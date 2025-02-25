@@ -46,10 +46,22 @@
 			<artifactId>telegrambots-springboot-longpolling-starter</artifactId>
 			<version>8.0.0</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.telegram</groupId>
 			<artifactId>telegrambots-client</artifactId>
+			<version>8.0.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.telegram</groupId>
+			<artifactId>telegrambots-meta</artifactId>
+			<version>8.2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.telegram</groupId>
+			<artifactId>telegrambots-longpolling</artifactId>
 			<version>8.0.0</version>
 		</dependency>
 	</dependencies>
