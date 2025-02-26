@@ -7,7 +7,7 @@ public class Lobby {
     String name;
     Date created;
     List<Player> players;
-    Enum<civMap> civMap;
+    CivMap civMap;
     List<Leader> bannedLeaders;
 
     public Lobby(String id, String name, Date created) {
@@ -24,11 +24,11 @@ public class Lobby {
         this.players = players;
     }
 
-    public Enum<civMap> getCivMap() {
+    public CivMap getCivMap() {
         return civMap;
     }
 
-    public void setCivMap(Enum<civMap> civMap) {
+    public void setCivMap(CivMap civMap) {
         this.civMap = civMap;
     }
 
