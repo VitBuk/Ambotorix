@@ -17,10 +17,10 @@ import java.util.List;
 @Component
 public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 
-    private final TelegramClient telegramClient;
+    AmbotorixService ambotorixService;
 
-    public Ambotorix() {
-        this.telegramClient = new OkHttpTelegramClient(getBotToken());
+    public Ambotorix(AmbotorixService ambotorixService) {
+        this.ambotorixService = ambotorixService;
     }
 
     @Override
@@ -35,17 +35,6 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
     @Override
     public void consume(Update update) {
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(update.getMessage().getChatId())
-                .text(update.getMessage().getText())
-                .build();
-
-        try {
-            telegramClient.execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @AfterBotRegistration
