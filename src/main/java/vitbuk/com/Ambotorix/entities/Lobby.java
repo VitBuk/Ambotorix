@@ -1,6 +1,7 @@
 package vitbuk.com.Ambotorix.entities;
 
 import java.util.Date;
+import java.util.List;
 
 public class Lobby {
     String id;
