@@ -1,11 +1,17 @@
 package vitbuk.com.Ambotorix.entities;
 
 public class Leader {
-
     String fullName;
     String shortName;
     String description;
-    String iconPath;
+    String picPath;
+
+    public Leader(String fullName, String shortName, String description, String picPath) {
+        this.fullName = fullName;
+        this.shortName = shortName;
+        this.description = description;
+        this.picPath = picPath;
+    }
 
     public String getFullName() {
         return fullName;
@@ -31,11 +37,11 @@ public class Leader {
         this.description = description;
     }
 
-    public String getIconPath() {
-        return iconPath;
+    public String getPicPath() {
+        return picPath;
     }
 
-    public void setIconPath(String iconPath) {
-        this.iconPath = iconPath;
+    public void setPicPath(String picPath) {
+        this.picPath = picPath;
     }
 }
