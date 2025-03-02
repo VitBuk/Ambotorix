@@ -33,7 +33,7 @@ public class LeaderScraper {
         Document doc = Jsoup.connect(BASE_URL).get();
         Elements leaderSections = doc.select("div.leaders-data div.row");
         List<Leader> leaders = new ArrayList<>();
-        new File(IMAGE_FOLDER).mkdirs(); // Ensure folder exists
+        new File(IMAGE_FOLDER).mkdirs();
 
         for (Element section : leaderSections) {
             String fullName = section.attr("id");
@@ -45,7 +45,7 @@ public class LeaderScraper {
 
             if (downloadImage(imgUrl, webpPath)) {
                 convertWebPToPng(webpPath, pngPath);
-                new File(webpPath).delete(); // Remove the original .webp file
+                new File(webpPath).delete();
             }
 
             StringBuilder description = new StringBuilder();
