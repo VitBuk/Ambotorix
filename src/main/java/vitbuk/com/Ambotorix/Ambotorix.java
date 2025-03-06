@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+import vitbuk.com.Ambotorix.entities.Leader;
 
 import java.util.List;
 
@@ -35,6 +36,17 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
     @Override
     public void consume(Update update) {
+        String messageText = update.getMessage().getText();
+        long chatId = update.getMessage().getChatId();
+        List<Leader> leaders = ambotorixService.getAllLeaders(Constants.LEADERS_JSON_PATH);
+
+        if (leaders != null) {
+            for (Leader leader : leaders) {
+                System.out.println(leader.getFullName() + " - " + leader.getPicPath());
+            }
+        } else {
+            System.out.println("Failed to load leaders.");
+        }
     }
 
     @AfterBotRegistration
