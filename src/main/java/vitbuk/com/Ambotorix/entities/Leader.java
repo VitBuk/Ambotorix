@@ -1,5 +1,7 @@
 package vitbuk.com.Ambotorix.entities;
 
+import java.util.Objects;
+
 public class Leader {
     String fullName;
     String shortName;
@@ -43,5 +45,18 @@ public class Leader {
 
     public void setPicPath(String picPath) {
         this.picPath = picPath;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Leader leader = (Leader) o;
+        return fullName.equals(leader.fullName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fullName);
     }
 }

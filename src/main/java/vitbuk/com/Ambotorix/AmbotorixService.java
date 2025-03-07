@@ -6,17 +6,17 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.entities.Leader;
+import vitbuk.com.Ambotorix.entities.Lobby;
+import vitbuk.com.Ambotorix.entities.Player;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
-import java.util.List;
+import java.util.*;
 
 @Component
 public class AmbotorixService {
     private final TelegramClient telegramClient;
-    private final String LEADERS_PATH = Constants.LEADERS_JSON_PATH;
-
     public AmbotorixService() {
         this.telegramClient = new OkHttpTelegramClient(Constants.BOT_TOKEN);
     }
@@ -30,5 +30,41 @@ public class AmbotorixService {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public Lobby setLeadersPoll (Lobby lobby) {
+        List<Leader> allLeaders = getAllLeaders(Constants.LEADERS_JSON_PATH);
+        if (!lobby.getBannedLeaders().isEmpty()) {
+            allLeaders.removeAll(lobby.getBannedLeaders());
+        }
+
+        if (hasEnoughLeaders(allLeaders.size(), lobby.getPickSize(), lobby.getPlayers().size())) {
+            lobby = setLeadersPollToPlayers(allLeaders, lobby);
+        } else {
+            System.out.println("Not enough leaders to get uniq poll to every player!");
+        }
+
+        return lobby;
+    }
+
+    private boolean hasEnoughLeaders (Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
+        return notBannedLeaders > pickSize * playersAmount;
+    }
+
+    private Lobby setLeadersPollToPlayers (List<Leader> leaders, Lobby lobby) {
+        Collections.shuffle(leaders, new Random());
+        Iterator<Leader> leaderIterator = leaders.iterator();
+
+        for (Player p : lobby.getPlayers()) {
+            List<Leader> pick = new ArrayList<>();
+            for (int i=0; i<pick.size(); i++) {
+                if (leaderIterator.hasNext()) {
+                    pick.add(leaderIterator.next());
+                }
+            }
+            p.setPicks(pick);
+        }
+
+        return lobby;
     }
 }

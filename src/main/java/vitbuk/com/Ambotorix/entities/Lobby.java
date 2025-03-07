@@ -10,6 +10,7 @@ public class Lobby {
     List<Player> players;
     CivMap civMap;
     List<Leader> bannedLeaders;
+    Integer pickSize;
 
     public Lobby(String id, String name, Date created) {
         this.id = id;
@@ -39,5 +40,13 @@ public class Lobby {
 
     public void setBannedLeaders(List<Leader> bannedLeaders) {
         this.bannedLeaders = bannedLeaders;
+    }
+
+    public Integer getPickSize() {
+        return pickSize;
+    }
+
+    public void setPickSize(Integer pickSize) {
+        this.pickSize = pickSize;
     }
 }
