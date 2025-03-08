@@ -50,4 +50,8 @@ public class Lobby {
     public void setPickSize(Integer pickSize) {
         this.pickSize = pickSize;
     }
+
+    public void addPlayer(Player player) {
+        players.add(player);
+    }
 }
