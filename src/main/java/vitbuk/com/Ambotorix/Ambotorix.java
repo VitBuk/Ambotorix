@@ -13,6 +13,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
+import vitbuk.com.Ambotorix.entities.Player;
 
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -46,7 +47,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
         switch (messageText) {
             case "/lobby" -> {
-                Lobby lobby = new Lobby("0", "lobby0", LocalDateTime.now());
+                ambotorixService.createLobby(chatId);
             }
         }
     }

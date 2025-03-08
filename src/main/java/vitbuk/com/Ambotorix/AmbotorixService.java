@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -12,6 +14,7 @@ import vitbuk.com.Ambotorix.entities.Player;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Component
@@ -47,6 +50,34 @@ public class AmbotorixService {
         return lobby;
     }
 
+    public void createLobby(long chatId) {
+        Lobby lobby = new Lobby("0", "lobby0", LocalDateTime.now());
+        lobby.addPlayer(new Player("Player1"));
+        lobby.addPlayer(new Player("Player2"));
+        lobby.addPlayer(new Player("Player3"));
+        lobby.addPlayer(new Player("Player4"));
+
+        lobby.setPickSize(5);
+        lobby = setLeadersPoll(lobby);
+
+        StringBuilder answer = new StringBuilder();
+
+        for (Player p : lobby.getPlayers()) {
+            answer.append(p.getName()).append(": ").append(p.getPicks()).append("\n");
+        }
+
+
+        SendMessage message = SendMessage
+                .builder()
+                .chatId(chatId)
+                .text(answer.toString())
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
     private boolean hasEnoughLeaders (Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
         return notBannedLeaders > pickSize * playersAmount;
     }

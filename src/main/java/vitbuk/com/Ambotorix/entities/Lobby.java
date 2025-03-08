@@ -1,6 +1,7 @@
 package vitbuk.com.Ambotorix.entities;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -17,6 +18,8 @@ public class Lobby {
         this.id = id;
         this.name = name;
         this.created = created;
+        players = new ArrayList<>();
+        bannedLeaders = new ArrayList<>();
     }
 
     public List<Player> getPlayers() {
