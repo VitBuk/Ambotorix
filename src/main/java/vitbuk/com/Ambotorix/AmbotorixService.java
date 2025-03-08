@@ -57,7 +57,7 @@ public class AmbotorixService {
 
         for (Player p : lobby.getPlayers()) {
             List<Leader> pick = new ArrayList<>();
-            for (int i=0; i<pick.size(); i++) {
+            for (int i=0; i<lobby.getPickSize(); i++) {
                 if (leaderIterator.hasNext()) {
                     pick.add(leaderIterator.next());
                 }

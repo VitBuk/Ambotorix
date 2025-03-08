@@ -12,8 +12,13 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.entities.Leader;
+import vitbuk.com.Ambotorix.entities.Lobby;
 
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
+
+import static com.fasterxml.jackson.databind.type.LogicalType.DateTime;
 
 @Component
 public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
@@ -38,14 +43,11 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
     public void consume(Update update) {
         String messageText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
-        List<Leader> leaders = ambotorixService.getAllLeaders(Constants.LEADERS_JSON_PATH);
 
-        if (leaders != null) {
-            for (Leader leader : leaders) {
-                System.out.println(leader.getFullName() + " - " + leader.getPicPath());
+        switch (messageText) {
+            case "/lobby" -> {
+                Lobby lobby = new Lobby("0", "lobby0", LocalDateTime.now());
             }
-        } else {
-            System.out.println("Failed to load leaders.");
         }
     }
 

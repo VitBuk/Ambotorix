@@ -1,18 +1,19 @@
 package vitbuk.com.Ambotorix.entities;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
 public class Lobby {
     String id;
     String name;
-    Date created;
+    LocalDateTime created;
     List<Player> players;
     CivMap civMap;
     List<Leader> bannedLeaders;
     Integer pickSize;
 
-    public Lobby(String id, String name, Date created) {
+    public Lobby(String id, String name, LocalDateTime created) {
         this.id = id;
         this.name = name;
         this.created = created;
