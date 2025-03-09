@@ -5,12 +5,12 @@ import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -63,20 +63,14 @@ public class AmbotorixService {
         StringBuilder answer = new StringBuilder();
 
         for (Player p : lobby.getPlayers()) {
-            answer.append(p.getName()).append(": ").append(p.getPicks()).append("\n");
+            SendPhoto sp = PickImageGenerator.createLeaderPickMessage(chatId, p.getName(), p.getPicks());
+            try {
+                telegramClient.execute(sp);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
         }
 
-
-        SendMessage message = SendMessage
-                .builder()
-                .chatId(chatId)
-                .text(answer.toString())
-                .build();
-        try {
-            telegramClient.execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
     }
     private boolean hasEnoughLeaders (Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
         return notBannedLeaders > pickSize * playersAmount;
