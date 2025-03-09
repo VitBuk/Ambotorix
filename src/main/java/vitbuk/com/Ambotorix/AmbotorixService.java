@@ -57,7 +57,7 @@ public class AmbotorixService {
         lobby.addPlayer(new Player("Player3"));
         lobby.addPlayer(new Player("Player4"));
 
-        lobby.setPickSize(5);
+        lobby.setPickSize(3);
         lobby = setLeadersPoll(lobby);
 
         StringBuilder answer = new StringBuilder();
