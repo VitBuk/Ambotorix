@@ -63,7 +63,7 @@ public class AmbotorixService {
         StringBuilder answer = new StringBuilder();
 
         for (Player p : lobby.getPlayers()) {
-            SendPhoto sp = PickImageGenerator.createLeaderPickMessage(chatId, p.getName(), p.getPicks());
+            SendPhoto sp = PickImageGenerator.createLeaderPickMessage(chatId, p);
             try {
                 telegramClient.execute(sp);
             } catch (TelegramApiException e) {

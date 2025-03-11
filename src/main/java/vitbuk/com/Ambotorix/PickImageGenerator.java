@@ -3,6 +3,8 @@ package vitbuk.com.Ambotorix;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import vitbuk.com.Ambotorix.entities.Leader;
+import vitbuk.com.Ambotorix.entities.Player;
+
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -12,7 +14,7 @@ import java.util.List;
 
 public class PickImageGenerator {
 
-    public static File generateLeaderPickImage(String playerName, List<Leader> leaders) {
+    public static File generateLeaderPickImage(Player player) {
         int iconSize = 80;
         int padding = 15;   // space between icons
         int maxTextWidth = iconSize - 5;
@@ -20,7 +22,7 @@ public class PickImageGenerator {
         int textLineHeight = 18;
         int textPadding = 12; // space between icon and name of the leader
 
-        int width = leaders.size() * (iconSize + padding);
+        int width = player.getPicks().size() * (iconSize + padding);
         int height = iconSize + (maxTextRows * textLineHeight) + textPadding + 10;
 
         BufferedImage finalImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -36,7 +38,7 @@ public class PickImageGenerator {
         int x = padding / 2;
         int y = padding;
 
-        for (Leader leader : leaders) {
+        for (Leader leader : player.getPicks()) {
             BufferedImage leaderIcon = null;
             try {
                 leaderIcon = ImageIO.read(new File(leader.getPicPath()));
@@ -113,14 +115,14 @@ public class PickImageGenerator {
         g.drawString(text, startX, y);
     }
 
-    public static SendPhoto createLeaderPickMessage(Long chatId, String playerName, List<Leader> leaders) {
-        File imageFile = generateLeaderPickImage(playerName, leaders);
+    public static SendPhoto createLeaderPickMessage(Long chatId, Player player) {
+        File imageFile = generateLeaderPickImage(player);
 
         SendPhoto sp = SendPhoto
                 .builder()
                 .chatId(chatId)
                 .photo(new InputFile(imageFile))
-                .caption(playerName + "`s pool")
+                .caption(player.getName() + "`s pool")
                 .build();
 
         new Thread(() -> {
