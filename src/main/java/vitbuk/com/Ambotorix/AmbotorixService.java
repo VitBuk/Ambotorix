@@ -36,13 +36,13 @@ public class AmbotorixService {
     }
 
     public Lobby setLeadersPoll (Lobby lobby) {
-        List<Leader> allLeaders = getAllLeaders(Constants.LEADERS_JSON_PATH);
+        List<Leader> nonBannedLeaders = getAllLeaders(Constants.LEADERS_JSON_PATH);
         if (!lobby.getBannedLeaders().isEmpty()) {
-            allLeaders.removeAll(lobby.getBannedLeaders());
+            nonBannedLeaders.removeAll(lobby.getBannedLeaders());
         }
 
-        if (hasEnoughLeaders(allLeaders.size(), lobby.getPickSize(), lobby.getPlayers().size())) {
-            lobby = setLeadersPollToPlayers(allLeaders, lobby);
+        if (hasEnoughLeaders(nonBannedLeaders.size(), lobby.getPickSize(), lobby.getPlayers().size())) {
+            lobby = setLeadersPollToPlayers(nonBannedLeaders, lobby);
         } else {
             System.out.println("Not enough leaders to get uniq poll to every player!");
         }
