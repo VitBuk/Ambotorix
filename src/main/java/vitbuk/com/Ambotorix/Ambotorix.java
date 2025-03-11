@@ -36,6 +36,9 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             case "/lobby" -> {
                 ambotorixService.createLobby(chatId);
             }
+            case "/leaders" -> {
+                ambotorixService.getLeadersList(chatId);
+            }
         }
     }
 

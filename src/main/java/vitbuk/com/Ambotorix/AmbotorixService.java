@@ -58,8 +58,33 @@ public class AmbotorixService {
                 e.printStackTrace();
             }
         }
-
     }
+
+    public void getLeadersList(long chatId) {
+        List<Leader> leaders = getAllLeaders(Constants.LEADERS_JSON_PATH);
+
+        StringBuilder message = new StringBuilder();
+        message.append("Leaders: \n" );
+        message.append("<i>To get description use /[shortName] command</i> \n");
+
+        for (Leader l : leaders) {
+            message.append("/").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");
+        }
+
+        SendMessage answer = SendMessage
+                .builder()
+                .chatId(chatId)
+                .text(message.toString())
+                .parseMode("HTML")
+                .build();
+
+        try{
+            telegramClient.execute(answer);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private List<Leader> getAllLeaders(String leadersPath) {
         Gson gson = new Gson();
