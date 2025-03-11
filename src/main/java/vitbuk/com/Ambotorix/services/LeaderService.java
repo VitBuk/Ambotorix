@@ -43,7 +43,7 @@ public class LeaderService {
         }
 
         if (hasEnoughLeaders(nonBannedLeaders.size(), lobby.getPickSize(), lobby.getPlayers().size())) {
-            lobby = setLeadersPollToPlayers(nonBannedLeaders, lobby);
+            lobby = setLeadersPoolToPlayers(nonBannedLeaders, lobby);
         } else {
             System.out.println("Not enough leaders to get uniq poll to every player!");
         }
@@ -55,7 +55,7 @@ public class LeaderService {
         return notBannedLeaders > pickSize * playersAmount;
     }
 
-    private Lobby setLeadersPollToPlayers (List<Leader> leaders, Lobby lobby) {
+    private Lobby setLeadersPoolToPlayers(List<Leader> leaders, Lobby lobby) {
         Collections.shuffle(leaders, new Random());
         Iterator<Leader> leaderIterator = leaders.iterator();
 
