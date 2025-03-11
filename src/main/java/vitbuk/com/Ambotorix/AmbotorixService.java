@@ -24,16 +24,6 @@ public class AmbotorixService {
         this.telegramClient = new OkHttpTelegramClient(Constants.BOT_TOKEN);
     }
 
-    public List<Leader> getAllLeaders(String leadersPath) {
-        Gson gson = new Gson();
-        try (FileReader reader = new FileReader(leadersPath)) {
-            Type listType = new TypeToken<List<Leader>>() {}.getType();
-            return gson.fromJson(reader, listType);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 
     public Lobby setLeadersPoll (Lobby lobby) {
         List<Leader> nonBannedLeaders = getAllLeaders(Constants.LEADERS_JSON_PATH);
@@ -60,8 +50,6 @@ public class AmbotorixService {
         lobby.setPickSize(5);
         lobby = setLeadersPoll(lobby);
 
-        StringBuilder answer = new StringBuilder();
-
         for (Player p : lobby.getPlayers()) {
             SendPhoto sp = PickImageGenerator.createLeaderPickMessage(chatId, p);
             try {
@@ -71,6 +59,17 @@ public class AmbotorixService {
             }
         }
 
+    }
+
+    private List<Leader> getAllLeaders(String leadersPath) {
+        Gson gson = new Gson();
+        try (FileReader reader = new FileReader(leadersPath)) {
+            Type listType = new TypeToken<List<Leader>>() {}.getType();
+            return gson.fromJson(reader, listType);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
     private boolean hasEnoughLeaders (Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
         return notBannedLeaders > pickSize * playersAmount;
