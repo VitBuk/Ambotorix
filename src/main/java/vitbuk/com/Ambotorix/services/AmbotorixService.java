@@ -26,6 +26,7 @@ public class AmbotorixService {
         this.leaderService = leaderService;
     }
 
+    // logic for command -> /lobby
     public void createLobby(long chatId) {
         Lobby lobby = new Lobby("0", "lobby0", LocalDateTime.now());
         lobby.addPlayer(new Player("Player1"));
@@ -46,6 +47,7 @@ public class AmbotorixService {
         }
     }
 
+    // logic for command -> /leaders
     public void getLeadersList(long chatId) {
         List<Leader> leaders = leaderService.getLeaders();
 

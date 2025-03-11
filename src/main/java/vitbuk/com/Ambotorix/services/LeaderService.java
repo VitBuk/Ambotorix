@@ -15,7 +15,7 @@ import java.util.*;
 
 @Service
 public class LeaderService {
-    private List<Leader> leaders;
+    private final List<Leader> leaders;
 
     public LeaderService(List<Leader> leaders) {
         this.leaders = loadLeaders();
