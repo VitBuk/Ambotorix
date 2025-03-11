@@ -1,4 +1,4 @@
-package vitbuk.com.Ambotorix;
+package vitbuk.com.Ambotorix.services;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -8,6 +8,8 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+import vitbuk.com.Ambotorix.Constants;
+import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
@@ -85,17 +87,6 @@ public class AmbotorixService {
         }
     }
 
-
-    private List<Leader> getAllLeaders(String leadersPath) {
-        Gson gson = new Gson();
-        try (FileReader reader = new FileReader(leadersPath)) {
-            Type listType = new TypeToken<List<Leader>>() {}.getType();
-            return gson.fromJson(reader, listType);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
     private boolean hasEnoughLeaders (Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
         return notBannedLeaders > pickSize * playersAmount;
     }

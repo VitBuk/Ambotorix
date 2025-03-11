@@ -7,6 +7,7 @@ import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
 public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
