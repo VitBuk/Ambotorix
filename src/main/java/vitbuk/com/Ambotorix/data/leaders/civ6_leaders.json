@@ -457,7 +457,7 @@
   },
   {
     "fullName": "Zulu Shaka",
-    "shortName": "Shaka",
+    "shortName": "shaka",
     "description": "Isibongo\nCities with a garrisoned unit get +3 Loyalty per turn, or +5 if it is a Corps or Army. Conquering a city with a unit will upgrade it into a Corps/Fleet or Army/Armada if that unit was already a Corp/Fleet, if the proper Civics are unlocked. • Bias: None.\nAmabutho\nMay form Corps at the Mercenaries Civic and Armies at the Nationalism Civic. Corps and Armies both gain +2 base Combat Strength at the Mobilization Civic.\nIkanda\nA district unique to Zulu which replaces the Encampment. Provides +1 Housing. Buildings in the Ikanda receive +2 Gold and +1 Culture. Once required Civics are unlocked, allows Corps or Armies to be trained directly and their costs reduced by 25%.\nImpi\nZulu unique Medieval Era unit that replaces the Pikeman. Increased Flanking bonus, low cost and low maintenance. Earns XP faster.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Zulu Shaka.png"
   }

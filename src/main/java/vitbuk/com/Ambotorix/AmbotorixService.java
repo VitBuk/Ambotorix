@@ -2,7 +2,7 @@ package vitbuk.com.Ambotorix;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -17,7 +17,7 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.*;
 
-@Component
+@Service
 public class AmbotorixService {
     private final TelegramClient telegramClient;
     public AmbotorixService() {
