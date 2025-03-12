@@ -59,8 +59,9 @@ public class LeaderService {
     }
 
     private Lobby setLeadersPoolToPlayers(List<Leader> leaders, Lobby lobby) {
-        Collections.shuffle(leaders, new Random());
-        Iterator<Leader> leaderIterator = leaders.iterator();
+        List<Leader> shuffledLeaders = getLeaders();
+        Collections.shuffle(shuffledLeaders, new Random());
+        Iterator<Leader> leaderIterator = shuffledLeaders.iterator();
 
         for (Player p : lobby.getPlayers()) {
             List<Leader> pick = new ArrayList<>();
