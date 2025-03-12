@@ -54,6 +54,15 @@ public class LeaderService {
         return lobby;
     }
 
+    public String getShortNameMessage(Player player) {
+        StringBuilder sb = new StringBuilder("<b>").append(player.getName()).append(":</b>").append("\n");
+        for (Leader leader : player.getPicks()) {
+            sb.append("/").append(leader.getShortName()).append(" ");
+        }
+
+        return sb.toString().trim();
+    }
+
     private boolean hasEnoughLeaders (Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
         return notBannedLeaders > pickSize * playersAmount;
     }
