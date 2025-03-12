@@ -85,7 +85,7 @@
   },
   {
     "fullName": "China Qin (Unifier)",
-    "shortName": "qinUnifier",
+    "shortName": "qinU",
     "description": "Dynastic Cycle\nEurekas and Inspirations provide 45% of civics and technologies instead of 40%. • Bias: None.\nThirty-Six Stratagems\nMelee units receive the Convert Barbarians action, which consumes the melee unit. +50% Production towards Encampment buildings. +1 Great Writer point from Encampment districts. Barracks buildings provide 2 slots for Great Works of Writing. Great Works of Writing provide +1 Food. When recruiting a Great General or Great Writer receive a random Eureka and Inspiration.\nGreat Wall\nChinese unique builder improvement unlocked with Masonry. Must be built in a line along the borders of your empire. Can only be pillaged (never destroyed) by natural disasters. +1 Production. +1 Gold for each adjacent Great Wall. +1 Culture for each adjacent Great Wall with Castles. +1 Culture with Military Science. Provides Tourism after researching Flight. An occupying unit receives +1 Sight and +4 Defense Strength and automatically gains 2 turns of fortification.\nCrouching Tiger\nChinese unique unit that replaces the Crossbowman. +7 Ranged Strength when attacking adjacent enemy units.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\China Qin (Unifier).png"
   },
@@ -109,13 +109,13 @@
   },
   {
     "fullName": "Egypt Cleopatra (Egyptian)",
-    "shortName": "cleoEgypt",
+    "shortName": "cleoE",
     "description": "Iteru\n+15% Production towards districts and wonders if placed next to a River. Does not receive damage from Floods. • Bias: T2 Floodplains, T5 Rivers\nMediterranean's Bride\nYour Trade Routes to other civilizations provide +4 Gold for Egypt. Other civilizations' Trade Routes to Egypt provide +1 Food for them and +2 Gold for Egypt. Trading with Allies earns twice as many bonus Alliance Points. +15% production toward Commercial Hubs and Theater Squares when the city is settled on a river.\nSphinx\nEgyptian unique builder improvement unlocked with Craftsmanship. Cannot be built next to another Sphinx. Cannot be built on Snow tiles. +1 Culture and +2 Faith. +1 Culture if built on Floodplains. +1 Culture with Diplomatic Service. +1 Faith and +1 Culture if built next to a wonder. +1 Food and +1 Production if built on Desert (not Floodplains) or Desert Hills. +2 Appeal to adjacent tiles. Provides Tourism after researching Flight.\nMaryannu Chariot Archer\nEgyptian unique Ancient era ranged cavalry unit. 4 Movement when starting in open terrain.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Egypt Cleopatra (Egyptian).png"
   },
   {
     "fullName": "Egypt Cleopatra (Ptolemaic)",
-    "shortName": "cleoPtolemaic",
+    "shortName": "cleoP",
     "description": "Iteru\n+15% Production towards districts and wonders if placed next to a River. Does not receive damage from Floods. • Bias: T2 Floodplains, T5 Rivers\nArrival of Hapi\nMilitary units receive +5 Combat Strength on floodplains. +15% production bonus for Campuses and Encampments when the city is settled on a river.\nSphinx\nEgyptian unique builder improvement unlocked with Craftsmanship. Cannot be built next to another Sphinx. Cannot be built on Snow tiles. +1 Culture and +2 Faith. +1 Culture if built on Floodplains. +1 Culture with Diplomatic Service. +1 Faith and +1 Culture if built next to a wonder. +1 Food and +1 Production if built on Desert (not Floodplains) or Desert Hills. +2 Appeal to adjacent tiles. Provides Tourism after researching Flight.\nMaryannu Chariot Archer\nEgyptian unique Ancient era ranged cavalry unit. 4 Movement when starting in open terrain.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Egypt Cleopatra (Ptolemaic).png"
   },
@@ -163,7 +163,7 @@
   },
   {
     "fullName": "France Catherine de Medici (Magnificence)",
-    "shortName": "catMag",
+    "shortName": "catM",
     "description": "Grand Tour\nReceives a free Spy (and extra spy capacity) with the Castles technology. All spies start with a free promotion. +20% Production toward Medieval, Renaissance, and Industrial era Wonders. +50% Tourism from Wonders of any era. • Bias: T4 Rivers.\nCatherine’s Magnificences\nImproved resources receive +1 Culture after researching Craftsmanship. Improved resources adjacent to Theater Square districts or a Chateau receive +1 Culture. May initiate the Court Festival unique project in any city with a Theater Square district.\nChâteau\nFrench unique builder improvement unlocked at Feudalism. Cannot be built adjacent to another Chateau. +1 Food, +1 Culture, +1 Gold +1 Housing and +1 Appeal to adjacent tiles. +1 Culture for each adjacent wonder, increasing to +2 with the Flight technology. +1 Culture and +1 Gold for each adjacent Luxury resource. +2 Gold if built next to River. Provides Tourism after researching Flight.\nGarde Impériale\nFrench unique Industrial era melee unit that replaces the Line Infantry. +5 Combat Strength when fighting on your capital's continent. +10 Great General points when killing an enemy unit.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\France Catherine de Medici (Magnificence).png"
   },
@@ -223,7 +223,7 @@
   },
   {
     "fullName": "Inca Pachacuti",
-    "shortName": "pachacuti",
+    "shortName": "loveOfDanya",
     "description": "Mit’a\nCitizens can work Mountain tiles. Mountain tiles provide +2 Production, increasing to +3 Production after you reach the Industrial Era, and +1 Food for each adjacent Terrace Farm. • Bias: T3 Grassland and Plains Mountains. Special \"Mountain Lover\".\nQhapaq Ñan\nDomestic Trade Routes gain +1 Food for every Mountain tile in the origin city. International Trade Routes gain +1 Gold for every Mountain tile in the origin city. -50% of the normal Gold cost to purchase Mountain tiles. Gain the Qhapaq Ñan improvement with Foreign Trade. Recon units gain +1 build charge to build a Qhapaq Ñan.\nQhapaq Ñan\nUnlocks the Builder ability to construct a Qhapaq Ñan, unique to Pachacuti. Acts as a movement portal on a mountain range, allowing units to move into it and exit from another portal at the cost of 2 Movement. Trade Routes traveling through it can multiply the Gold they get from districts at their destination. Can only be built on an adjacent Mountain tile. Cannot be pillaged or removed.\nTerrace Farm\nIncan unique builder improvement available at the start of the game. Can be placed on Grassland Hills, Plains Hills, Desert Hills, or Volcanic Soil. +1 Food +1 Housing. +1 Food for each adjacent Mountain. +1 Food for every 2 adjacent Terrace Farms, increasing to +1 Food for every Terrace Farm with Replaceable Parts. +1 Production if adjacent to Fresh Water and not an Aqueduct. +2 Production for each adjacent Aqueduct.\nWarak’aq\nIncan unique Medieval Era unit that replaces the Skirmisher. Stronger at ranged combat than the Skirmisher and +1 additional attack per turn.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Inca Pachacuti.png"
   },
