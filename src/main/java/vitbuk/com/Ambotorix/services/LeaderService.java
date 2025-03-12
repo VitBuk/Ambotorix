@@ -40,8 +40,7 @@ public class LeaderService {
     public List<Leader> getLeaders() {return new ArrayList<>(leaders);}
 
     public Lobby setLeadersPool(Lobby lobby) {
-        List<Leader> nonBannedLeaders = new ArrayList<>();
-        nonBannedLeaders = getLeaders();
+        List<Leader> nonBannedLeaders = getLeaders();
         if (!lobby.getBannedLeaders().isEmpty()) {
             nonBannedLeaders.removeAll(lobby.getBannedLeaders());
         }
