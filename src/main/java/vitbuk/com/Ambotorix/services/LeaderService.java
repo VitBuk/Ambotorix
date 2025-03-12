@@ -25,19 +25,23 @@ public class LeaderService {
         Gson gson = new Gson();
         try (FileReader reader = new FileReader(Constants.LEADERS_JSON_PATH)) {
             Type listType = new TypeToken<List<Leader>>() {}.getType();
-            return gson.fromJson(reader, listType);
+            List<Leader> loadedLeaders = gson.fromJson(reader, listType);
+            if (loadedLeaders != null) {
+                loadedLeaders.sort(Comparator.comparing(Leader::getFullName));
+            }
+            return Collections.unmodifiableList(loadedLeaders);
+
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return Collections.emptyList();
         }
     }
 
-    public List<Leader> getLeaders() {
-        return leaders;
-    }
+    public List<Leader> getLeaders() {return new ArrayList<>(leaders);}
 
     public Lobby setLeadersPool(Lobby lobby) {
-        List<Leader> nonBannedLeaders = leaders;
+        List<Leader> nonBannedLeaders = new ArrayList<>();
+        nonBannedLeaders = getLeaders();
         if (!lobby.getBannedLeaders().isEmpty()) {
             nonBannedLeaders.removeAll(lobby.getBannedLeaders());
         }
