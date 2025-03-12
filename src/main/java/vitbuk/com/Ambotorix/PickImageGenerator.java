@@ -122,7 +122,6 @@ public class PickImageGenerator {
                 .builder()
                 .chatId(chatId)
                 .photo(new InputFile(imageFile))
-                .caption(player.getName() + "`s pool")
                 .build();
 
         new Thread(() -> {
