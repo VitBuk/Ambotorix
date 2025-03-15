@@ -33,13 +33,21 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         String messageText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
-        switch (messageText) {
-            case "/lobby" -> {
-                ambotorixService.createLobby(chatId);
+        if (messageText.startsWith("/")) {
+            switch (messageText) {
+                case "/lobby" -> {
+                    ambotorixService.createLobby(chatId);
+                }
+                case "/leaders" -> {
+                    ambotorixService.getLeadersList(chatId);
+                }
             }
-            case "/leaders" -> {
-                ambotorixService.getLeadersList(chatId);
-            }
+        } else if (messageText.startsWith("!")) {
+            String shortName = messageText.substring(1).trim();
+            // ambotorixServicecommand
+        } else {
+            System.out.println("Uknown command");
+            //ambotorixService unknown command method
         }
     }
 
