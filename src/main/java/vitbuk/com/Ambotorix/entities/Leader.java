@@ -5,13 +5,13 @@ import java.util.Objects;
 public class Leader {
     String fullName;
     String shortName;
-    String descriptionPath;
+    String description;
     String picPath;
 
-    public Leader(String fullName, String shortName, String descriptionPath, String picPath) {
+    public Leader(String fullName, String shortName, String description, String picPath) {
         this.fullName = fullName;
         this.shortName = shortName;
-        this.descriptionPath = descriptionPath;
+        this.description = description;
         this.picPath = picPath;
     }
 
@@ -31,12 +31,12 @@ public class Leader {
         this.shortName = shortName;
     }
 
-    public String getDescriptionPath() {
-        return descriptionPath;
+    public String getDescription() {
+        return description;
     }
 
-    public void setDescriptionPath(String descriptionPath) {
-        this.descriptionPath = descriptionPath;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getPicPath() {
