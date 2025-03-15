@@ -37,13 +37,13 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         if (messageText.startsWith("/")) {
             switch (messageText) {
                 case "/lobby" -> {
-                    ambotorixService.createLobby(chatId);
+                    ambotorixService.sendLobby(chatId);
                 }
                 case "/leaders" -> {
-                    ambotorixService.getLeadersList(chatId);
+                    ambotorixService.sendLeaders(chatId);
                 }
             }
-            
+
             // ![command] -> for every get description of the leader command
         } else if (messageText.startsWith("!")) {
             String shortName = messageText.substring(1).trim();

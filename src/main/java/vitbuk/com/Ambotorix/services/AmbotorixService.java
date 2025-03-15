@@ -27,7 +27,7 @@ public class AmbotorixService {
     }
 
     // logic for command -> /lobby
-    public void createLobby(long chatId) {
+    public void sendLobby(long chatId) {
         Lobby lobby = new Lobby("0", "lobby0", LocalDateTime.now());
         lobby.addPlayer(new Player("Player1"));
         lobby.addPlayer(new Player("Player2"));
@@ -63,7 +63,7 @@ public class AmbotorixService {
     }
 
     // logic for command -> /leaders
-    public void getLeadersList(long chatId) {
+    public void sendLeaders(long chatId) {
         List<Leader> leaders = leaderService.getLeaders();
 
         StringBuilder message = new StringBuilder();
