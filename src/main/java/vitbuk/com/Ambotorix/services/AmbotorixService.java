@@ -127,7 +127,6 @@ public class AmbotorixService {
             }
         }
 
-
         SendMessage errorSM = SendMessage
                 .builder()
                 .chatId(chatId)
@@ -136,6 +135,20 @@ public class AmbotorixService {
 
         try {
             telegramClient.execute(errorSM);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendUnknown(long chatId) {
+        SendMessage sm = SendMessage
+                .builder()
+                .chatId(chatId)
+                .text("Unknown command. Use /help to get list of available commands.")
+                .build();
+
+        try {
+            telegramClient.execute(sm);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

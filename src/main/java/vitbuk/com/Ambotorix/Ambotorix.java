@@ -44,7 +44,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
                 case "/leaders" -> {
                     ambotorixService.sendLeaders(chatId);
                 }
-                //default -> ambotorixService.sendUnknonwn
+                default -> ambotorixService.sendUnknown(chatId);
             }
         }
     }
