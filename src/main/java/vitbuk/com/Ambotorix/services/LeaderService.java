@@ -24,7 +24,8 @@ public class LeaderService {
     private List<Leader> loadLeaders() {
         Gson gson = new Gson();
         try (FileReader reader = new FileReader(Constants.LEADERS_JSON_PATH)) {
-            Type listType = new TypeToken<List<Leader>>() {}.getType();
+            Type listType = new TypeToken<List<Leader>>() {
+            }.getType();
             List<Leader> loadedLeaders = gson.fromJson(reader, listType);
             if (loadedLeaders != null) {
                 loadedLeaders.sort(Comparator.comparing(Leader::getFullName));
@@ -37,7 +38,9 @@ public class LeaderService {
         }
     }
 
-    public List<Leader> getLeaders() {return new ArrayList<>(leaders);}
+    public List<Leader> getLeaders() {
+        return new ArrayList<>(leaders);
+    }
 
     public Lobby setLeadersPool(Lobby lobby) {
         List<Leader> nonBannedLeaders = getLeaders();
@@ -63,7 +66,7 @@ public class LeaderService {
         return sb.toString().trim();
     }
 
-    private boolean hasEnoughLeaders (Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
+    private boolean hasEnoughLeaders(Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
         return notBannedLeaders > pickSize * playersAmount;
     }
 
@@ -74,7 +77,7 @@ public class LeaderService {
 
         for (Player p : lobby.getPlayers()) {
             List<Leader> pick = new ArrayList<>();
-            for (int i=0; i<lobby.getPickSize(); i++) {
+            for (int i = 0; i < lobby.getPickSize(); i++) {
                 if (leaderIterator.hasNext()) {
                     pick.add(leaderIterator.next());
                 }
@@ -87,19 +90,37 @@ public class LeaderService {
 
     public String formatDescription(String description) {
         StringBuilder formattedText = new StringBuilder();
+        String biasLine = "";
 
         String[] paragraphs = description.split("\n");
+        List<String> contentParagraphs = new ArrayList<>();
 
-        for (int i = 0; i < paragraphs.length; i++) {
-            String line = paragraphs[i].trim();
+        for (String line : paragraphs) {
+            line = line.trim();
+
+            if (line.contains("• Bias:")) {
+                int biasIndex = line.indexOf("• Bias:");
+                biasLine = "<i>" + line.substring(biasIndex).trim() + "</i>\n";
+                line = line.substring(0, biasIndex).trim();
+            }
 
             if (!line.isEmpty()) {
-                formattedText.append("<b>").append(line).append("</b>\n");
+                contentParagraphs.add(line);
+            }
+        }
 
-                if (i + 1 < paragraphs.length && !paragraphs[i + 1].trim().isEmpty()) {
-                    formattedText.append(paragraphs[i + 1].trim()).append("\n\n");
-                    i++;
-                }
+        if (!biasLine.isEmpty()) {
+            formattedText.append(biasLine).append("\n");
+        }
+
+        for (int i = 0; i < contentParagraphs.size(); i++) {
+            String paragraph = contentParagraphs.get(i);
+
+            formattedText.append("<b>").append(paragraph).append("</b>\n");
+
+            if (i + 1 < contentParagraphs.size()) {
+                formattedText.append(contentParagraphs.get(i + 1)).append("\n\n");
+                i++;
             }
         }
 

@@ -111,14 +111,14 @@ public class AmbotorixService {
                 }
 
                 String formattedDescription = leaderService.formatDescription(l.getDescription());
-                SendMessage textMessage = SendMessage.builder()
+                SendMessage sm = SendMessage.builder()
                         .chatId(chatId)
                         .text(formattedDescription)
                         .parseMode("HTML")
                         .build();
 
                 try {
-                    telegramClient.execute(textMessage);
+                    telegramClient.execute(sm);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
