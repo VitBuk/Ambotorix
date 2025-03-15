@@ -47,7 +47,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             // ![command] -> for every get description of the leader command
         } else if (messageText.startsWith("!")) {
             String shortName = messageText.substring(1).trim();
-            // ambotorixServicecommand
+            ambotorixService.sendDescription(chatId, shortName);
 
             // for unknown commands
         } else {

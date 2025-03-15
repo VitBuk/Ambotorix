@@ -87,4 +87,41 @@ public class AmbotorixService {
             e.printStackTrace();
         }
     }
+
+    public void sendDescription (long chatId, String shortName){
+        List<Leader> leaders = leaderService.getLeaders();
+
+        for (Leader l : leaders) {
+            if (l.getShortName().equalsIgnoreCase(shortName)) {
+                String message = "<b>" + l.getFullName() + "</b>\n\n" + l.getDescription();
+
+                SendMessage sm = SendMessage
+                        .builder()
+                        .chatId(chatId)
+                        .text(message)
+                        .parseMode("HTML")
+                        .build();
+
+                try {
+                    telegramClient.execute(sm);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+
+                return;
+            }
+        }
+
+        SendMessage errorSM = SendMessage
+                .builder()
+                .chatId(chatId)
+                .text("Unknown leader. Use /leaders to see available description command")
+                .build();
+
+        try {
+            telegramClient.execute(errorSM);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 }
