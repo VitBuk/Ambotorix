@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
@@ -12,6 +13,8 @@ import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
+
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -88,22 +91,34 @@ public class AmbotorixService {
         }
     }
 
+    //logic for command -> /d_[shortName]
     public void sendDescription (long chatId, String shortName){
         List<Leader> leaders = leaderService.getLeaders();
 
         for (Leader l : leaders) {
             if (l.getShortName().equalsIgnoreCase(shortName)) {
-                String message = "<b>" + l.getFullName() + "</b>\n\n" + l.getDescription();
-
-                SendMessage sm = SendMessage
-                        .builder()
+                SendPhoto photoMessage = SendPhoto.builder()
                         .chatId(chatId)
-                        .text(message)
+                        .photo(new InputFile(new File(l.getPicPath())))
+                        .caption("<b>" + l.getFullName() + "</b>")
                         .parseMode("HTML")
                         .build();
 
                 try {
-                    telegramClient.execute(sm);
+                    telegramClient.execute(photoMessage);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+
+                String formattedDescription = leaderService.formatDescription(l.getDescription());
+                SendMessage textMessage = SendMessage.builder()
+                        .chatId(chatId)
+                        .text(formattedDescription)
+                        .parseMode("HTML")
+                        .build();
+
+                try {
+                    telegramClient.execute(textMessage);
                 } catch (TelegramApiException e) {
                     e.printStackTrace();
                 }
@@ -111,6 +126,7 @@ public class AmbotorixService {
                 return;
             }
         }
+
 
         SendMessage errorSM = SendMessage
                 .builder()

@@ -84,4 +84,25 @@ public class LeaderService {
 
         return lobby;
     }
+
+    public String formatDescription(String description) {
+        StringBuilder formattedText = new StringBuilder();
+
+        String[] paragraphs = description.split("\n");
+
+        for (int i = 0; i < paragraphs.length; i++) {
+            String line = paragraphs[i].trim();
+
+            if (!line.isEmpty()) {
+                formattedText.append("<b>").append(line).append("</b>\n");
+
+                if (i + 1 < paragraphs.length && !paragraphs[i + 1].trim().isEmpty()) {
+                    formattedText.append(paragraphs[i + 1].trim()).append("\n\n");
+                    i++;
+                }
+            }
+        }
+
+        return formattedText.toString().trim();
+    }
 }
