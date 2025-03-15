@@ -33,8 +33,10 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         String messageText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
-        // /[command] - for every main amborotix commands
-        if (messageText.startsWith("/")) {
+        if (messageText.startsWith("/d_")) {
+            String shortName = messageText.substring(3).trim();
+            ambotorixService.sendDescription(chatId, shortName);
+        } else {
             switch (messageText) {
                 case "/lobby" -> {
                     ambotorixService.sendLobby(chatId);
@@ -42,17 +44,8 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
                 case "/leaders" -> {
                     ambotorixService.sendLeaders(chatId);
                 }
+                //default -> ambotorixService.sendUnknonwn
             }
-
-            // ![command] -> for every get description of the leader command
-        } else if (messageText.startsWith("!")) {
-            String shortName = messageText.substring(1).trim();
-            ambotorixService.sendDescription(chatId, shortName);
-
-            // for unknown commands
-        } else {
-            System.out.println("Uknown command");
-            //ambotorixService unknown command method
         }
     }
 

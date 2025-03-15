@@ -71,7 +71,7 @@ public class AmbotorixService {
         message.append("<i>To get description use /[shortName] command</i> \n");
 
         for (Leader l : leaders) {
-            message.append("!").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");
+            message.append("/d_").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");
         }
 
         SendMessage answer = SendMessage
