@@ -72,7 +72,7 @@
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Canada Wilfrid Laurier.png"
   },
   {
-    "fullName": "China Kublai Khan (China)",
+    "fullName": "China Kublai Khan",
     "shortName": "kublaiC",
     "description": "Dynastic Cycle\nEurekas and Inspirations provide 45% of civics and technologies instead of 40%. • Bias: None.\nGerege\nOne extra Economic policy slot in any government. +1 Science and +1 Culture per international trade route and an additional +1 Science and +1 Culture for each 20 tiles traveled. Receive a random Eureka and Inspiration when establishing a Trading Post in another Civilization's city for the first time.\nGreat Wall\nChinese unique builder improvement unlocked with Masonry. Must be built in a line along the borders of your empire. Can only be pillaged (never destroyed) by natural disasters. +1 Production. +1 Gold for each adjacent Great Wall. +1 Culture for each adjacent Great Wall with Castles. +1 Culture with Military Science. Provides Tourism after researching Flight. An occupying unit receives +1 Sight and +4 Defense Strength and automatically gains 2 turns of fortification.\nCrouching Tiger\nChinese unique unit that replaces the Crossbowman. +7 Ranged Strength when attacking adjacent enemy units.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\China Kublai Khan (China).png"
@@ -162,7 +162,7 @@
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\France Catherine de Medici (Black Queen).png"
   },
   {
-    "fullName": "France Catherine de Medici (Magnificence)",
+    "fullName": "France Catherine de Medici Magnificence",
     "shortName": "catM",
     "description": "Grand Tour\nReceives a free Spy (and extra spy capacity) with the Castles technology. All spies start with a free promotion. +20% Production toward Medieval, Renaissance, and Industrial era Wonders. +50% Tourism from Wonders of any era. • Bias: T4 Rivers.\nCatherine’s Magnificences\nImproved resources receive +1 Culture after researching Craftsmanship. Improved resources adjacent to Theater Square districts or a Chateau receive +1 Culture. May initiate the Court Festival unique project in any city with a Theater Square district.\nChâteau\nFrench unique builder improvement unlocked at Feudalism. Cannot be built adjacent to another Chateau. +1 Food, +1 Culture, +1 Gold +1 Housing and +1 Appeal to adjacent tiles. +1 Culture for each adjacent wonder, increasing to +2 with the Flight technology. +1 Culture and +1 Gold for each adjacent Luxury resource. +2 Gold if built next to River. Provides Tourism after researching Flight.\nGarde Impériale\nFrench unique Industrial era melee unit that replaces the Line Infantry. +5 Combat Strength when fighting on your capital's continent. +10 Great General points when killing an enemy unit.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\France Catherine de Medici (Magnificence).png"
@@ -228,7 +228,7 @@
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Inca Pachacuti.png"
   },
   {
-    "fullName": "India Chandragupta",
+    "fullName": "India Chandra.",
     "shortName": "chandra",
     "description": "Dharma\nReceives Follower Belief bonuses in a city from each Religion that has at least 1 Follower. Cities gain +1 Amenity for every Religion with at least 1 Follower. Missionaries have +2 spreads. +100% Religious pressure from your Trade Routes. • Bias: None.\nArthashastra\nShrines grant +1 Movement and Temples grant +1 Sight for all newly trained military units in the city. Units receive +1 Combat Strength for each Holy Site building in the city when produced.\nStepwell\nIndian unique builder improvement unlocked with Irrigation. +1 Food, +1 Faith, and +1 Housing. +1 Food and +1 Faith with Feudalism. +1 Food for each adjacent Farm. +1 Faith if adjacent to a Holy Site district. +1 Housing with Sanitation. Cannot be built on Hills or adjacent to another Stepwell.\nVaru\nIndian unique Classical era heavy cavalry unit. Has Sight of 3. Adjacent enemy units receive -5 Combat Strength.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\India Chandragupta.png"
@@ -330,7 +330,7 @@
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Mongolia Genghis Khan.png"
   },
   {
-    "fullName": "Mongolia Kublai Khan (Mongolia)",
+    "fullName": "Mongolia Kublai Khan",
     "shortName": "kublaiM",
     "description": "Örtöö\nAll Mongolian units double the usual Combat Bonus for having a higher level of Diplomatic Visibility than their opponent. Starting a Trade Route immediately creates a Trading Post in the destination city. • Bias: T4 Horses.\nGerege\nOne extra Economic policy slot in any government. +1 Science and +1 Culture per international trade route and an additional +1 Science and +1 Culture for each 20 tiles traveled. Receive a random Eureka and Inspiration when establishing a Trading Post in another Civilization's city for the first time.\nOrdu\nA building unique to Mongolia. Grants an ability that gives +1 Movement to Heavy and Light Cavalry trained in this city. +25% combat experience for all cavalry and siege class units trained in this city. Strategic Resource Stockpiles increased +10 (on Standard Speed). May not be built in an Encampment district that already has a Barracks.\nKeshig\nMongolian unique Medieval Era Ranged Cavalry unit. Can escort moving civilian and support units at their higher Movement speed.",
     "picPath": "src\\main\\java\\vitbuk\\com\\Ambotorix\\data\\leaderPics\\Mongolia Kublai Khan (Mongolia).png"
