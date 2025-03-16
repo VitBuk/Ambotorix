@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
+import vitbuk.com.Ambotorix.entities.Command;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
@@ -129,7 +130,7 @@ public class AmbotorixService {
         SendMessage errorSM = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text("Unknown leader. Use /leaders to see available description command")
+                .text("Unknown leader. Use " + Command.LEADERS.getCommandText() + " to see available description command")
                 .build();
 
         try {
