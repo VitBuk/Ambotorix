@@ -23,4 +23,9 @@ public enum Command {
                 .filter(cmd -> cmd.getCommandText().equalsIgnoreCase(commandText))
                 .findFirst();
     }
+
+    @Override
+    public String toString() {
+        return commandText;
+    }
 }

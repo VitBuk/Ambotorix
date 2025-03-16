@@ -130,7 +130,7 @@ public class AmbotorixService {
         SendMessage errorSM = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text("Unknown leader. Use " + Command.LEADERS.getCommandText() + " to see available description command")
+                .text("Unknown leader. Use " + Command.LEADERS + " to see available description command")
                 .build();
 
         try {
@@ -144,7 +144,7 @@ public class AmbotorixService {
         SendMessage sm = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text("Unknown command. Use " + Command.HELP.getCommandText() + " to get list of available commands.")
+                .text("Unknown command. Use " + Command.HELP + " to get list of available commands.")
                 .build();
 
         try {
