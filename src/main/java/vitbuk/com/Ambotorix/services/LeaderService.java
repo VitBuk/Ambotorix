@@ -7,7 +7,6 @@ import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
-
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;

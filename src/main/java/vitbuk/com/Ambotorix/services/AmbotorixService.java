@@ -13,7 +13,6 @@ import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
-
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
