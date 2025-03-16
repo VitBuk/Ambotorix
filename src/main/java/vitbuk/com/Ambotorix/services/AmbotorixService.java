@@ -144,7 +144,7 @@ public class AmbotorixService {
         SendMessage sm = SendMessage
                 .builder()
                 .chatId(chatId)
-                .text("Unknown command. Use /help to get list of available commands.")
+                .text("Unknown command. Use " + Command.HELP.getCommandText() + " to get list of available commands.")
                 .build();
 
         try {
