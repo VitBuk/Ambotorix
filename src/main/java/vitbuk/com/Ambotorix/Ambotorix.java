@@ -7,6 +7,7 @@ import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import vitbuk.com.Ambotorix.entities.Command;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
@@ -37,15 +38,14 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             String shortName = messageText.substring(3).trim();
             ambotorixService.sendDescription(chatId, shortName);
         } else {
-            switch (messageText) {
-                case "/lobby" -> {
-                    ambotorixService.sendLobby(chatId);
-                }
-                case "/leaders" -> {
-                    ambotorixService.sendLeaders(chatId);
-                }
-                default -> ambotorixService.sendUnknown(chatId);
-            }
+            Command.fromCommandText(messageText).ifPresentOrElse(
+                    command -> {
+                        switch (command) {
+                            case LOBBY -> ambotorixService.sendLobby(chatId);
+                            case LEADERS -> ambotorixService.sendLeaders(chatId);
+                        }
+                    }, () -> {ambotorixService.sendUnknown(chatId);}
+            );
         }
     }
 
