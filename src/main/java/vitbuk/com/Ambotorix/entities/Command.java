@@ -6,7 +6,8 @@ import java.util.Optional;
 public enum Command {
     HELP("/help"),
     LOBBY("/lobby"),
-    LEADERS("/leaders");
+    LEADERS("/leaders"),
+    REGISTER("/register");
 
     private final String commandText;
 
