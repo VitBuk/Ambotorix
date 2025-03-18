@@ -77,18 +77,7 @@ public class AmbotorixService {
             message.append("/d_").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");
         }
 
-        SendMessage answer = SendMessage
-                .builder()
-                .chatId(chatId)
-                .text(message.toString())
-                .parseMode("HTML")
-                .build();
-
-        try{
-            telegramClient.execute(answer);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+        sendMessage(chatId, message.toString());
     }
 
     //logic for command -> /d_[shortName]
