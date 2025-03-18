@@ -32,7 +32,7 @@ public class AmbotorixService {
     // logic for command -> /lobby
     public void sendLobby(long chatId) {
         Player player1 = new Player("Player1");
-        Lobby lobby = new Lobby("0", "lobby0", LocalDateTime.now(), player1);
+        Lobby lobby = new Lobby(LocalDateTime.now(), player1);
         lobby.addPlayer(new Player("Player2"));
         lobby.addPlayer(new Player("Player3"));
         lobby.addPlayer(new Player("Player4"));
