@@ -127,17 +127,7 @@ public class AmbotorixService {
             }
         }
 
-        SendMessage errorSM = SendMessage
-                .builder()
-                .chatId(chatId)
-                .text("Unknown leader. Use " + Command.LEADERS + " to see available description command")
-                .build();
-
-        try {
-            telegramClient.execute(errorSM);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+        sendMessage(chatId, "Unknown leader. Use " + Command.LEADERS + " to see available description command");
     }
 
     // logic for unknown command
