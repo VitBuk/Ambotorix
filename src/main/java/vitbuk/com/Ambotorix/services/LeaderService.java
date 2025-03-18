@@ -118,7 +118,14 @@ public class LeaderService {
             formattedText.append("<b>").append(paragraph).append("</b>\n");
 
             if (i + 1 < contentParagraphs.size()) {
-                formattedText.append(contentParagraphs.get(i + 1)).append("\n\n");
+                String nextParagraph = contentParagraphs.get(i + 1);
+
+                String[] sentences = nextParagraph.split("(?<=[.:])\\s+");
+                for (String sentence : sentences) {
+                    formattedText.append(sentence.trim()).append("\n");
+                }
+
+                formattedText.append("\n");
                 i++;
             }
         }
