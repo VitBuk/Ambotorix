@@ -5,18 +5,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Lobby {
-    LocalDateTime created;
-    Player host;
-    List<Player> players;
-    CivMap civMap;
-    List<Leader> bannedLeaders;
-    Integer pickSize;
+
+    private final LocalDateTime created;
+    private final Player host;
+    private List<Player> players;
+    private CivMap civMap;
+    private List<Leader> bannedLeaders;
+    private Integer pickSize;
 
     public Lobby(LocalDateTime created, Player host) {
         this.created = created;
         this.host = host;
         players = new ArrayList<>();
         bannedLeaders = new ArrayList<>();
+        players.add(host);
     }
 
     public List<Player> getPlayers() {
