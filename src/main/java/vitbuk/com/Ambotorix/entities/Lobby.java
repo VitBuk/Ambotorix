@@ -21,6 +21,14 @@ public class Lobby {
         players.add(host);
     }
 
+    public LocalDateTime getCreated() {
+        return created;
+    }
+
+    public Player getHost() {
+        return host;
+    }
+
     public List<Player> getPlayers() {
         return players;
     }

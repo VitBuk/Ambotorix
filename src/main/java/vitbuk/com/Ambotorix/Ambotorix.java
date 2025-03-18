@@ -33,6 +33,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
     public void consume(Update update) {
         String messageText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
+        String userName = update.getMessage().getChat().getUserName();
 
         if (messageText.startsWith("/d_")) {
             String shortName = messageText.substring(3).trim();
@@ -41,7 +42,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             Command.fromCommandText(messageText).ifPresentOrElse(
                     command -> {
                         switch (command) {
-                            case LOBBY -> ambotorixService.sendLobby(chatId);
+                            case LOBBY -> ambotorixService.sendLobby(chatId, userName);
                             case LEADERS -> ambotorixService.sendLeaders(chatId);
                            // case REGISTER -> ambotorixService.sendRegister(chatId);
                         }

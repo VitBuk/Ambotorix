@@ -32,28 +32,34 @@ public class AmbotorixService {
     }
 
     // logic for command -> /lobby
-    public void sendLobby(long chatId) {
+    public void sendLobby(long chatId, String userName) {
+        Player host = new Player(userName);
+        String message = lobbyService.createLobby(host);
+
+        sendMessage(chatId, message);
 //        Player player1 = new Player("Player1");
 //        Lobby lobby = new Lobby(LocalDateTime.now(), player1);
 //        lobby.addPlayer(new Player("Player2"));
 //        lobby.addPlayer(new Player("Player3"));
 //        lobby.addPlayer(new Player("Player4"));
+//
+//        lobby.setPickSize(5);
+//        lobby = leaderService.setLeadersPool(lobby);
+//
+//        for (Player p : lobby.getPlayers()) {
+//            String leaderShortNames = leaderService.getShortNameMessage(p);
+//
+//            sendMessage(chatId, leaderShortNames);
+//
+//            SendPhoto sp = PickImageGenerator.createLeaderPickMessage(chatId, p);
+//            try {
+//                telegramClient.execute(sp);
+//            } catch (TelegramApiException e) {
+//                e.printStackTrace();
+//            }
+//        }
 
-        lobby.setPickSize(5);
-        lobby = leaderService.setLeadersPool(lobby);
 
-        for (Player p : lobby.getPlayers()) {
-            String leaderShortNames = leaderService.getShortNameMessage(p);
-
-            sendMessage(chatId, leaderShortNames);
-
-            SendPhoto sp = PickImageGenerator.createLeaderPickMessage(chatId, p);
-            try {
-                telegramClient.execute(sp);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     // logic for command -> /leaders

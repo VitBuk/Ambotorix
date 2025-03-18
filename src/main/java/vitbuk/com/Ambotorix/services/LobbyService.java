@@ -11,11 +11,12 @@ public class LobbyService {
 
     private Lobby lobby;
 
-    public void createLobby(Player host) {
+    public String createLobby(Player host) {
         if (lobby != null) {
-            throw new IllegalStateException("Lobby already exists.");
+            return "Lobby is already exist. " + lobby.getHost().getName() + " can terminate it by using /terminate command";
         } else {
             this.lobby = new Lobby(LocalDateTime.now(), host);
+            return "Lobby is created by " + lobby.getHost().getName();
         }
     }
 }
