@@ -140,6 +140,7 @@ public class AmbotorixService {
         }
     }
 
+    // logic for unknown command
     public void sendUnknown(long chatId) {
         SendMessage sm = SendMessage
                 .builder()
@@ -149,6 +150,20 @@ public class AmbotorixService {
 
         try {
             telegramClient.execute(sm);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendMessage(long chatId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
+                .build();
+
+        try {
+            telegramClient.execute(message);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
