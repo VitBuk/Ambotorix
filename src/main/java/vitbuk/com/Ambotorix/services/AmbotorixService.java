@@ -43,18 +43,7 @@ public class AmbotorixService {
         for (Player p : lobby.getPlayers()) {
             String leaderShortNames = leaderService.getShortNameMessage(p);
 
-            SendMessage sm = SendMessage
-                    .builder()
-                    .chatId(chatId)
-                    .text(leaderShortNames)
-                    .parseMode("HTML")
-                    .build();
-
-            try {
-                telegramClient.execute(sm);
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-            }
+            sendMessage(chatId, leaderShortNames);
 
             SendPhoto sp = PickImageGenerator.createLeaderPickMessage(chatId, p);
             try {
