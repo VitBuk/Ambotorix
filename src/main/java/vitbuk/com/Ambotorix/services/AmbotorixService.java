@@ -142,17 +142,7 @@ public class AmbotorixService {
 
     // logic for unknown command
     public void sendUnknown(long chatId) {
-        SendMessage sm = SendMessage
-                .builder()
-                .chatId(chatId)
-                .text("Unknown command. Use " + Command.HELP + " to get list of available commands.")
-                .build();
-
-        try {
-            telegramClient.execute(sm);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
+        sendMessage(chatId,"Unknown command. Use " + Command.HELP + " to get list of available commands." );
     }
 
     private void sendMessage(long chatId, String text) {
