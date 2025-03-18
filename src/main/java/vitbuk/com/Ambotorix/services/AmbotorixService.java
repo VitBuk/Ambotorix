@@ -22,20 +22,22 @@ import java.util.*;
 public class AmbotorixService {
     private final TelegramClient telegramClient;
     private final LeaderService leaderService;
+    private final LobbyService lobbyService;
 
     @Autowired
-    public AmbotorixService(LeaderService leaderService) {
+    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService) {
         this.telegramClient = new OkHttpTelegramClient(Constants.BOT_TOKEN);
         this.leaderService = leaderService;
+        this.lobbyService = lobbyService;
     }
 
     // logic for command -> /lobby
     public void sendLobby(long chatId) {
-        Player player1 = new Player("Player1");
-        Lobby lobby = new Lobby(LocalDateTime.now(), player1);
-        lobby.addPlayer(new Player("Player2"));
-        lobby.addPlayer(new Player("Player3"));
-        lobby.addPlayer(new Player("Player4"));
+//        Player player1 = new Player("Player1");
+//        Lobby lobby = new Lobby(LocalDateTime.now(), player1);
+//        lobby.addPlayer(new Player("Player2"));
+//        lobby.addPlayer(new Player("Player3"));
+//        lobby.addPlayer(new Player("Player4"));
 
         lobby.setPickSize(5);
         lobby = leaderService.setLeadersPool(lobby);
