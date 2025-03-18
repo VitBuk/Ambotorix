@@ -8,15 +8,17 @@ public class Lobby {
     String id;
     String name;
     LocalDateTime created;
+    Player host;
     List<Player> players;
     CivMap civMap;
     List<Leader> bannedLeaders;
     Integer pickSize;
 
-    public Lobby(String id, String name, LocalDateTime created) {
+    public Lobby(String id, String name, LocalDateTime created, Player host) {
         this.id = id;
         this.name = name;
         this.created = created;
+        this.host = host;
         players = new ArrayList<>();
         bannedLeaders = new ArrayList<>();
     }
