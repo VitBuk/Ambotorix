@@ -1,5 +1,7 @@
 package vitbuk.com.Ambotorix.entities;
 
+import java.util.List;
+
 public enum CivMap {
     ARCHIPELAGO("Archipelago"),
     CONTINENTS("Continents"),
@@ -35,6 +37,7 @@ public enum CivMap {
         this.displayName = displayName;
     }
 
+    public static final List<CivMap> STANDARD_MAPS = List.of(PANGEA, SEVEN_SEAS, HIGHLANDS, LAKES);
     @Override
     public String toString() {
         return displayName;
