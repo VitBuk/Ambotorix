@@ -21,6 +21,7 @@ public class Lobby {
         players = new ArrayList<>();
         bannedLeaders = new ArrayList<>();
         players.add(host);
+        defaultSetup();
     }
 
     public LocalDateTime getCreated() {
@@ -81,5 +82,11 @@ public class Lobby {
 
     public void addPlayer(Player player) {
         players.add(player);
+    }
+
+    public void defaultSetup() {
+        this.banSize = 1;
+        this.pickSize = 5;
+        this.mapPool = CivMap.STANDARD_MAPS;
     }
 }
