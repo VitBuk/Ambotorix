@@ -2,7 +2,9 @@ package vitbuk.com.Ambotorix.entities;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Lobby {
 
@@ -74,6 +76,13 @@ public class Lobby {
         players.add(player);
     }
 
+    public List<Leader> getBannedLeaders() {
+        Set<Leader> bannedSet = new HashSet<>();
+        for (Player player : players) {
+            bannedSet.addAll(player.getBans());
+        }
+        return bannedSet.stream().toList();
+    }
     public void defaultSetup() {
         this.banSize = 1;
         this.pickSize = 5;
