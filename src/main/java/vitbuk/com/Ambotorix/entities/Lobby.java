@@ -11,6 +11,7 @@ public class Lobby {
     private List<Player> players;
     private CivMap civMap;
     private List<Leader> bannedLeaders;
+    private Integer banSize;
     private Integer pickSize;
 
     public Lobby(LocalDateTime created, Player host) {
@@ -51,6 +52,14 @@ public class Lobby {
 
     public void setBannedLeaders(List<Leader> bannedLeaders) {
         this.bannedLeaders = bannedLeaders;
+    }
+
+    public Integer getBanSize() {
+        return banSize;
+    }
+
+    public void setBanSize(Integer banSize) {
+        this.banSize = banSize;
     }
 
     public Integer getPickSize() {
