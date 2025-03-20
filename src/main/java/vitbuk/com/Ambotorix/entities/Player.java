@@ -34,4 +34,8 @@ public class Player {
     public void setBans(List<Leader> bans) {
         this.bans = bans;
     }
+
+    public void ban(Leader leader) {
+        bans.add(leader);
+    }
 }
