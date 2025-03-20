@@ -12,14 +12,12 @@ public class Lobby {
     private Integer banSize;
     private Integer pickSize;
     private List<Player> players;
-    private List<Leader> bannedLeaders;
     private CivMap selectedMap;
 
     public Lobby(LocalDateTime created, Player host) {
         this.created = created;
         this.host = host;
         players = new ArrayList<>();
-        bannedLeaders = new ArrayList<>();
         players.add(host);
         defaultSetup();
     }
@@ -62,14 +60,6 @@ public class Lobby {
 
     public void setPlayers(List<Player> players) {
         this.players = players;
-    }
-
-    public List<Leader> getBannedLeaders() {
-        return bannedLeaders;
-    }
-
-    public void setBannedLeaders(List<Leader> bannedLeaders) {
-        this.bannedLeaders = bannedLeaders;
     }
 
     public CivMap getSelectedMap() {
