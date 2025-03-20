@@ -8,11 +8,12 @@ public class Lobby {
 
     private final LocalDateTime created;
     private final Player host;
-    private List<Player> players;
-    private CivMap civMap;
-    private List<Leader> bannedLeaders;
+    private List<CivMap> mapPool;
     private Integer banSize;
     private Integer pickSize;
+    private List<Player> players;
+    private List<Leader> bannedLeaders;
+    private CivMap selectedMap;
 
     public Lobby(LocalDateTime created, Player host) {
         this.created = created;
@@ -30,28 +31,12 @@ public class Lobby {
         return host;
     }
 
-    public List<Player> getPlayers() {
-        return players;
+    public List<CivMap> getMapPool() {
+        return mapPool;
     }
 
-    public void setPlayers(List<Player> players) {
-        this.players = players;
-    }
-
-    public CivMap getCivMap() {
-        return civMap;
-    }
-
-    public void setCivMap(CivMap civMap) {
-        this.civMap = civMap;
-    }
-
-    public List<Leader> getBannedLeaders() {
-        return bannedLeaders;
-    }
-
-    public void setBannedLeaders(List<Leader> bannedLeaders) {
-        this.bannedLeaders = bannedLeaders;
+    public void setMapPool(List<CivMap> mapPool) {
+        this.mapPool = mapPool;
     }
 
     public Integer getBanSize() {
@@ -68,6 +53,30 @@ public class Lobby {
 
     public void setPickSize(Integer pickSize) {
         this.pickSize = pickSize;
+    }
+
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(List<Player> players) {
+        this.players = players;
+    }
+
+    public List<Leader> getBannedLeaders() {
+        return bannedLeaders;
+    }
+
+    public void setBannedLeaders(List<Leader> bannedLeaders) {
+        this.bannedLeaders = bannedLeaders;
+    }
+
+    public CivMap getSelectedMap() {
+        return selectedMap;
+    }
+
+    public void setSelectedMap(CivMap selectedMap) {
+        this.selectedMap = selectedMap;
     }
 
     public void addPlayer(Player player) {
