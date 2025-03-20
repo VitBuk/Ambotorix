@@ -83,6 +83,10 @@ public class Lobby {
         }
         return bannedSet.stream().toList();
     }
+
+    public boolean isBanned(Leader leader) {
+        return getBannedLeaders().contains(leader);
+    }
     public void defaultSetup() {
         this.banSize = 1;
         this.pickSize = 5;
