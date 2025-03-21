@@ -44,7 +44,10 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
                         switch (command) {
                             case LOBBY -> ambotorixService.sendLobby(chatId, userName);
                             case LEADERS -> ambotorixService.sendLeaders(chatId);
-                           // case REGISTER -> ambotorixService.sendRegister(chatId);
+                           // case REGISTER -> ambotorixService.sendRegister(chatId)
+                           // case HELP ->
+                            //case BANSIZE ->
+                            // case PICKSIZE ->
                         }
                     }, () -> {ambotorixService.sendUnknown(chatId);}
             );
