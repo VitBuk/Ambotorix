@@ -60,6 +60,11 @@ public class Lobby {
     public List<Player> getPlayers() {
         return players;
     }
+    public List<String> getPlayersNames(){
+        return players.stream()
+                .map(Player::getName)
+                .collect(Collectors.toList());
+    }
 
     public void setPlayers(List<Player> players) {
         this.players = players;

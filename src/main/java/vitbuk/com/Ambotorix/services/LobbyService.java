@@ -22,4 +22,12 @@ public class LobbyService {
             return sb.toString();
         }
     }
+
+    public String registerPlayer(String userName) {
+        if (lobby.getPlayers().contains())
+        Player player = new Player(userName);
+        lobby.addPlayer(player);
+
+        return "Player " + player.getName() + " added to lobby";
+    }
 }
