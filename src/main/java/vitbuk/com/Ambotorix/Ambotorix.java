@@ -56,7 +56,6 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
                 );
         }
     }
-}
 
 
     @AfterBotRegistration

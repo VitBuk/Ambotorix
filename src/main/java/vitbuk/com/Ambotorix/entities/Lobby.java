@@ -17,8 +17,8 @@ public class Lobby {
     private List<Player> players;
     private CivMap selectedMap;
 
-    public Lobby(LocalDateTime created, Player host) {
-        this.created = created;
+    public Lobby(Player host) {
+        this.created = LocalDateTime.now();
         this.host = host;
         players = new ArrayList<>();
         players.add(host);
