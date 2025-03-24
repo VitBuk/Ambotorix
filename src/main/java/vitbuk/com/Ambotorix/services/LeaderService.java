@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class LeaderService {
@@ -39,6 +40,11 @@ public class LeaderService {
 
     public List<Leader> getLeaders() {
         return new ArrayList<>(leaders);
+    }
+    public List<String> getShortNames(){
+        return getLeaders().stream()
+                .map(Leader::getShortName)
+                .collect(Collectors.toList());
     }
 
     public Lobby setLeadersPool(Lobby lobby) {

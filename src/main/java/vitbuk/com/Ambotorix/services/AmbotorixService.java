@@ -102,6 +102,11 @@ public class AmbotorixService {
         sendMessage(chatId, "Unknown leader. Use " + Command.LEADERS + " to see available description command");
     }
 
+    //logic for command -> /ban_[shortName]
+    public void sendBanLeader(long chatId, String userName, String shortName) {
+
+    }
+
     // logic for unknown command
     public void sendUnknown(long chatId) {
         sendMessage(chatId,"Unknown command. Use " + Command.HELP + " to get list of available commands." );
