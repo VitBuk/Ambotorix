@@ -1,6 +1,7 @@
 package vitbuk.com.Ambotorix.entities;
 
 import java.util.List;
+import java.util.Objects;
 
 public class Player {
     String userName;
@@ -37,5 +38,18 @@ public class Player {
 
     public void ban(Leader leader) {
         bans.add(leader);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Player player = (Player) o;
+        return userName.equals(player.userName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(userName);
     }
 }
