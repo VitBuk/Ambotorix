@@ -41,4 +41,9 @@ public class LobbyService {
         return lobby.getPlayers().stream()
                 .anyMatch(player -> player.getUserName().equals(userName));
     }
+
+    public boolean hasAvailableBans(String userName) {
+
+        if (lobby.getBanSize() > )
+    }
 }

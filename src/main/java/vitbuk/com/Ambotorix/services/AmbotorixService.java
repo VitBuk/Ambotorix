@@ -106,7 +106,11 @@ public class AmbotorixService {
     public void sendBanLeader(long chatId, String userName, String shortName) {
         if (leaderService.getShortNames().contains(shortName)) {
             if (lobbyService.isBanned(shortName)) {
-                if (lo)
+                if (lobbyService.isRegistered(userName)){
+                    if (l)
+                } else {
+                    sendMessage(chatId, "Player " + userName + " is not registered");
+                }
             } else {
                 sendMessage(chatId, "Leader is already banned");
             }

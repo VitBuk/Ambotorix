@@ -82,6 +82,13 @@ public class Lobby {
         players.add(player);
     }
 
+    public Player getPlayerByName(String userName) {
+        return players.stream()
+                .filter(p -> p.getUserName().equals(userName))
+                .findFirst()
+                .orElse(null);
+    }
+
     public List<Leader> getBannedLeaders() {
         Set<Leader> bannedSet = new HashSet<>();
         for (Player player : players) {
