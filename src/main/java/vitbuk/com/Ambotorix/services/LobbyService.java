@@ -36,4 +36,9 @@ public class LobbyService {
         return lobby.getBannedLeaders().stream()
                 .anyMatch(leader -> leader.getShortName().equalsIgnoreCase(shortName));
     }
+
+    public boolean isRegistered(String userName) {
+        return lobby.getPlayers().stream()
+                .anyMatch(player -> player.getUserName().equals(userName));
+    }
 }
