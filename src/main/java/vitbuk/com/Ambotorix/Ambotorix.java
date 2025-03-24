@@ -42,21 +42,22 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             String shortName = messageText.substring(3).trim();
           //  ambotorixService.banLeader(chatId, leader);
         } else {
-                Command.fromCommandText(messageText).ifPresentOrElse(
-                        command -> {
-                            switch (command) {
-                                case LOBBY -> ambotorixService.sendLobby(chatId, userName);
-                                case LEADERS -> ambotorixService.sendLeaders(chatId);
-                                // case REGISTER -> ambotorixService.sendRegister(chatId)
-                                // case HELP ->
-                                //case BANSIZE ->
-                                // case PICKSIZE ->
+            Command.fromCommandText(messageText).ifPresentOrElse(
+                    command -> {
+                        switch (command) {
+                            case LOBBY -> ambotorixService.sendLobby(chatId, userName);
+                            case LEADERS -> ambotorixService.sendLeaders(chatId);
+                            // case REGISTER -> ambotorixService.sendRegister(chatId)
+                            // case HELP ->
+                            //case BANSIZE ->
+                            // case PICKSIZE ->
                             }
                         }, () -> {ambotorixService.sendUnknown(chatId);}
                 );
-            }
         }
     }
+}
+
 
     @AfterBotRegistration
     public void afterRegistration(BotSession botSession) {
