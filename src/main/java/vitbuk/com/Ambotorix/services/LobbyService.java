@@ -1,6 +1,7 @@
 package vitbuk.com.Ambotorix.services;
 
 import org.springframework.stereotype.Service;
+import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
 
@@ -29,5 +30,10 @@ public class LobbyService {
         lobby.addPlayer(player);
 
         return "Player " + player.getUserName() + " added to lobby";
+    }
+
+    public boolean isBanned(String shortName) {
+        return lobby.getBannedLeaders().stream()
+                .anyMatch(leader -> leader.getShortName().equalsIgnoreCase(shortName));
     }
 }

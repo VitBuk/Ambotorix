@@ -104,7 +104,15 @@ public class AmbotorixService {
 
     //logic for command -> /ban_[shortName]
     public void sendBanLeader(long chatId, String userName, String shortName) {
-
+        if (leaderService.getShortNames().contains(shortName)) {
+            if (lobbyService.isBanned(shortName)) {
+                if (lo)
+            } else {
+                sendMessage(chatId, "Leader is already banned");
+            }
+        } else {
+            sendMessage(chatId, "Unknown leader. User " + Command.LEADERS + " to see available description comamnd");
+        }
     }
 
     // logic for unknown command
