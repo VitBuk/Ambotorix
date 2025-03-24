@@ -24,7 +24,9 @@ public class LobbyService {
     }
 
     public String registerPlayer(String userName) {
-        if (lobby.getPlayers().contains())
+        if (lobby.getPlayersNames().contains(userName)) {
+            return "Player " + userName + " is already registered";
+        }
         Player player = new Player(userName);
         lobby.addPlayer(player);
 

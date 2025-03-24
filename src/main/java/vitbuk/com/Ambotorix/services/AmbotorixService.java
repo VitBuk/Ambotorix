@@ -108,8 +108,7 @@ public class AmbotorixService {
     }
 
     //logic for command -> /register
-    public void sendRegister(long chatId, String userName) {
-    }
+
     private void sendMessage(long chatId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
