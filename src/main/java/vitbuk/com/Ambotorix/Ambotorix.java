@@ -40,7 +40,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             ambotorixService.sendDescription(chatId, shortName);
         } else if (messageText.startsWith("ban_")){
             String shortName = messageText.substring(5).trim();
-            ambotorixService.sendBanLeader(chatId, shortName);
+            ambotorixService.sendBanLeader(chatId, userName, shortName);
         } else {
             Command.fromCommandText(messageText).ifPresentOrElse(
                     command -> {

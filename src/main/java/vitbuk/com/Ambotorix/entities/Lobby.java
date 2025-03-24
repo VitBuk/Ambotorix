@@ -62,7 +62,7 @@ public class Lobby {
     }
     public List<String> getPlayersNames(){
         return players.stream()
-                .map(Player::getName)
+                .map(Player::getUserName)
                 .collect(Collectors.toList());
     }
 

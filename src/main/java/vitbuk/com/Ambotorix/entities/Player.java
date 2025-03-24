@@ -3,20 +3,20 @@ package vitbuk.com.Ambotorix.entities;
 import java.util.List;
 
 public class Player {
-    String name;
+    String userName;
     List<Leader> picks;
     List<Leader> bans;
 
-    public Player(String name) {
-        this.name = name;
+    public Player(String userName) {
+        this.userName = userName;
     }
 
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setUserName(String userName) {
+        this.userName = userName;
     }
 
     public List<Leader> getPicks() {
