@@ -133,6 +133,12 @@ public class AmbotorixService {
 
         player.getBans().add(leader);
         sendMessage(chatId, "Leader " + leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
+
+        StringBuilder sb = new StringBuilder("Bans: \n");
+        for (Leader l: lobbyService.bannedLeaders()) {
+            sb.append(l.getFullName()).append(", ");
+        }
+        sendMessage(chatId, sb.toString());
     }
 
     // logic for unknown command

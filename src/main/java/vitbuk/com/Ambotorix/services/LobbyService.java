@@ -5,6 +5,8 @@ import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
 
+import java.util.List;
+
 @Service
 public class LobbyService {
 
@@ -49,5 +51,9 @@ public class LobbyService {
 
     public boolean hasAvailableBans(Player player) {
         return lobby.getBanSize() > player.getBans().size();
+    }
+
+    public List<Leader> bannedLeaders() {
+        return lobby.getBannedLeaders();
     }
 }
