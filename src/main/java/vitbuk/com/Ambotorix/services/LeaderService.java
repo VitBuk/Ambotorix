@@ -71,6 +71,17 @@ public class LeaderService {
         return sb.toString().trim();
     }
 
+    public Leader getLeaderByShortName(String shortName) {
+        if (leaders == null ) {
+            return null;
+        }
+
+        return leaders.stream()
+                .filter(l -> l.getShortName().equalsIgnoreCase(shortName))
+                .findFirst()
+                .orElse(null);
+    }
+
     private boolean hasEnoughLeaders(Integer notBannedLeaders, Integer pickSize, Integer playersAmount) {
         return notBannedLeaders > pickSize * playersAmount;
     }
