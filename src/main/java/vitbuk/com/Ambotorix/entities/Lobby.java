@@ -94,6 +94,11 @@ public class Lobby {
         for (Player player : players) {
             bannedSet.addAll(player.getBans());
         }
+
+        if (bannedSet.size() == 0) {
+            return new ArrayList<Leader>();
+        }
+
         return bannedSet.stream().toList();
     }
 
