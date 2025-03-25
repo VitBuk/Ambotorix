@@ -112,6 +112,13 @@ public class AmbotorixService {
             return;
         }
 
+        // leader exists check
+        Leader leader = leaderService.getLeaderByShortName(shortName);
+        if (leader == null ) {
+            sendMessage(chatId, "Unknown leader. User " + Command.LEADERS + " to see available description comamnd");
+            return;
+        }
+
 
         if (leaderService.getShortNames().contains(shortName)) {
             if (lobbyService.isBanned(shortName)) {
