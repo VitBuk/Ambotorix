@@ -107,7 +107,11 @@ public class AmbotorixService {
         if (leaderService.getShortNames().contains(shortName)) {
             if (lobbyService.isBanned(shortName)) {
                 if (lobbyService.isRegistered(userName)){
-                    if (l)
+                    if (lobbyService.hasAvailableBans(userName)){
+
+                    } else {
+                        sendMessage(chatId, "Player " + userName + " cant ban more leaders");
+                    }
                 } else {
                     sendMessage(chatId, "Player " + userName + " is not registered");
                 }

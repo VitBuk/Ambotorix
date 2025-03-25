@@ -100,6 +100,7 @@ public class Lobby {
     public boolean isBanned(Leader leader) {
         return getBannedLeaders().contains(leader);
     }
+
     public void defaultSetup() {
         this.banSize = 1;
         this.pickSize = 5;
