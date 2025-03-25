@@ -119,6 +119,11 @@ public class AmbotorixService {
             return;
         }
 
+        //already banned check
+        if (lobbyService.isBanned(leader)) {
+            sendMessage(chatId, "Leader " + leader.getFullName() + " is already banned");
+            return;
+        }
 
         if (leaderService.getShortNames().contains(shortName)) {
             if (lobbyService.isBanned(shortName)) {
