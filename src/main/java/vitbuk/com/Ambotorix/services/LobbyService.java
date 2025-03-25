@@ -43,9 +43,8 @@ public class LobbyService {
                 .findFirst()
                 .orElse(null);
     }
-    public boolean isBanned(String shortName) {
-        return lobby.getBannedLeaders().stream()
-                .anyMatch(leader -> leader.getShortName().equalsIgnoreCase(shortName));
+    public boolean isBanned(Leader leader) {
+        return lobby.getBannedLeaders().contains(leader);
     }
 
     public boolean isRegistered(String userName) {
