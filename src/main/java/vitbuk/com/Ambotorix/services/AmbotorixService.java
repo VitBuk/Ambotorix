@@ -104,6 +104,13 @@ public class AmbotorixService {
 
     //logic for command -> /ban_[shortName]
     public void sendBanLeader(long chatId, String userName, String shortName) {
+        Player player = lobbyService.findPlayerByName(userName);
+        if (player == null) {
+            sendMessage(chatId, "Player " + userName + " is not registered");
+            return;
+        }
+
+
         if (leaderService.getShortNames().contains(shortName)) {
             if (lobbyService.isBanned(shortName)) {
                 if (lobbyService.isRegistered(userName)){
