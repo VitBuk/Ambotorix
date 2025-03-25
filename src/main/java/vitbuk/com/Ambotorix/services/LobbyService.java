@@ -50,8 +50,4 @@ public class LobbyService {
     public boolean hasAvailableBans(Player player) {
         return lobby.getBanSize() > player.getBans().size();
     }
-
-    public String banLeader(String shortName, String userName) {
-
-    }
 }

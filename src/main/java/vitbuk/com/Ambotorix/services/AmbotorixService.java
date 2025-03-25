@@ -128,7 +128,11 @@ public class AmbotorixService {
         //has bans slots check
         if (!lobbyService.hasAvailableBans(player)) {
             sendMessage(chatId, "Player " + player.getUserName() + " cant ban more leaders");
+            return;
         }
+
+        player.getBans().add(leader);
+        sendMessage(chatId, "Leader " + leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
     }
 
     // logic for unknown command
