@@ -1,5 +1,6 @@
 package vitbuk.com.Ambotorix.entities;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,6 +11,8 @@ public class Player {
 
     public Player(String userName) {
         this.userName = userName;
+        picks = new ArrayList<>();
+        bans = new ArrayList<>();
     }
 
     public String getUserName() {
