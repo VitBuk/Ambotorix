@@ -47,13 +47,8 @@ public class LobbyService {
         return lobby.getBannedLeaders().contains(leader);
     }
 
-    public boolean isRegistered(String userName) {
-        return lobby.getPlayers().stream()
-                .anyMatch(player -> player.getUserName().equals(userName));
-    }
-
-    public boolean hasAvailableBans(String userName) {
-        return lobby.getBanSize() > lobby.getPlayerByName(userName).getBans().size();
+    public boolean hasAvailableBans(Player player) {
+        return lobby.getBanSize() > player.getBans().size();
     }
 
     public String banLeader(String shortName, String userName) {

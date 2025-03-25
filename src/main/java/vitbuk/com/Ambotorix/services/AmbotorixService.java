@@ -114,7 +114,7 @@ public class AmbotorixService {
 
         // leader exists check
         Leader leader = leaderService.getLeaderByShortName(shortName);
-        if (leader == null ) {
+        if (leader == null) {
             sendMessage(chatId, "Unknown leader. User " + Command.LEADERS + " to see available description comamnd");
             return;
         }
@@ -125,22 +125,9 @@ public class AmbotorixService {
             return;
         }
 
-        if (leaderService.getShortNames().contains(shortName)) {
-            if (lobbyService.isBanned(shortName)) {
-                if (lobbyService.isRegistered(userName)){
-                    if (lobbyService.hasAvailableBans(userName)){
-
-                    } else {
-                        sendMessage(chatId, "Player " + userName + " cant ban more leaders");
-                    }
-                } else {
-                    sendMessage(chatId, "Player " + userName + " is not registered");
-                }
-            } else {
-                sendMessage(chatId, "Leader is already banned");
-            }
-        } else {
-            sendMessage(chatId, "Unknown leader. User " + Command.LEADERS + " to see available description comamnd");
+        //has bans slots check
+        if (!lobbyService.hasAvailableBans(player)) {
+            sendMessage(chatId, "Player " + player.getUserName() + " cant ban more leaders");
         }
     }
 
