@@ -7,7 +7,9 @@ public enum Command {
     HELP("/help"),
     LOBBY("/lobby"),
     LEADERS("/leaders"),
-    REGISTER("/register");
+    REGISTER("/register"),
+    RELOBBY("/relobby"),
+    RESTART("restart");
 
     private final String commandText;
 
