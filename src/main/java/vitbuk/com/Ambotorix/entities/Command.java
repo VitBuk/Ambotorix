@@ -9,7 +9,8 @@ public enum Command {
     LEADERS("/leaders"),
     REGISTER("/register"),
     RELOBBY("/relobby"),
-    RESTART("restart");
+    RESTART("/restart"),
+    TIME ("/time");
 
     private final String commandText;
 
