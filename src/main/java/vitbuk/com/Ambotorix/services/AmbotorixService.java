@@ -13,6 +13,10 @@ import vitbuk.com.Ambotorix.entities.Command;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Player;
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -126,6 +130,21 @@ public class AmbotorixService {
     //logic for command -> /register
     public void sendRegister(long chatId, String userName) {
         sendMessage(chatId, lobbyService.registerPlayer(userName));
+    }
+
+    public void sendTime(Long chatId) {
+        ZonedDateTime nowInRiga = ZonedDateTime.now(ZoneId.of("Europe/Riga"));
+        ZonedDateTime nowInMunich = ZonedDateTime.now(ZoneId.of("Europe/Berlin"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss, dd MMM yyyy");
+
+        String message = String.format("\uD83C\uDF07 Current time:\n"
+                        + "\uD83C\uDDF7\uD83C\uDDFA Riga: %s\n"
+                        + "\uD83C\uDDE9\uD83C\uDDEA Munich: %s",
+                nowInRiga.format(formatter),
+                nowInMunich.format(formatter)
+        );
+
+        sendMessage(chatId, message);
     }
     private void sendMessage(long chatId, String text) {
         SendMessage message = SendMessage.builder()
