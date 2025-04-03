@@ -138,7 +138,7 @@ public class AmbotorixService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss, dd MMM yyyy");
 
         String message = String.format("\uD83C\uDF07 Current time:\n"
-                        + "\uD83C\uDDF7\uD83C\uDDFA Riga: %s\n"
+                        + "\uD83C\uDDF1\uD83C\uDDFB Riga: %s\n"
                         + "\uD83C\uDDE9\uD83C\uDDEA Munich: %s",
                 nowInRiga.format(formatter),
                 nowInMunich.format(formatter)
