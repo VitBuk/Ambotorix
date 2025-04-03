@@ -52,6 +52,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
                             //case BANSIZE ->
                             //case PICKSIZE ->
                             //case PLAYERS ->
+                            case TIME -> ambotorixService.sendTime(chatId);
                             }
                         }, () -> {ambotorixService.sendUnknown(chatId);}
                 );
