@@ -130,6 +130,7 @@ public class AmbotorixService {
         sendMessage(chatId, lobbyService.registerPlayer(userName));
     }
 
+    //logic for command -> /time
     public void sendTime(Long chatId) {
         ZonedDateTime nowInRiga = ZonedDateTime.now(ZoneId.of("Europe/Riga"));
         ZonedDateTime nowInMunich = ZonedDateTime.now(ZoneId.of("Europe/Berlin"));
