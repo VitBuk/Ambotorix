@@ -9,6 +9,7 @@ import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateC
 import org.telegram.telegrambots.meta.api.objects.Update;
 import vitbuk.com.Ambotorix.commands.Command;
 import vitbuk.com.Ambotorix.commands.CommandFactory;
+import vitbuk.com.Ambotorix.commands.CommandNames;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
@@ -35,12 +36,18 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
     @Override
     public void consume(Update update) {
         String messageText = update.getMessage().getText();
-        Command command = commandFactory.getCommand(messageText);
+        Command command;
 
-        if (command != null) {
-            command.execute(update, ambotorixService);
+        if (messageText.startsWith(CommandNames.DESCRIPTION)){
+            command = commandFactory.getCommand(CommandNames.DESCRIPTION);
         } else {
+            command = commandFactory.getCommand(messageText);
+        }
+
+        if (command == null) {
             ambotorixService.sendUnknown(update.getMessage().getChatId());
+        } else {
+            command.execute(update, ambotorixService);
         }
     }
 

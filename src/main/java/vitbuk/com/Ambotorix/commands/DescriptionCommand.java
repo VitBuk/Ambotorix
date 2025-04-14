@@ -5,14 +5,17 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
-public class LeadersCommand implements Command {
+public class DescriptionCommand implements Command{
     @Override
     public String getCommandName() {
-        return CommandNames.LEADERS;
+        return CommandNames.DESCRIPTION;
     }
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        ambotorixService.sendLeaders(update.getMessage().getChatId());
+        String messageText = update.getMessage().getText();
+        String shortName = messageText.substring(getCommandName().length());
+
+        ambotorixService.sendDescription(update.getMessage().getChatId(), shortName);
     }
 }
