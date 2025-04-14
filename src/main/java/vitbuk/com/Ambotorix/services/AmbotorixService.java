@@ -123,7 +123,7 @@ public class AmbotorixService {
 
     // logic for unknown command
     public void sendUnknown(long chatId) {
-        sendMessage(chatId,"Unknown command. Use " + Command.HELP + " to get list of available commands." );
+        sendMessage(chatId,"Unknown command. Use " + CommandNames.HELP + " to get list of available commands." );
     }
 
     //logic for command -> /register
