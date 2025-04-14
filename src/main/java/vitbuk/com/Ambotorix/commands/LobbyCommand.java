@@ -6,10 +6,9 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
 public class LobbyCommand implements Command{
-    private static final String commandName =  "/lobby";
     @Override
     public String getCommandName() {
-        return commandName;
+        return CommandNames.LOBBY;
     }
 
     @Override
