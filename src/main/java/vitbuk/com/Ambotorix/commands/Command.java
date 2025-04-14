@@ -1,4 +1,4 @@
-package vitbuk.com.Ambotorix.entities;
+package vitbuk.com.Ambotorix.commands;
 
 import org.telegram.telegrambots.meta.api.objects.Update;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
