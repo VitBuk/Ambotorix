@@ -7,15 +7,18 @@ import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import vitbuk.com.Ambotorix.commands.CommandFactory;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
 public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 
-    AmbotorixService ambotorixService;
+    private final AmbotorixService ambotorixService;
+    private final CommandFactory commandFactory;
 
-    public Ambotorix(AmbotorixService ambotorixService) {
+    public Ambotorix(AmbotorixService ambotorixService, CommandFactory commandFactory) {
         this.ambotorixService = ambotorixService;
+        this.commandFactory = commandFactory;
     }
 
     @Override
@@ -30,32 +33,6 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
     @Override
     public void consume(Update update) {
-        String messageText = update.getMessage().getText();
-        long chatId = update.getMessage().getChatId();
-        String userName = update.getMessage().getChat().getUserName();
-
-        if (messageText.startsWith("/d_")) {
-            String shortName = messageText.substring(3).trim();
-            ambotorixService.sendDescription(chatId, shortName);
-        } else if (messageText.startsWith("/ban_")){
-            String shortName = messageText.substring(5).trim();
-            ambotorixService.sendBanLeader(chatId, userName, shortName);
-        } else {
-//            Command.fromCommandText(messageText).ifPresentOrElse(
-//                    command -> {
-//                        switch (command) {
-//                            case LOBBY -> ambotorixService.sendLobby(chatId, userName);
-//                            case LEADERS -> ambotorixService.sendLeaders(chatId);
-//                            case REGISTER -> ambotorixService.sendRegister(chatId, userName);
-//                            //case HELP ->
-//                            //case BANSIZE ->
-//                            //case PICKSIZE ->
-//                            //case PLAYERS ->
-//                            case TIME -> ambotorixService.sendTime(chatId);
-//                            }
-//                        }, () -> {ambotorixService.sendUnknown(chatId);}
-//                );
-        }
     }
 
 
