@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
+import vitbuk.com.Ambotorix.commands.CommandNames;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Player;
 import java.io.File;
@@ -78,7 +79,7 @@ public class AmbotorixService {
             }
         }
 
-        sendMessage(chatId, "Unknown leader. Use " + Command.LEADERS + " to see available description command");
+        sendMessage(chatId, "Unknown leader. Use " + CommandNames.LEADERS + " to see available description command");
     }
 
     //logic for command -> /ban_[shortName]
@@ -94,7 +95,7 @@ public class AmbotorixService {
         // leader exists check
         Leader leader = leaderService.getLeaderByShortName(shortName);
         if (leader == null) {
-            sendMessage(chatId, "Unknown leader. User " + Command.LEADERS + " to see available description comamnd");
+            sendMessage(chatId, "Unknown leader. User " + CommandNames.LEADERS + " to see available description comamnd");
             return;
         }
 
