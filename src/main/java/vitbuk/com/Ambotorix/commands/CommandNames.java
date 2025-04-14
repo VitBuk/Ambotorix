@@ -7,5 +7,6 @@ public final class CommandNames {
     public static final String REGISTER = "/register";
     public static final String TIME = "/time";
     public static final String DESCRIPTION = "/d_";
+    public static final String BAN = "/b_";
 
 }
