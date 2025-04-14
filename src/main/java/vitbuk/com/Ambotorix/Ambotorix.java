@@ -7,7 +7,6 @@ import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import vitbuk.com.Ambotorix.entities.Command;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
@@ -42,20 +41,20 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             String shortName = messageText.substring(5).trim();
             ambotorixService.sendBanLeader(chatId, userName, shortName);
         } else {
-            Command.fromCommandText(messageText).ifPresentOrElse(
-                    command -> {
-                        switch (command) {
-                            case LOBBY -> ambotorixService.sendLobby(chatId, userName);
-                            case LEADERS -> ambotorixService.sendLeaders(chatId);
-                            case REGISTER -> ambotorixService.sendRegister(chatId, userName);
-                            //case HELP ->
-                            //case BANSIZE ->
-                            //case PICKSIZE ->
-                            //case PLAYERS ->
-                            case TIME -> ambotorixService.sendTime(chatId);
-                            }
-                        }, () -> {ambotorixService.sendUnknown(chatId);}
-                );
+//            Command.fromCommandText(messageText).ifPresentOrElse(
+//                    command -> {
+//                        switch (command) {
+//                            case LOBBY -> ambotorixService.sendLobby(chatId, userName);
+//                            case LEADERS -> ambotorixService.sendLeaders(chatId);
+//                            case REGISTER -> ambotorixService.sendRegister(chatId, userName);
+//                            //case HELP ->
+//                            //case BANSIZE ->
+//                            //case PICKSIZE ->
+//                            //case PLAYERS ->
+//                            case TIME -> ambotorixService.sendTime(chatId);
+//                            }
+//                        }, () -> {ambotorixService.sendUnknown(chatId);}
+//                );
         }
     }
 
