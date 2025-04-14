@@ -12,7 +12,7 @@ public class CommandFactory {
             commandMap.put(c.getCommandName(), c);
         }
     }
-    
+
     public Command getCommand(String commandName){
         return commandMap.get(commandName);
     }
