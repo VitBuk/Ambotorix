@@ -40,6 +40,8 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
         if (messageText.startsWith(CommandNames.DESCRIPTION)){
             command = commandFactory.getCommand(CommandNames.DESCRIPTION);
+        } else if (messageText.startsWith(CommandNames.BAN)){
+            command = commandFactory.getCommand(CommandNames.BAN);
         } else {
             command = commandFactory.getCommand(messageText);
         }
