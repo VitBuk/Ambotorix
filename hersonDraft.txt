@@ -1,0 +1,11 @@
+HersonDraft rules:
+
+1.Banned are Tokugawa, Cyrus, Nader Shah, and Cree
+2.All players must submit 4 picks to the tournament organiser
+3.Please label these picks 1, 2, 3, and 4. With your first choice being pick 1
+4.Any picks chosen by 2 or more players will be banned, and 2nd priority picks then chosen for players who selected banned civs
+5.This process will repeat until all players have unique civs.
+If there are still duplicates after 4 choices the tournament organiser will flip to determine who receives their 4th pick,
+and the other player will be asked to pick again from the pool of remaining civs
+6.Picks will be hidden until the game has ended, so feel free to pick your comfort picks
+
