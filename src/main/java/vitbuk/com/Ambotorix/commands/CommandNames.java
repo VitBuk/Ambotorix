@@ -16,5 +16,11 @@ public final class CommandNames {
     public static final String TIME = "/time";
 
     //commands for host of the lobby
+    public static final String BANSIZE = "/bansize";
+    public static final String PICKSIZE = "/picksize";
+    public static final String MAPPOOL = "/mappool";
+    public static final String RELOBBY = "/relobby";
+    public static final String RESTART = "/restart";
+    public static final String STANDARD = "/standard";
 
 }
