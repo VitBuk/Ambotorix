@@ -10,18 +10,13 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 public class DescriptionCommand implements Command {
     @Override
     public String getPrefix() {
-        return null;
-    }
-
-    @Override
-    public String getCommandName() {
         return CommandConstants.DESCRIPTION;
     }
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
         String messageText = update.getMessage().getText();
-        String shortName = messageText.substring(getCommandName().length());
+        String shortName = messageText.substring(getPrefix().length());
 
         ambotorixService.sendDescription(update.getMessage().getChatId(), shortName);
     }

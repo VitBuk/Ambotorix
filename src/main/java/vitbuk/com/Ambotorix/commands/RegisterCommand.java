@@ -11,11 +11,6 @@ public class RegisterCommand implements Command {
 
     @Override
     public String getPrefix() {
-        return null;
-    }
-
-    @Override
-    public String getCommandName() {
         return CommandConstants.REGISTER;
     }
 

@@ -5,6 +5,5 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 public interface Command {
     String getPrefix();
-    String getCommandName();
     void execute(Update update, AmbotorixService ambotorixService);
 }

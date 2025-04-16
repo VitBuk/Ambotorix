@@ -15,12 +15,13 @@ public final class CommandConstants {
     public static final String REGISTER = "/register";
     public static final String TIME = "/time";
 
-    //commands for host of the lobby
-    public static final String BANSIZE = "/bansize";
-    public static final String PICKSIZE = "/picksize";
-    public static final String MAPPOOL = "/mappool";
+    //non-dynamic commands for the host of the lobby
     public static final String RELOBBY = "/relobby";
     public static final String RESTART = "/restart";
     public static final String STANDARD = "/standard";
 
+    //dynamic commands for the host of the lobby
+    public static final String BANSIZE = "/bansize";
+    public static final String PICKSIZE = "/picksize";
+    public static final String MAPPOOL = "/mappool";
 }

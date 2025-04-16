@@ -10,11 +10,6 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 public class BanCommand implements Command {
     @Override
     public String getPrefix() {
-        return null;
-    }
-
-    @Override
-    public String getCommandName() {
         return CommandConstants.BAN;
     }
 
