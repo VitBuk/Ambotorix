@@ -26,7 +26,7 @@ public final class CommandConstants {
     public static final String PICKSIZE = "/picksize";
     public static final String PICKSIZE_NAME = "/picksize [amount]";
     public static final String ADDMAP = "/addMap";
-    public static final String ADDMAP_NAME = "/addMap [amount]";\
+    public static final String ADDMAP_NAME = "/addMap [amount]";
     public static final String REMOVEMAP = "/removeMap [name]";
     public static final String REMOVEMAP_NAME = "/removeMap [name]";
 
