@@ -9,7 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
-import vitbuk.com.Ambotorix.commands.CommandNames;
+import vitbuk.com.Ambotorix.commands.structure.CommandNames;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Player;
 import java.io.File;

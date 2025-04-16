@@ -1,4 +1,4 @@
-package vitbuk.com.Ambotorix.commands;
+package vitbuk.com.Ambotorix.commands.structure;
 
 public final class CommandNames {
     //common prefix for all commands

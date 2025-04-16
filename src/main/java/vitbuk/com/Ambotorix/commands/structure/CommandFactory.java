@@ -1,6 +1,7 @@
-package vitbuk.com.Ambotorix.commands;
+package vitbuk.com.Ambotorix.commands.structure;
 
 import org.springframework.stereotype.Service;
+import vitbuk.com.Ambotorix.commands.structure.Command;
 
 import java.util.HashMap;
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.Map;
 
 @Service
 public class CommandFactory {
-    private final Map<String,Command> commandMap = new HashMap<>();
+    private final Map<String, Command> commandMap = new HashMap<>();
 
     public CommandFactory(List<Command> commands) {
         for (Command c : commands) {

@@ -7,9 +7,9 @@ import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import vitbuk.com.Ambotorix.commands.Command;
-import vitbuk.com.Ambotorix.commands.CommandFactory;
-import vitbuk.com.Ambotorix.commands.CommandNames;
+import vitbuk.com.Ambotorix.commands.structure.Command;
+import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
+import vitbuk.com.Ambotorix.commands.structure.CommandNames;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
