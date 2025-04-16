@@ -1,6 +1,6 @@
 package vitbuk.com.Ambotorix.commands.structure;
 
-public final class CommandNames {
+public final class CommandConstants {
     //common prefix for all commands
     public static final String PREFIX = "/";
 
