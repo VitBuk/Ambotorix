@@ -1,4 +1,6 @@
 package vitbuk.com.Ambotorix.commands.hostCommands;
 
-public interface HostCommand {
+import vitbuk.com.Ambotorix.commands.Command;
+
+public interface HostCommand extends Command {
 }
