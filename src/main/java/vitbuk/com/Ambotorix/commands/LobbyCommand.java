@@ -7,6 +7,11 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class LobbyCommand implements Command{
     @Override
+    public String getPrefix() {
+        return null;
+    }
+
+    @Override
     public String getCommandName() {
         return CommandNames.LOBBY;
     }
