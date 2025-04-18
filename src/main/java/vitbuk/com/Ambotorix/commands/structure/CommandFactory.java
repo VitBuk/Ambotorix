@@ -16,7 +16,7 @@ public class CommandFactory {
         }
     }
 
-    public Command getCommand(String commandName){
-        return commandMap.get(commandName);
+    public Command getCommand(String commandPrefix){
+        return commandMap.get(commandPrefix);
     }
 }

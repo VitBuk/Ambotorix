@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
+import vitbuk.com.Ambotorix.commands.structure.HostCommand;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
@@ -38,7 +39,15 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         String messageText = update.getMessage().getText();
         if (messageText == null || !messageText.startsWith(CommandConstants.PREFIX)) return;
 
+        // we look at the first part of the message before first whitespace, which always be a prefix of a command (or not a command)
+        String[] parts = messageText.split("\\s+");
+        Command command = commandFactory.getCommand(parts[0]);
 
+        long chatId = update.getMessage().getChatId();
+        if (command == null) {
+            ambotorixService.sendUnknown(chatId);
+            return;
+        }
     }
 
     @AfterBotRegistration
