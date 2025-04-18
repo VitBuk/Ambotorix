@@ -1,7 +1,6 @@
 package vitbuk.com.Ambotorix.commands.structure;
 
 import org.springframework.stereotype.Service;
-import vitbuk.com.Ambotorix.commands.structure.Command;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +12,7 @@ public class CommandFactory {
 
     public CommandFactory(List<Command> commands) {
         for (Command c : commands) {
-            commandMap.put(c.getCommandName(), c);
+            commandMap.put(c.getPrefix(), c);
         }
     }
 

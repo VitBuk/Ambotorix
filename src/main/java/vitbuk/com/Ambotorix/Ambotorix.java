@@ -36,24 +36,9 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
     @Override
     public void consume(Update update) {
         String messageText = update.getMessage().getText();
+        if (messageText == null || !messageText.startsWith(CommandConstants.PREFIX)) return;
 
-        if (messageText.startsWith(CommandConstants.PREFIX)) {
-            Command command;
 
-            if (messageText.startsWith(CommandConstants.DESCRIPTION)){
-                command = commandFactory.getCommand(CommandConstants.DESCRIPTION);
-            } else if (messageText.startsWith(CommandConstants.BAN)){
-                command = commandFactory.getCommand(CommandConstants.BAN);
-            } else {
-                command = commandFactory.getCommand(messageText);
-            }
-
-            if (command == null ) {
-                ambotorixService.sendUnknown(update.getMessage().getChatId());
-            } else {
-                command.execute(update, ambotorixService);
-            }
-        }
     }
 
     @AfterBotRegistration
