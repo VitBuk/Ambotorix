@@ -34,16 +34,12 @@ public class LobbyService {
         return "Player " + player.getUserName() + " added to lobby";
     }
 
-    public Player findPlayerByName(String userName){
-        if (lobby == null || lobby.getPlayers() == null) {
-            return null;
+    public boolean isRegistered(Player player) {
+        if (findPlayerByName(player.getUserName()) != null) {
+            return true;
         }
 
-        return lobby.getPlayers()
-                .stream()
-                .filter(p -> p.getUserName().equalsIgnoreCase(userName))
-                .findFirst()
-                .orElse(null);
+        return false;
     }
     public boolean isBanned(Leader leader) {
         return lobby.getBannedLeaders().contains(leader);
@@ -61,5 +57,15 @@ public class LobbyService {
         String hostUserName = lobby.getHost().getUserName();
         return hostUserName != null && hostUserName.equalsIgnoreCase(userName);
     }
+    public Player findPlayerByName(String userName){
+        if (lobby == null || lobby.getPlayers() == null) {
+            return null;
+        }
 
+        return lobby.getPlayers()
+                .stream()
+                .filter(p -> p.getUserName().equalsIgnoreCase(userName))
+                .findFirst()
+                .orElse(null);
+    }
 }

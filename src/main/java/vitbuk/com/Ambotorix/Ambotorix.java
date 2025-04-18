@@ -7,10 +7,7 @@ import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import vitbuk.com.Ambotorix.commands.structure.Command;
-import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
-import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
-import vitbuk.com.Ambotorix.commands.structure.HostCommand;
+import vitbuk.com.Ambotorix.commands.structure.*;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
@@ -56,7 +53,9 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             }
         }
 
-        
+        if (command instanceof PlayerCommand) {
+            if (
+        }
     }
 
     @AfterBotRegistration

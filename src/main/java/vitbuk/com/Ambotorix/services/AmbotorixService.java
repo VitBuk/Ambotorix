@@ -88,7 +88,7 @@ public class AmbotorixService {
         Player player = lobbyService.findPlayerByName(userName);
 
         // registration check
-        if (player == null) {
+        if (!lobbyService.isRegistered(player)) {
             sendMessage(chatId, "Player " + userName + " is not registered");
             return;
         }
