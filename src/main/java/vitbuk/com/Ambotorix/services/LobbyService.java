@@ -34,12 +34,8 @@ public class LobbyService {
         return "Player " + player.getUserName() + " added to lobby";
     }
 
-    public boolean isRegistered(Player player) {
-        if (findPlayerByName(player.getUserName()) != null) {
-            return true;
-        }
-
-        return false;
+    public boolean isRegistered(String userName) {
+        return lobby.getPlayersNames().contains(userName);
     }
     public boolean isBanned(Leader leader) {
         return lobby.getBannedLeaders().contains(leader);

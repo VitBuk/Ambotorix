@@ -88,7 +88,7 @@ public class AmbotorixService {
         Player player = lobbyService.findPlayerByName(userName);
 
         // registration check
-        if (!lobbyService.isRegistered(player)) {
+        if (!lobbyService.isRegistered(userName)) {
             sendMessage(chatId, "Player " + userName + " is not registered");
             return;
         }
@@ -154,6 +154,15 @@ public class AmbotorixService {
 
     public void sendNotAHost(Update update) {
         sendMessage(update.getMessage().getChatId(), "You can`t use host commands");
+    }
+
+    public boolean isRegistered(Update update) {
+        return lobbyService.isRegistered(update.getMessage().getChat().getUserName());
+    }
+
+    public void sendNotAPlayer(Update update) {
+        sendMessage(update.getMessage().getChatId(), "Unregistered players cant use that command. To register use: "  +
+                CommandConstants.REGISTER + " command");
     }
     private void sendMessage(long chatId, String text) {
         SendMessage message = SendMessage.builder()
