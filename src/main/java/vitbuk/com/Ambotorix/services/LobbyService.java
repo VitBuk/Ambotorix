@@ -56,4 +56,10 @@ public class LobbyService {
     public List<Leader> bannedLeaders() {
         return lobby.getBannedLeaders();
     }
+
+    public boolean isHost(String userName) {
+        String hostUserName = lobby.getHost().getUserName();
+        return hostUserName != null && hostUserName.equalsIgnoreCase(userName);
+    }
+
 }

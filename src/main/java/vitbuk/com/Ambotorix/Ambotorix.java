@@ -48,6 +48,15 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             ambotorixService.sendUnknown(chatId);
             return;
         }
+
+        if (command instanceof HostCommand) {
+            if (!ambotorixService.isHost(update)) {
+                ambotorixService.sendNotAHost(update);
+                return;
+            }
+        }
+
+        
     }
 
     @AfterBotRegistration

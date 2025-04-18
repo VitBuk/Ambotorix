@@ -6,6 +6,7 @@ import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
@@ -145,6 +146,14 @@ public class AmbotorixService {
         );
 
         sendMessage(chatId, message);
+    }
+
+    public boolean isHost(Update update){
+        return lobbyService.isHost(update.getMessage().getChat().getUserName());
+    }
+
+    public void sendNotAHost(Update update) {
+        sendMessage(update.getMessage().getChatId(), "You can`t use host commands");
     }
     private void sendMessage(long chatId, String text) {
         SendMessage message = SendMessage.builder()
