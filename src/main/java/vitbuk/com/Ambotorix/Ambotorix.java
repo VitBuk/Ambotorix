@@ -38,7 +38,9 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
         // we look at the first part of the message before first whitespace, which always be a prefix of a command (or not a command)
         String[] parts = messageText.split("\\s+");
-        Command command = commandFactory.getCommand(parts[0]);
+        System.out.println("parts[0]: [" + parts[0].trim() + "]");
+        Command command = commandFactory.getCommand(parts[0].trim());
+        commandFactory.alLCommands();
 
         long chatId = update.getMessage().getChatId();
         if (command == null) {
@@ -56,8 +58,12 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         if (command instanceof PlayerCommand) {
             if (!ambotorixService.isRegistered(update)){
                 ambotorixService.sendNotAPlayer(update);
+                return;
             }
+            System.out.println("checked as PlayerCommand");
         }
+
+        command.execute(update, ambotorixService);
     }
 
     @AfterBotRegistration

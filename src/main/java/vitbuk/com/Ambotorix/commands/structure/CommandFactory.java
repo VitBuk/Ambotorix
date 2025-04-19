@@ -17,6 +17,20 @@ public class CommandFactory {
     }
 
     public Command getCommand(String commandPrefix){
+        System.out.println("c: [" + commandMap.get(commandPrefix) + "]");
         return commandMap.get(commandPrefix);
+    }
+
+    public void alLCommands() {
+        System.out.println("keys:");
+        for (String s : commandMap.keySet()) {
+            System.out.println(s);
+        }
+        System.out.println("-------");
+        System.out.println("values:");
+        for (Command c : commandMap.values()) {
+            System.out.println(c.getPrefix());
+        }
+
     }
 }
