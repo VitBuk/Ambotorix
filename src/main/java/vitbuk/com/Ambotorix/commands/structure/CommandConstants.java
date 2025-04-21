@@ -31,6 +31,6 @@ public final class CommandConstants {
     public static final String REMOVEMAP_NAME = "/removeMap [name]";
 
     //dynamic commands for the registered players
-    public static final String BAN = "/ban ";
+    public static final String BAN = "/ban";
     public static final String BAN_NAME = "/ban [shortName]";
 }
