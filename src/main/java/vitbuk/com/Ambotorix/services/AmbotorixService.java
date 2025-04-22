@@ -85,42 +85,43 @@ public class AmbotorixService {
     }
 
     //logic for command -> /ban_[shortName]
-    public void sendBanLeader(long chatId, String userName, String shortName) {
-        Player player = lobbyService.findPlayerByName(userName);
+    public void sendBanLeader(Update update, String shortName) {
+        Player player = lobbyService.findPlayerByName(update.getMessage().getChat().getUserName());
 
         // registration check
-        if (!lobbyService.isRegistered(userName)) {
-            sendMessage(chatId, "Player " + userName + " is not registered");
+        if (!lobbyService.isRegistered(update.getMessage().getChat().getUserName())) {
+            sendMessage(update.getMessage().getChatId(), "Player " +
+                    update.getMessage().getChat().getUserName() + " is not registered");
             return;
         }
 
         // leader exists check
         Leader leader = leaderService.getLeaderByShortName(shortName);
         if (leader == null) {
-            sendMessage(chatId, "Unknown leader. User " + CommandConstants.LEADERS + " to see available description comamnd");
+            sendMessage(update.getMessage().getChatId(), "Unknown leader. User " + CommandConstants.LEADERS + " to see available description comamnd");
             return;
         }
 
         //already banned check
         if (lobbyService.isBanned(leader)) {
-            sendMessage(chatId, "Leader " + leader.getFullName() + " is already banned");
+            sendMessage(update.getMessage().getChatId(), "Leader " + leader.getFullName() + " is already banned");
             return;
         }
 
         //has bans slots check
         if (!lobbyService.hasAvailableBans(player)) {
-            sendMessage(chatId, "Player " + player.getUserName() + " cant ban more leaders");
+            sendMessage(update.getMessage().getChatId(), "Player " + player.getUserName() + " cant ban more leaders");
             return;
         }
 
         player.getBans().add(leader);
-        sendMessage(chatId, "Leader " + leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
+        sendMessage(update.getMessage().getChatId(), "Leader " + leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
 
         StringBuilder sb = new StringBuilder("Bans: \n");
         for (Leader l: lobbyService.bannedLeaders()) {
             sb.append(l.getFullName()).append(", ");
         }
-        sendMessage(chatId, sb.toString());
+        sendMessage(update.getMessage().getChatId(), sb.toString());
     }
 
     // logic for unknown command
