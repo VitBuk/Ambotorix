@@ -37,7 +37,7 @@ public class AmbotorixService {
         Player host = new Player(update.getMessage().getChat().getUserName());
         String message = lobbyService.createLobby(host);
 
-        sendMessage(update.getMessage().getChatId(), message);
+        sendMessage(update, message);
     }
 
     // logic for command -> /leaders
@@ -53,7 +53,7 @@ public class AmbotorixService {
             message.append("/d_").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");
         }
 
-        sendMessage(update.getMessage().getChatId(), message.toString());
+        sendMessage(update, message.toString());
     }
 
     //logic for command -> /d_[shortName]
@@ -76,12 +76,12 @@ public class AmbotorixService {
                 }
 
                 String formattedDescription = leaderService.formatDescription(l.getDescription());
-                sendMessage(update.getMessage().getChatId(), formattedDescription);
+                sendMessage(update, formattedDescription);
                 return;
             }
         }
 
-        sendMessage(update.getMessage().getChatId(), "Unknown leader. Use " + CommandConstants.LEADERS + " to see available description command");
+        sendMessage(update, "Unknown leader. Use " + CommandConstants.LEADERS + " to see available description command");
     }
 
     //logic for command -> /ban_[shortName]
@@ -90,7 +90,7 @@ public class AmbotorixService {
 
         // registration check
         if (!lobbyService.isRegistered(update.getMessage().getChat().getUserName())) {
-            sendMessage(update.getMessage().getChatId(), "Player " +
+            sendMessage(update, "Player " +
                     update.getMessage().getChat().getUserName() + " is not registered");
             return;
         }
@@ -98,40 +98,40 @@ public class AmbotorixService {
         // leader exists check
         Leader leader = leaderService.getLeaderByShortName(shortName);
         if (leader == null) {
-            sendMessage(update.getMessage().getChatId(), "Unknown leader. User " + CommandConstants.LEADERS + " to see available description comamnd");
+            sendMessage(update, "Unknown leader. User " + CommandConstants.LEADERS + " to see available description comamnd");
             return;
         }
 
         //already banned check
         if (lobbyService.isBanned(leader)) {
-            sendMessage(update.getMessage().getChatId(), "Leader " + leader.getFullName() + " is already banned");
+            sendMessage(update, "Leader " + leader.getFullName() + " is already banned");
             return;
         }
 
         //has bans slots check
         if (!lobbyService.hasAvailableBans(player)) {
-            sendMessage(update.getMessage().getChatId(), "Player " + player.getUserName() + " cant ban more leaders");
+            sendMessage(update, "Player " + player.getUserName() + " cant ban more leaders");
             return;
         }
 
         player.getBans().add(leader);
-        sendMessage(update.getMessage().getChatId(), "Leader " + leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
+        sendMessage(update, "Leader " + leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
 
         StringBuilder sb = new StringBuilder("Bans: \n");
         for (Leader l: lobbyService.bannedLeaders()) {
             sb.append(l.getFullName()).append(", ");
         }
-        sendMessage(update.getMessage().getChatId(), sb.toString());
+        sendMessage(update, sb.toString());
     }
 
     // logic for unknown command
-    public void sendUnknown(long chatId) {
-        sendMessage(chatId,"Unknown command. Use " + CommandConstants.HELP + " to get list of available commands." );
+    public void sendUnknown(Update update) {
+        sendMessage(update,"Unknown command. Use " + CommandConstants.HELP + " to get list of available commands." );
     }
 
     //logic for command -> /register
     public void sendRegister(Update update) {
-        sendMessage(update.getMessage().getChatId(), lobbyService.registerPlayer(update.getMessage().getChat().getUserName()));
+        sendMessage(update, lobbyService.registerPlayer(update.getMessage().getChat().getUserName()));
     }
 
     //logic for command -> /time
@@ -147,7 +147,7 @@ public class AmbotorixService {
                 nowInMunich.format(formatter)
         );
 
-        sendMessage(update.getMessage().getChatId(), message);
+        sendMessage(update, message);
     }
 
     public boolean isHost(Update update){
@@ -155,7 +155,7 @@ public class AmbotorixService {
     }
 
     public void sendNotAHost(Update update) {
-        sendMessage(update.getMessage().getChatId(), "You can`t use host commands");
+        sendMessage(update, "You can`t use host commands");
     }
 
     public boolean isRegistered(Update update) {
@@ -163,12 +163,12 @@ public class AmbotorixService {
     }
 
     public void sendNotAPlayer(Update update) {
-        sendMessage(update.getMessage().getChatId(), "Unregistered players cant use that command. To register use: "  +
+        sendMessage(update, "Unregistered players cant use that command. To register use: "  +
                 CommandConstants.REGISTER + " command");
     }
-    private void sendMessage(long chatId, String text) {
+    private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
-                .chatId(chatId)
+                .chatId(update.getMessage().getChatId())
                 .text(text)
                 .parseMode("HTML")
                 .build();
