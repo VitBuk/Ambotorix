@@ -15,6 +15,6 @@ public class TimeCommand implements Command {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        ambotorixService.sendTime(update.getMessage().getChatId());
+        ambotorixService.sendTime(update);
     }
 }

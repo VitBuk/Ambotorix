@@ -135,7 +135,7 @@ public class AmbotorixService {
     }
 
     //logic for command -> /time
-    public void sendTime(Long chatId) {
+    public void sendTime(Update update) {
         ZonedDateTime nowInRiga = ZonedDateTime.now(ZoneId.of("Europe/Riga"));
         ZonedDateTime nowInMunich = ZonedDateTime.now(ZoneId.of("Europe/Berlin"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss, dd MMM yyyy");
@@ -147,7 +147,7 @@ public class AmbotorixService {
                 nowInMunich.format(formatter)
         );
 
-        sendMessage(chatId, message);
+        sendMessage(update.getMessage().getChatId(), message);
     }
 
     public boolean isHost(Update update){
