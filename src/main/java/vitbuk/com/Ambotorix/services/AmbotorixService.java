@@ -41,7 +41,7 @@ public class AmbotorixService {
     }
 
     // logic for command -> /leaders
-    public void sendLeaders(long chatId) {
+    public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
         StringBuilder message = new StringBuilder();
@@ -53,7 +53,7 @@ public class AmbotorixService {
             message.append("/d_").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");
         }
 
-        sendMessage(chatId, message.toString());
+        sendMessage(update.getMessage().getChatId(), message.toString());
     }
 
     //logic for command -> /d_[shortName]

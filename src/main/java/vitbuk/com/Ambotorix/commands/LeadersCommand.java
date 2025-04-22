@@ -15,6 +15,6 @@ public class LeadersCommand implements Command {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        ambotorixService.sendLeaders(update.getMessage().getChatId());
+        ambotorixService.sendLeaders(update);
     }
 }
