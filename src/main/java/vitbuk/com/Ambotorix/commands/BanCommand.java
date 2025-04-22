@@ -23,7 +23,7 @@ public class BanCommand implements DynamicCommand, PlayerCommand {
         long chatId = update.getMessage().getChatId();
         String messageText = update.getMessage().getText();
         String userName = update.getMessage().getChat().getUserName();
-        String shortName = messageText.substring(CommandConstants.BAN.length());
+        String shortName = messageText.substring(CommandConstants.BAN.length()).trim();
 
         ambotorixService.sendBanLeader(chatId, userName, shortName);
     }
