@@ -57,13 +57,13 @@ public class AmbotorixService {
     }
 
     //logic for command -> /d_[shortName]
-    public void sendDescription (long chatId, String shortName){
+    public void sendDescription (Update update, String shortName){
         List<Leader> leaders = leaderService.getLeaders();
 
         for (Leader l : leaders) {
             if (l.getShortName().equalsIgnoreCase(shortName)) {
                 SendPhoto photoMessage = SendPhoto.builder()
-                        .chatId(chatId)
+                        .chatId(update.getMessage().getChatId())
                         .photo(new InputFile(new File(l.getPicPath())))
                         .caption("<b>" + l.getFullName() + "</b>")
                         .parseMode("HTML")
@@ -76,12 +76,12 @@ public class AmbotorixService {
                 }
 
                 String formattedDescription = leaderService.formatDescription(l.getDescription());
-                sendMessage(chatId, formattedDescription);
+                sendMessage(update.getMessage().getChatId(), formattedDescription);
                 return;
             }
         }
 
-        sendMessage(chatId, "Unknown leader. Use " + CommandConstants.LEADERS + " to see available description command");
+        sendMessage(update.getMessage().getChatId(), "Unknown leader. Use " + CommandConstants.LEADERS + " to see available description command");
     }
 
     //logic for command -> /ban_[shortName]

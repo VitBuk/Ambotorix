@@ -23,8 +23,6 @@ public class DescriptionCommand implements DynamicCommand {
         String messageText = update.getMessage().getText().replace("_", "");
         String shortName = messageText.substring(getPrefix().length()).trim();
 
-        System.out.println("ShortName: " + shortName);
-
-        ambotorixService.sendDescription(update.getMessage().getChatId(), shortName);
+        ambotorixService.sendDescription(update, shortName);
     }
 }
