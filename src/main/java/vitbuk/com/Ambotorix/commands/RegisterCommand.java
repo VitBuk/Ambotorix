@@ -16,6 +16,6 @@ public class RegisterCommand implements Command {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        ambotorixService.sendRegister(update.getMessage().getChatId(), update.getMessage().getChat().getUserName());
+        ambotorixService.sendRegister(update);
     }
 }

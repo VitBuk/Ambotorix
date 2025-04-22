@@ -130,8 +130,8 @@ public class AmbotorixService {
     }
 
     //logic for command -> /register
-    public void sendRegister(long chatId, String userName) {
-        sendMessage(chatId, lobbyService.registerPlayer(userName));
+    public void sendRegister(Update update) {
+        sendMessage(update.getMessage().getChatId(), lobbyService.registerPlayer(update.getMessage().getChat().getUserName()));
     }
 
     //logic for command -> /time
