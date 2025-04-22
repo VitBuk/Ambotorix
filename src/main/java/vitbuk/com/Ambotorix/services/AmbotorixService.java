@@ -46,7 +46,8 @@ public class AmbotorixService {
 
         StringBuilder message = new StringBuilder();
         message.append("Leaders: \n" );
-        message.append("<i>To get description use /d_[shortName] command</i> \n");
+        message.append("<i>To get description use " + CommandConstants.DESCRIPTION_NAME + " command or "
+                + CommandConstants.DESCRIPTION_NAME2 + " command </i> \n");
 
         for (Leader l : leaders) {
             message.append("/d_").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");

@@ -37,7 +37,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         if (messageText == null || !messageText.startsWith(CommandConstants.PREFIX)) return;
 
         // we look at the first part of the message before first whitespace, which always be a prefix of a command (or not a command)
-        String[] parts = messageText.split("\\s+");
+        String[] parts = messageText.split("[\\s_]+");
         System.out.println("parts[0]: [" + parts[0].trim() + "]");
         Command command = commandFactory.getCommand(parts[0].trim());
         commandFactory.alLCommands();

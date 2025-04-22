@@ -5,8 +5,9 @@ public final class CommandConstants {
     public static final String PREFIX = "/";
 
     //dynamic commands
-    public static final String DESCRIPTION = "/d_";
+    public static final String DESCRIPTION = "/d";
     public static final String DESCRIPTION_NAME = "/d_[shortName]";
+    public static final String DESCRIPTION_NAME2 = "/d [shortName]";
 
     //commands for everyone
     public static final String HELP = "/help";
