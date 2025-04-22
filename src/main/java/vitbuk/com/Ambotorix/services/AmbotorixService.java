@@ -33,11 +33,11 @@ public class AmbotorixService {
     }
 
     // logic for command -> /lobby
-    public void sendLobby(long chatId, String userName) {
-        Player host = new Player(userName);
+    public void sendLobby(Update update) {
+        Player host = new Player(update.getMessage().getChat().getUserName());
         String message = lobbyService.createLobby(host);
 
-        sendMessage(chatId, message);
+        sendMessage(update.getMessage().getChatId(), message);
     }
 
     // logic for command -> /leaders

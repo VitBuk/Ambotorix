@@ -15,6 +15,6 @@ public class LobbyCommand implements Command {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        ambotorixService.sendLobby(update.getMessage().getChatId(), update.getMessage().getChat().getUserName());
+        ambotorixService.sendLobby(update);
     }
 }
