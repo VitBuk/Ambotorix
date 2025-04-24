@@ -26,7 +26,7 @@ public enum CivMap {
     SPLINTERED_FRACTAL("Splintered Fractal"),
     TERRA("Terra"),
     TILTED_AXIS("Tilted Axis"),
-    TILTED_AXIS_WRAPAROUND("Tilted Axis Wraparound"),
+    TILTED_AXIS_WRAPAROUND("Tilted Axis Wrap around"),
     TRUE_START_LOCATION_EARTH_HUGE("True Start Location Earth Huge"),
     TRUE_START_LOCATION_MEDITERRANEAN("True Start Location Mediterranean"),
     WETLANDS("Wetlands");

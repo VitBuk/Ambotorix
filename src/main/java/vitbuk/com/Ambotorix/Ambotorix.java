@@ -40,7 +40,6 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         String[] parts = messageText.split("[\\s_]+");
         Command command = commandFactory.getCommand(parts[0].trim());
 
-        long chatId = update.getMessage().getChatId();
         if (command == null) {
             ambotorixService.sendUnknown(update);
             return;

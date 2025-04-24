@@ -13,6 +13,8 @@ public final class CommandConstants {
     public static final String HELP = "/help";
     public static final String LOBBY = "/lobby";
     public static final String LEADERS = "/leaders";
+    public static final String MAPLIST = "/maplist";
+    public static final String MAPPOLL = "/mappool";
     public static final String REGISTER = "/register";
     public static final String TIME = "/time";
 
@@ -27,7 +29,7 @@ public final class CommandConstants {
     public static final String PICKSIZE = "/picksize";
     public static final String PICKSIZE_NAME = "/picksize [amount]";
     public static final String ADDMAP = "/addMap";
-    public static final String ADDMAP_NAME = "/addMap [amount]";
+    public static final String ADDMAP_NAME = "/addMap [name]";
     public static final String REMOVEMAP = "/removeMap [name]";
     public static final String REMOVEMAP_NAME = "/removeMap [name]";
 
