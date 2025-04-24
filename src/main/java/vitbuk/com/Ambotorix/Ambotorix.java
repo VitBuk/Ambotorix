@@ -42,7 +42,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
         long chatId = update.getMessage().getChatId();
         if (command == null) {
-            ambotorixService.sendUnknown(chatId);
+            ambotorixService.sendUnknown(update);
             return;
         }
 
