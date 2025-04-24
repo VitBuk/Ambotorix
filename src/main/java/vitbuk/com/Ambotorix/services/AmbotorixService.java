@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
+import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Player;
 import java.io.File;
@@ -150,6 +151,17 @@ public class AmbotorixService {
         sendMessage(update, message);
     }
 
+    //logic for command -> /mappool
+    public void sendMappool(Update update) {
+        List<CivMap> mapPool =  lobbyService.getMappool();
+        StringBuilder sb = new StringBuilder("Map pool of the lobby:");
+        for (CivMap cm : mapPool) {
+            sb.append(cm.toString());
+        }
+
+        sendMessage(update, sb.toString());
+    }
+
     public boolean isHost(Update update){
         return lobbyService.isHost(update.getMessage().getChat().getUserName());
     }
@@ -166,6 +178,7 @@ public class AmbotorixService {
         sendMessage(update, "Unregistered players cant use that command. To register use: "  +
                 CommandConstants.REGISTER + " command");
     }
+
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(update.getMessage().getChatId())

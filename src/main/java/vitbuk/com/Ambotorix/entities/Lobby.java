@@ -108,7 +108,7 @@ public class Lobby {
 
     public void defaultSetup() {
         this.banSize = 1;
-        this.pickSize = 5;
+        this.pickSize = 6;
         this.mapPool = CivMap.STANDARD_MAPS;
     }
 }

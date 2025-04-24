@@ -1,6 +1,8 @@
 package vitbuk.com.Ambotorix.services;
 
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
@@ -63,5 +65,9 @@ public class LobbyService {
                 .filter(p -> p.getUserName().equalsIgnoreCase(userName))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public List<CivMap> getMappool() {
+        return lobby.getMapPool();
     }
 }

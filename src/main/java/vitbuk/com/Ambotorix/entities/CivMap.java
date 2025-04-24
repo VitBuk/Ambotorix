@@ -38,6 +38,7 @@ public enum CivMap {
     }
 
     public static final List<CivMap> STANDARD_MAPS = List.of(PANGEA, SEVEN_SEAS, HIGHLANDS, LAKES);
+
     @Override
     public String toString() {
         return displayName;
