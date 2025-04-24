@@ -4,7 +4,7 @@ public final class CommandConstants {
     /*Commands dump:
     *  /settings - reminder which settings to change if u installed civ again
     * /mods - reminder which mods are necessary to add
-    * 
+    *
     * */
 
     //common prefix for all commands
@@ -34,10 +34,10 @@ public final class CommandConstants {
     public static final String BANSIZE_NAME = "/bansize [amount]";
     public static final String PICKSIZE = "/picksize";
     public static final String PICKSIZE_NAME = "/picksize [amount]";
-    public static final String ADDMAP = "/map+";
-    public static final String ADDMAP_NAME = "/map+ [name]";
-    public static final String REMOVEMAP = "/map- [name]";
-    public static final String REMOVEMAP_NAME = "/map- [name]";
+    public static final String ADDMAP = "/mapAdd";
+    public static final String ADDMAP_NAME = "/mapAdd [name]";
+    public static final String REMOVEMAP = "/mapRemove [name]";
+    public static final String REMOVEMAP_NAME = "/mapRemove [name]";
 
     //dynamic commands for the registered players
     public static final String BAN = "/ban";

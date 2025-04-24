@@ -5,30 +5,30 @@ import java.util.List;
 public enum CivMap {
     ARCHIPELAGO("Archipelago"),
     CONTINENTS("Continents"),
-    CONTINENTS_AND_ISLANDS("Continents and Islands"),
+    CONTINENTS_AND_ISLANDS("ContinentsAndIslands"),
     EARTH("Earth"),
-    EARTH_HUGE("Earth Huge"),
-    FOUR_LEAF_CLOVER("4-Leaf Clover"),
+    EARTH_HUGE("EarthHuge"),
+    FOUR_LEAF_CLOVER("Clover"),
     FRACTAL("Fractal"),
     HIGHLANDS("Highlands"),
-    INLAND_SEA("Inland Sea"),
-    ISLAND_PLATES("Island Plates"),
+    INLAND_SEA("InlandSea"),
+    ISLAND_PLATES("IslandPlates"),
     LAKES("Lakes"),
-    MEDITERRANEAN_LARGE("Mediterranean Large"),
+    MEDITERRANEAN_LARGE("MediterraneanLarge"),
     MIRROR("Mirror"),
     PANGEA("Pangea"),
     PRIMORDIAL("Primordial"),
-    RICH_HIGHLANDS("Rich Highlands"),
-    SEVEN_SEAS("Seven Seas"),
+    RICH_HIGHLANDS("RichHighlands"),
+    SEVEN_SEAS("SevenSeas"),
     SHUFFLE("Shuffle"),
-    SIX_ARMED_SNOWFLAKE("6-Armed Snowflake"),
-    SMALL_CONTINENTS("Small Continents"),
-    SPLINTERED_FRACTAL("Splintered Fractal"),
+    SIX_ARMED_SNOWFLAKE("Snowflake"),
+    SMALL_CONTINENTS("SmallContinents"),
+    SPLINTERED_FRACTAL("SplinteredFractal"),
     TERRA("Terra"),
-    TILTED_AXIS("Tilted Axis"),
-    TILTED_AXIS_WRAPAROUND("Tilted Axis Wrap around"),
-    TRUE_START_LOCATION_EARTH_HUGE("True Start Location Earth Huge"),
-    TRUE_START_LOCATION_MEDITERRANEAN("True Start Location Mediterranean"),
+    TILTED_AXIS("TiltedAxis"),
+    TILTED_AXIS_WRAPAROUND("TiltedAxisWrapAround"),
+    TRUE_START_LOCATION_EARTH_HUGE("TrueStartLocationEarthHuge"),
+    TRUE_START_LOCATION_MEDITERRANEAN("TrueStartLocationMediterranean"),
     WETLANDS("Wetlands");
 
     private final String displayName;
@@ -44,4 +44,3 @@ public enum CivMap {
         return displayName;
     }
 }
-

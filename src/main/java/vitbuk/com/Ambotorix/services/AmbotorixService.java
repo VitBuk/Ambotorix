@@ -169,8 +169,8 @@ public class AmbotorixService {
 
     //logic for the command -> maplist
     public void sendMaplist(Update update) {
-        StringBuilder sb = new StringBuilder("Maps: ");
-        sb.append("<i> To add map to map pool of the lobby use " + CommandConstants.ADDMAP_NAME + " command </i> \n");
+        StringBuilder sb = new StringBuilder("Maps: \n");
+        sb.append("<i>To add map to the pool use " + CommandConstants.ADDMAP_NAME + " command </i> \n");
 
         for (CivMap cm : CivMap.values()) {
             sb.append(CommandConstants.ADDMAP).append("_").append(cm.toString()).append(" \n");
