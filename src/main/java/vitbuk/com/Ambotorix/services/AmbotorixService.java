@@ -167,6 +167,18 @@ public class AmbotorixService {
         sendMessage(update, sb.toString());
     }
 
+    //logic for the command -> maplist
+    public void sendMaplist(Update update) {
+        StringBuilder sb = new StringBuilder("Maps: ");
+        sb.append("<i> To add map to map pool of the lobby use " + CommandConstants.ADDMAP_NAME + " command </i> \n");
+
+        for (CivMap cm : CivMap.values()) {
+            sb.append(CommandConstants.ADDMAP).append("_").append(cm.toString()).append(" \n");
+        }
+
+        sendMessage(update, sb.toString());
+    }
+
     public boolean isHost(Update update){
         return lobbyService.isHost(update.getMessage().getChat().getUserName());
     }

@@ -1,6 +1,12 @@
 package vitbuk.com.Ambotorix.commands.structure;
 
 public final class CommandConstants {
+    /*Commands dump:
+    *  /settings - reminder which settings to change if u installed civ again
+    * /mods - reminder which mods are necessary to add
+    * 
+    * */
+
     //common prefix for all commands
     public static final String PREFIX = "/";
 
