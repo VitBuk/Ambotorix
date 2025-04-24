@@ -68,6 +68,10 @@ public class LobbyService {
     }
 
     public List<CivMap> getMappool() {
+        if (lobby == null || lobby.getMapPool() == null) {
+            return null;
+        }
+
         return lobby.getMapPool();
     }
 }

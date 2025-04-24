@@ -154,9 +154,14 @@ public class AmbotorixService {
     //logic for command -> /mappool
     public void sendMappool(Update update) {
         List<CivMap> mapPool =  lobbyService.getMappool();
-        StringBuilder sb = new StringBuilder("Map pool of the lobby:");
+        if (mapPool == null) {
+            sendMessage(update, "Lobby does not exist. To create lobby use " + CommandConstants.LOBBY + " command");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("Map pool of the lobby: \n");
         for (CivMap cm : mapPool) {
-            sb.append(cm.toString());
+            sb.append(cm.toString()).append("\n");
         }
 
         sendMessage(update, sb.toString());
