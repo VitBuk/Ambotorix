@@ -34,10 +34,10 @@ public final class CommandConstants {
     public static final String BANSIZE_NAME = "/bansize [amount]";
     public static final String PICKSIZE = "/picksize";
     public static final String PICKSIZE_NAME = "/picksize [amount]";
-    public static final String ADDMAP = "/mapAdd";
-    public static final String ADDMAP_NAME = "/mapAdd [name]";
-    public static final String REMOVEMAP = "/mapRemove";
-    public static final String REMOVEMAP_NAME = "/mapRemove [name]";
+    public static final String MAPADD = "/mapAdd";
+    public static final String MAPADD_NAME = "/mapAdd [name]";
+    public static final String MAPREMOVE = "/mapRemove";
+    public static final String MAPREMOVE_NAME = "/mapRemove [name]";
 
     //dynamic commands for the registered players
     public static final String BAN = "/ban";

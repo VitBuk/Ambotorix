@@ -109,6 +109,15 @@ public class Lobby {
     public void addMap(CivMap civMap) {
         mapPool.add(civMap);
     }
+
+    public boolean removeMap (CivMap civMap) {
+        if (mapPool.contains(civMap)) {
+            mapPool.remove(civMap);
+            return true;
+        }
+
+        return false;
+    }
     public void defaultSetup() {
         this.banSize = 1;
         this.pickSize = 6;

@@ -78,4 +78,8 @@ public class LobbyService {
     public void addMap(CivMap civMap) {
         lobby.addMap(civMap);
     }
+
+    public boolean removeMap (CivMap civMap) {
+        return  lobby.removeMap(civMap);
+    }
 }

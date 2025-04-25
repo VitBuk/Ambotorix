@@ -160,9 +160,9 @@ public class AmbotorixService {
         }
 
         StringBuilder sb = new StringBuilder("Map pool: \n");
-        sb.append("<i>To remove map from map pool use ").append(CommandConstants.REMOVEMAP_NAME).append(" command </i> \n");
+        sb.append("<i>To remove map from map pool use ").append(CommandConstants.MAPREMOVE_NAME).append(" command </i> \n");
         for (CivMap cm : mapPool) {
-            sb.append(CommandConstants.REMOVEMAP).append("_").append(cm.toString());
+            sb.append(CommandConstants.MAPREMOVE).append("_").append(cm.toString());
             sb.append(" → ").append(cm.toString()).append("\n");
         }
 
@@ -172,10 +172,10 @@ public class AmbotorixService {
     //logic for the command -> maplist
     public void sendMaplist(Update update) {
         StringBuilder sb = new StringBuilder("Maps: \n");
-        sb.append("<i>To add map to the pool use ").append(CommandConstants.ADDMAP_NAME).append( " command </i> \n");
+        sb.append("<i>To add map to the pool use ").append(CommandConstants.MAPADD_NAME).append( " command </i> \n");
 
         for (CivMap cm : CivMap.values()) {
-            sb.append(CommandConstants.ADDMAP).append("_").append(cm.toString());
+            sb.append(CommandConstants.MAPADD).append("_").append(cm.toString());
             sb.append(" → ").append(cm.toString()).append("\n");
         }
 
@@ -185,7 +185,7 @@ public class AmbotorixService {
     //logic for command -> /mapAdd [name]
     public void sendMapAdd(Update update, CivMap civMap) {
         if (civMap == null) {
-            sendMessage(update, "There is no such map. To list of available maps use " + CommandConstants.MAPLIST + " command.");
+            sendMessage(update, "There is no such map. To get list of available maps use " + CommandConstants.MAPLIST + " command.");
             return;
         }
 
@@ -193,6 +193,19 @@ public class AmbotorixService {
         sendMappool(update);
     }
 
+    public void sendMapRemove(Update update, CivMap civMap) {
+        if (civMap == null) {
+            sendMessage(update, "There is no such map.Check map pool by using " + CommandConstants.MAPPOLL + " command.");
+            return;
+        }
+
+        if (lobbyService.removeMap(civMap)) {
+            sendMappool(update);
+            return;
+        }
+
+        sendMessage(update, "There is no such map in map pool. Check map pool by using " + CommandConstants.MAPPOLL + " command");
+    }
     public boolean isHost(Update update){
         return lobbyService.isHost(update.getMessage().getChat().getUserName());
     }

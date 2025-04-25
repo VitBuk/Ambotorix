@@ -9,15 +9,10 @@ import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
-public class MapAddCommand implements HostCommand, DynamicCommand {
+public class MapRemoveCommand implements HostCommand, DynamicCommand {
     @Override
     public String getPrefix() {
-        return CommandConstants.MAPADD;
-    }
-
-    @Override
-    public String getName() {
-        return CommandConstants.MAPADD_NAME;
+        return CommandConstants.MAPREMOVE;
     }
 
     @Override
@@ -26,6 +21,11 @@ public class MapAddCommand implements HostCommand, DynamicCommand {
         String mapName = messageText.substring(getPrefix().length()).trim();
         CivMap civMap = CivMap.fromDisplayNameIgnoreCase(mapName).get();
 
-        ambotorixService.sendMapAdd(update, civMap);
+        ambotorixService.sendMapRemove(update, civMap);
+    }
+
+    @Override
+    public String getName() {
+        return CommandConstants.MAPREMOVE;
     }
 }
