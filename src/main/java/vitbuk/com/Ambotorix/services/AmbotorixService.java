@@ -159,9 +159,11 @@ public class AmbotorixService {
             return;
         }
 
-        StringBuilder sb = new StringBuilder("Map pool of the lobby: \n");
+        StringBuilder sb = new StringBuilder("Map pool: \n");
+        sb.append("<i>To remove map from map pool use ").append(CommandConstants.REMOVEMAP_NAME).append(" command </i> \n");
         for (CivMap cm : mapPool) {
-            sb.append(cm.toString()).append("\n");
+            sb.append(CommandConstants.REMOVEMAP).append("_").append(cm.toString());
+            sb.append(" → ").append(cm.toString()).append("\n");
         }
 
         sendMessage(update, sb.toString());
@@ -170,10 +172,11 @@ public class AmbotorixService {
     //logic for the command -> maplist
     public void sendMaplist(Update update) {
         StringBuilder sb = new StringBuilder("Maps: \n");
-        sb.append("<i>To add map to the pool use " + CommandConstants.ADDMAP_NAME + " command </i> \n");
+        sb.append("<i>To add map to the pool use ").append(CommandConstants.ADDMAP_NAME).append( " command </i> \n");
 
         for (CivMap cm : CivMap.values()) {
-            sb.append(CommandConstants.ADDMAP).append("_").append(cm.toString()).append(" \n");
+            sb.append(CommandConstants.ADDMAP).append("_").append(cm.toString());
+            sb.append(" → ").append(cm.toString()).append("\n");
         }
 
         sendMessage(update, sb.toString());

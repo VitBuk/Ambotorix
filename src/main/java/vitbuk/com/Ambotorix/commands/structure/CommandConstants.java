@@ -36,7 +36,7 @@ public final class CommandConstants {
     public static final String PICKSIZE_NAME = "/picksize [amount]";
     public static final String ADDMAP = "/mapAdd";
     public static final String ADDMAP_NAME = "/mapAdd [name]";
-    public static final String REMOVEMAP = "/mapRemove [name]";
+    public static final String REMOVEMAP = "/mapRemove";
     public static final String REMOVEMAP_NAME = "/mapRemove [name]";
 
     //dynamic commands for the registered players
