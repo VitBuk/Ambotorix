@@ -38,6 +38,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
         // we look at the first part of the message before first whitespace or underscore
         String[] parts = messageText.split("[\\s_]+");
+        System.out.println("part[0]:" + parts[0]);
         Command command = commandFactory.getCommand(parts[0].trim());
 
         if (command == null) {

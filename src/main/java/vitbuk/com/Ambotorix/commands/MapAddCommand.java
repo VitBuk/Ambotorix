@@ -23,6 +23,9 @@ public class MapAddCommand implements HostCommand, DynamicCommand {
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
         String messageText = update.getMessage().getText().replace("_", "");
-        CivMap map =
+        String mapName = messageText.substring(getPrefix().length()).trim();
+        CivMap map = CivMap.fromDisplayNameIgnoreCase(mapName).get();
+
+        am
     }
 }

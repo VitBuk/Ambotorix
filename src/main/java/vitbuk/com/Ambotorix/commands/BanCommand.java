@@ -21,7 +21,7 @@ public class BanCommand implements DynamicCommand, PlayerCommand {
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
         String messageText = update.getMessage().getText().replace("_", "");
-        String shortName = messageText.substring(CommandConstants.BAN.length()).trim();
+        String shortName = messageText.substring(getPrefix().length()).trim();
 
         ambotorixService.sendBanLeader(update, shortName);
     }

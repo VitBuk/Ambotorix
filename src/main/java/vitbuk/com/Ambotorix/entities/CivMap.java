@@ -51,5 +51,4 @@ public enum CivMap {
                 .filter(c -> c.displayName.equalsIgnoreCase(name))
                 .findFirst();
     }
-
 }
