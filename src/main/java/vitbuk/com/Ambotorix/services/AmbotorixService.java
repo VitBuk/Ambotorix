@@ -189,7 +189,8 @@ public class AmbotorixService {
             return;
         }
 
-        
+        lobbyService.addMap(civMap);
+        sendMappool(update);
     }
 
     public boolean isHost(Update update){

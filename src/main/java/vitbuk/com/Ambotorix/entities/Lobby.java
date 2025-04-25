@@ -106,9 +106,12 @@ public class Lobby {
         return getBannedLeaders().contains(leader);
     }
 
+    public void addMap(CivMap civMap) {
+        mapPool.add(civMap);
+    }
     public void defaultSetup() {
         this.banSize = 1;
         this.pickSize = 6;
-        this.mapPool = CivMap.STANDARD_MAPS;
+        this.mapPool = new ArrayList<>(CivMap.STANDARD_MAPS);
     }
 }

@@ -74,4 +74,8 @@ public class LobbyService {
 
         return lobby.getMapPool();
     }
+
+    public void addMap(CivMap civMap) {
+        lobby.addMap(civMap);
+    }
 }
