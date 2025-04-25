@@ -1,6 +1,8 @@
 package vitbuk.com.Ambotorix.entities;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public enum CivMap {
     ARCHIPELAGO("Archipelago"),
@@ -43,4 +45,11 @@ public enum CivMap {
     public String toString() {
         return displayName;
     }
+
+    public static Optional<CivMap> fromDisplayNameIgnoreCase(String name) {
+        return Arrays.stream(values())
+                .filter(c -> c.displayName.equalsIgnoreCase(name))
+                .findFirst();
+    }
+
 }
