@@ -182,6 +182,16 @@ public class AmbotorixService {
         sendMessage(update, sb.toString());
     }
 
+    //logic for command -> /mapAdd [name]
+    public void sendMapAdd(Update update, CivMap civMap) {
+        if (civMap == null) {
+            sendMessage(update, "There is no such map. To list of available maps use " + CommandConstants.MAPLIST + " command.");
+            return;
+        }
+
+        
+    }
+
     public boolean isHost(Update update){
         return lobbyService.isHost(update.getMessage().getChat().getUserName());
     }
