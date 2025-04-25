@@ -27,8 +27,8 @@ public enum CivMap {
     TERRA("Terra"),
     TILTED_AXIS("TiltedAxis"),
     TILTED_AXIS_WRAPAROUND("TiltedAxisWrapAround"),
-    TRUE_START_LOCATION_EARTH_HUGE("TrueStartLocationEarthHuge"),
-    TRUE_START_LOCATION_MEDITERRANEAN("TrueStartLocationMediterranean"),
+    TRUE_START_LOCATION_EARTH_HUGE("TrueStartEarthHuge"),
+    TRUE_START_LOCATION_MEDITERRANEAN("TrueStartMediterranean"),
     WETLANDS("Wetlands");
 
     private final String displayName;
