@@ -193,6 +193,7 @@ public class AmbotorixService {
         sendMappool(update);
     }
 
+    //logic for command /mapRemove [name]
     public void sendMapRemove(Update update, CivMap civMap) {
         if (civMap == null) {
             sendMessage(update, "There is no such map.Check map pool by using " + CommandConstants.MAPPOLL + " command.");
