@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Service;
 import vitbuk.com.Ambotorix.Constants;
+import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
@@ -56,7 +57,7 @@ public class LeaderService {
         if (hasEnoughLeaders(nonBannedLeaders.size(), lobby.getPickSize(), lobby.getPlayers().size())) {
             lobby = setLeadersPoolToPlayers(nonBannedLeaders, lobby);
         } else {
-            System.out.println("Not enough leaders to get uniq poll to every player!");
+            System.out.println("Not enough leaders to get uniq poll to every player! Recommend to change pickSize.");
         }
 
         return lobby;

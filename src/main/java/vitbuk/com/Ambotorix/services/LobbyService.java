@@ -93,4 +93,8 @@ public class LobbyService {
         Collections.shuffle(lobby.getMapPool());
         return lobby.getMapPool().get(0);
     }
+
+    public Lobby getLobby() {
+        return lobby;
+    }
 }

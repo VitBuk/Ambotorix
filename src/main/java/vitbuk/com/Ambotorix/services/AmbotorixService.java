@@ -137,7 +137,7 @@ public class AmbotorixService {
 
     //logic for command -> /start
     public void sendStart(Update update) {
-
+        sendSlotOrder(update);
     }
     //logic for command -> /time
     public void sendTime(Update update) {
@@ -228,6 +228,19 @@ public class AmbotorixService {
                 CommandConstants.REGISTER + " command");
     }
 
+    private void sendSlotOrder(Update update) {
+        List<Player> shuffledPlayers = lobbyService.randomSlotOrder();
+        if (shuffledPlayers == null ) {
+            sendMessage(update, "0 players registered");
+        }
+
+        StringBuilder sb = new StringBuilder("Slot order: \n");
+        for (int i=0; i<shuffledPlayers.size(); i++) {
+            sb.append(i).append(". ").append(shuffledPlayers.get(i));
+        }
+
+        sendMessage(update, sb.toString());
+    }
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(update.getMessage().getChatId())
