@@ -25,6 +25,7 @@ public final class CommandConstants {
     public static final String TIME = "/time";
 
     //non-dynamic commands for the host of the lobby
+    public static final String START = "/start";
     public static final String RELOBBY = "/relobby";
     public static final String RESTART = "/restart";
     public static final String STANDARD = "/standard";
