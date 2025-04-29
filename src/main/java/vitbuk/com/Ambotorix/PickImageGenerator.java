@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class PickImageGenerator {
 
-    public static File generateLeaderPickImage(Player player) {
+    private static File generateLeaderPickImage(Player player) {
         int iconSize = 80;
         int padding = 15;   // space between icons
         int maxTextWidth = iconSize - 5;

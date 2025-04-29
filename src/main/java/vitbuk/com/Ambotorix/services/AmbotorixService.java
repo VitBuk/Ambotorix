@@ -10,9 +10,11 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
+import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
+import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
 import java.io.File;
 import java.time.ZoneId;
@@ -138,6 +140,8 @@ public class AmbotorixService {
     //logic for command -> /start
     public void sendStart(Update update) {
         sendSlotOrder(update);
+        sendRandomMap(update);
+        sendPicks(update);
     }
     //logic for command -> /time
     public void sendTime(Update update) {
@@ -249,6 +253,20 @@ public class AmbotorixService {
         }
 
         sendMessage(update, "Map: " + randomMap.name());
+    }
+
+    private void sendPicks(Update update) {
+        Lobby lobby = lobbyService.getLobby();
+        lobby = leaderService.setLeadersPool(lobby);
+
+        for (Player p : lobby.getPlayers()) {
+            try{
+                telegramClient.execute(PickImageGenerator.createLeaderPickMessage(update.getMessage().getChatId(), p));
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
