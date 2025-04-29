@@ -13,6 +13,6 @@ public class StartCommand implements HostCommand {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-
+        ambotorixService.sendStart(update);
     }
 }

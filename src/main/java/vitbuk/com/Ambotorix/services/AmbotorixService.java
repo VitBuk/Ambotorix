@@ -135,6 +135,10 @@ public class AmbotorixService {
         sendMessage(update, lobbyService.registerPlayer(update.getMessage().getChat().getUserName()));
     }
 
+    //logic for command -> /start
+    public void sendStart(Update update) {
+
+    }
     //logic for command -> /time
     public void sendTime(Update update) {
         ZonedDateTime nowInRiga = ZonedDateTime.now(ZoneId.of("Europe/Riga"));

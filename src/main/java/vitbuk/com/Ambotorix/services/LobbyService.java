@@ -7,6 +7,7 @@ import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -81,5 +82,10 @@ public class LobbyService {
 
     public boolean removeMap (CivMap civMap) {
         return  lobby.removeMap(civMap);
+    }
+
+    public List<Player> randomSlotOrder() {
+        Collections.shuffle(lobby.getPlayers());
+        return lobby.getPlayers();
     }
 }
