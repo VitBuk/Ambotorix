@@ -64,7 +64,7 @@ public class LeaderService {
     }
 
     public String getShortNameMessage(Player player) {
-        StringBuilder sb = new StringBuilder("<b>").append(player.getUserName()).append(":</b>").append("\n");
+        StringBuilder sb = new StringBuilder();
         for (Leader leader : player.getPicks()) {
             sb.append("/d_").append(leader.getShortName()).append(" ");
         }

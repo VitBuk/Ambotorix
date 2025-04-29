@@ -260,13 +260,15 @@ public class AmbotorixService {
         lobby = leaderService.setLeadersPool(lobby);
 
         for (Player p : lobby.getPlayers()) {
+            sendMessage(update, "<b> " + p.getUserName() + ": </b>");
+            SendPhoto sendPhoto = PickImageGenerator.createLeaderPickMessage(update.getMessage().getChatId(), p);
+            sendPhoto.setCaption(leaderService.getShortNameMessage(p));
             try{
-                telegramClient.execute(PickImageGenerator.createLeaderPickMessage(update.getMessage().getChatId(), p));
+                telegramClient.execute(sendPhoto);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         }
-
     }
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
