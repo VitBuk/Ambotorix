@@ -88,4 +88,9 @@ public class LobbyService {
         Collections.shuffle(lobby.getPlayers());
         return lobby.getPlayers();
     }
+
+    public CivMap randomMap() {
+        Collections.shuffle(lobby.getMapPool());
+        return lobby.getMapPool().get(0);
+    }
 }
