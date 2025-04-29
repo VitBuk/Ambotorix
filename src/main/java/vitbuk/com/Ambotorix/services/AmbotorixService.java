@@ -241,6 +241,15 @@ public class AmbotorixService {
 
         sendMessage(update, sb.toString());
     }
+
+    private void sendRandomMap(Update update) {
+        CivMap randomMap = lobbyService.randomMap();
+        if (randomMap == null ) {
+            sendMessage(update, "There is no maps in the map pool");
+        }
+
+        sendMessage(update, "Map: " + randomMap.name());
+    }
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(update.getMessage().getChatId())
