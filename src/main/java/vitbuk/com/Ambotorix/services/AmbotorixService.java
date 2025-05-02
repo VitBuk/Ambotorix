@@ -23,6 +23,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AmbotorixService {
@@ -40,10 +41,14 @@ public class AmbotorixService {
     }
 
     public void sendHelp(Update update) {
-        List<Command> commands = commandFactory.getAll();
+        List<Command> commands = commandFactory.getAll()
+                .stream()
+                .sorted(Comparator.comparing(Command::getPrefix, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
         StringBuilder sb = new StringBuilder("Commands: \n");
         for (Command c : commands) {
-            sb.append(c.getPrefix() + " descrtipion \n");
+            sb.append(c.getPrefix() + " description \n");
         }
 
         sendMessage(update, sb.toString());
