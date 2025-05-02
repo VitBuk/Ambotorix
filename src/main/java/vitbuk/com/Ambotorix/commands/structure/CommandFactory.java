@@ -21,16 +21,7 @@ public class CommandFactory {
         return commandMap.get(commandPrefix);
     }
 
-    public void alLCommands() {
-        System.out.println("keys:");
-        for (String s : commandMap.keySet()) {
-            System.out.println(s);
-        }
-        System.out.println("-------");
-        System.out.println("values:");
-        for (Command c : commandMap.values()) {
-            System.out.println(c.getPrefix());
-        }
-
+    public List<Command> getAll() {
+        return List.of((Command) commandMap.values());
     }
 }

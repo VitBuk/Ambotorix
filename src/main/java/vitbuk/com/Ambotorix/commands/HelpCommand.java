@@ -15,6 +15,6 @@ public class HelpCommand implements Command {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-
+        ambotorixService.sendHelp(update);
     }
 }

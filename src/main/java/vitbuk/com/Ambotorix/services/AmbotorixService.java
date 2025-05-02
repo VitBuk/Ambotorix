@@ -11,7 +11,9 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
+import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
+import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -27,12 +29,24 @@ public class AmbotorixService {
     private final TelegramClient telegramClient;
     private final LeaderService leaderService;
     private final LobbyService lobbyService;
+    private final CommandFactory commandFactory;
 
     @Autowired
-    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService) {
+    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory) {
         this.telegramClient = new OkHttpTelegramClient(Constants.BOT_TOKEN);
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
+        this.commandFactory = commandFactory;
+    }
+
+    public void sendHelp(Update update) {
+        List<Command> commands = commandFactory.getAll();
+        StringBuilder sb = new StringBuilder("Commands: \n");
+        for (Command c : commands) {
+            sb.append(c.getPrefix() + " descrtipion");
+        }
+
+        sendMessage(update, sb.toString());
     }
 
     // logic for command -> /lobby
