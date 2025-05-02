@@ -240,7 +240,7 @@ public class AmbotorixService {
 
         StringBuilder sb = new StringBuilder("Slot order: \n");
         for (int i=0; i<shuffledPlayers.size(); i++) {
-            sb.append(i).append(". ").append(shuffledPlayers.get(i));
+            sb.append(i).append(". ").append(shuffledPlayers.get(i).getUserName());
         }
 
         sendMessage(update, sb.toString());
@@ -252,7 +252,7 @@ public class AmbotorixService {
             sendMessage(update, "There is no maps in the map pool");
         }
 
-        sendMessage(update, "Map: " + randomMap.name());
+        sendMessage(update, "Map: " + randomMap.toString());
     }
 
     private void sendPicks(Update update) {
