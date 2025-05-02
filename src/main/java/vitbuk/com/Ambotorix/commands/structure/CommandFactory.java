@@ -2,6 +2,7 @@ package vitbuk.com.Ambotorix.commands.structure;
 
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +23,6 @@ public class CommandFactory {
     }
 
     public List<Command> getAll() {
-        return List.of((Command) commandMap.values());
+        return new ArrayList<>(commandMap.values());
     }
 }

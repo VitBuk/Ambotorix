@@ -43,7 +43,7 @@ public class AmbotorixService {
         List<Command> commands = commandFactory.getAll();
         StringBuilder sb = new StringBuilder("Commands: \n");
         for (Command c : commands) {
-            sb.append(c.getPrefix() + " descrtipion");
+            sb.append(c.getPrefix() + " descrtipion \n");
         }
 
         sendMessage(update, sb.toString());
