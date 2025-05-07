@@ -16,11 +16,6 @@ public class MapAddCommand implements HostCommand, DynamicCommand {
     }
 
     @Override
-    public String getName() {
-        return CommandConstants.MAPADD_NAME;
-    }
-
-    @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
         String messageText = update.getMessage().getText().replace("_", "");
         String mapName = messageText.substring(getInfo().length()).trim();

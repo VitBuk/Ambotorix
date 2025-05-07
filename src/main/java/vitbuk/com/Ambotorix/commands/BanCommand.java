@@ -13,10 +13,6 @@ public class BanCommand implements DynamicCommand, PlayerCommand {
     public String getInfo() {
         return CommandConstants.BAN;
     }
-    @Override
-    public String getName() {
-        return CommandConstants.BAN_NAME;
-    }
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {

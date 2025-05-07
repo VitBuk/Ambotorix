@@ -23,9 +23,4 @@ public class MapRemoveCommand implements HostCommand, DynamicCommand {
 
         ambotorixService.sendMapRemove(update, civMap);
     }
-
-    @Override
-    public String getName() {
-        return CommandConstants.MAPREMOVE;
-    }
 }
