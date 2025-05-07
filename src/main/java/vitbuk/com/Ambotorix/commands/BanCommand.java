@@ -11,9 +11,9 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class BanCommand implements DynamicCommand, PlayerCommand {
     private static final CommandInfo INFO = new CommandInfo(
-            "/time",
-            "/time",
-            "Shows current time in Riga and Munich");
+            "/ban",
+            "/ban [shortName]",
+            "Ban leader");
     @Override
     public CommandInfo getInfo() {
         return INFO;
@@ -22,7 +22,7 @@ public class BanCommand implements DynamicCommand, PlayerCommand {
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
         String messageText = update.getMessage().getText().replace("_", "");
-        String shortName = messageText.substring(getInfo().length()).trim();
+        String shortName = messageText.substring(getInfo().prefix().length()).trim();
 
         ambotorixService.sendBanLeader(update, shortName);
     }
