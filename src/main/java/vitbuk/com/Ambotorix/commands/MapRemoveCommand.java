@@ -11,14 +11,14 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class MapRemoveCommand implements HostCommand, DynamicCommand {
     @Override
-    public String getPrefix() {
+    public String getInfo() {
         return CommandConstants.MAPREMOVE;
     }
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
         String messageText = update.getMessage().getText().replace("_", "");
-        String mapName = messageText.substring(getPrefix().length()).trim();
+        String mapName = messageText.substring(getInfo().length()).trim();
         CivMap civMap = CivMap.fromDisplayNameIgnoreCase(mapName).get();
 
         ambotorixService.sendMapRemove(update, civMap);

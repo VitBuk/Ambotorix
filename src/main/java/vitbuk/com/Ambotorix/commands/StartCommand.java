@@ -9,7 +9,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class StartCommand implements HostCommand {
     @Override
-    public String getPrefix() {
+    public String getInfo() {
         return CommandConstants.START;
     }
 

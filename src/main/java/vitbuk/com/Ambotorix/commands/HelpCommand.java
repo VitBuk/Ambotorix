@@ -9,7 +9,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class HelpCommand implements Command {
     @Override
-    public String getPrefix() {
+    public String getInfo() {
         return CommandConstants.HELP;
     }
 

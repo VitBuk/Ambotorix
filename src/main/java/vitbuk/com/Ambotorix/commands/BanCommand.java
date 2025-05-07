@@ -10,7 +10,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class BanCommand implements DynamicCommand, PlayerCommand {
     @Override
-    public String getPrefix() {
+    public String getInfo() {
         return CommandConstants.BAN;
     }
     @Override
@@ -21,7 +21,7 @@ public class BanCommand implements DynamicCommand, PlayerCommand {
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
         String messageText = update.getMessage().getText().replace("_", "");
-        String shortName = messageText.substring(getPrefix().length()).trim();
+        String shortName = messageText.substring(getInfo().length()).trim();
 
         ambotorixService.sendBanLeader(update, shortName);
     }

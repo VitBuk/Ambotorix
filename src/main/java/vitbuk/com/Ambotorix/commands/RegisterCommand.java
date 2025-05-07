@@ -10,7 +10,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 public class RegisterCommand implements Command {
 
     @Override
-    public String getPrefix() {
+    public String getInfo() {
         return CommandConstants.REGISTER;
     }
 

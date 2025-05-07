@@ -13,7 +13,7 @@ public class CommandFactory {
 
     public CommandFactory(List<Command> commands) {
         for (Command c : commands) {
-            commandMap.put(c.getPrefix(), c);
+            commandMap.put(c.getInfo(), c);
         }
     }
 
