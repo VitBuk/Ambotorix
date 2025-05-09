@@ -14,6 +14,7 @@ import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
+import vitbuk.com.Ambotorix.commands.structure.CommandInfo;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -46,9 +47,13 @@ public class AmbotorixService {
                 .sorted(Comparator.comparing(c -> c.getInfo().prefix(), String.CASE_INSENSITIVE_ORDER))
                 .toList();
 
-        StringBuilder sb = new StringBuilder("Commands: \n");
+        StringBuilder sb = new StringBuilder("Commands:\n");
         for (Command c : commands) {
-            sb.append(c.getInfo() + " description \n");
+            CommandInfo info = c.getInfo();
+            sb.append(info.name())
+                    .append(" – ")
+                    .append(info.description())
+                    .append('\n');
         }
 
         sendMessage(update, sb.toString());
