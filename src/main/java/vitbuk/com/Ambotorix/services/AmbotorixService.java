@@ -39,10 +39,11 @@ public class AmbotorixService {
         this.commandFactory = commandFactory;
     }
 
+    //logic for command -> help
     public void sendHelp(Update update) {
         List<Command> commands = commandFactory.getAll()
                 .stream()
-                .sorted(Comparator.comparing(Command::getInfo, String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator.comparing(c -> c.getInfo().prefix(), String.CASE_INSENSITIVE_ORDER))
                 .toList();
 
         StringBuilder sb = new StringBuilder("Commands: \n");
