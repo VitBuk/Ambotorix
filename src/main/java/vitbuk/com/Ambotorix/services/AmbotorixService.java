@@ -235,7 +235,7 @@ public class AmbotorixService {
     //logic for command -> /mapAdd [name]
     public void sendMapAdd(Update update, CivMap civMap) {
         if (civMap == null) {
-            sendMessage(update, "There is no such map. To get list of available maps use " + CommandConstants.MAPLIST + " command.");
+            sendMessage(update, "There is no such map. To get list of available maps use " + commandFactory.infoOf(MapAddCommand.class).name() + " command.");
             return;
         }
 
@@ -284,7 +284,9 @@ public class AmbotorixService {
 
         StringBuilder sb = new StringBuilder("Slot order: \n");
         for (int i=0; i<shuffledPlayers.size(); i++) {
-            sb.append(i).append(". ").append(shuffledPlayers.get(i).getUserName());
+            sb.append(i)
+                    .append(". ")
+                    .append(shuffledPlayers.get(i).getUserName());
         }
 
         sendMessage(update, sb.toString());
