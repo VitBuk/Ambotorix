@@ -246,7 +246,7 @@ public class AmbotorixService {
     //logic for command /mapRemove [name]
     public void sendMapRemove(Update update, CivMap civMap) {
         String mappoolName = commandFactory.infoOf(MappoolCommand.class).name();
-        
+
         if (civMap == null) {
             sendMessage(update, "There is no such map.Check map pool by using " + mappoolName + " command.");
             return;
@@ -273,7 +273,7 @@ public class AmbotorixService {
 
     public void sendNotAPlayer(Update update) {
         sendMessage(update, "Unregistered players cant use that command. To register use: "  +
-                CommandConstants.REGISTER + " command");
+                commandFactory.infoOf(RegisterCommand.class).name() + " command");
     }
 
     private void sendSlotOrder(Update update) {
