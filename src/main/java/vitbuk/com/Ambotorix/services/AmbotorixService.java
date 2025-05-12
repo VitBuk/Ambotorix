@@ -131,7 +131,7 @@ public class AmbotorixService {
         // leader exists check
         Leader leader = leaderService.getLeaderByShortName(shortName);
         if (leader == null) {
-            sendMessage(update, "Unknown leader. User " + CommandConstants.LEADERS + " to see available description comamnd");
+            sendMessage(update, "Unknown leader. User " + commandFactory.infoOf(LeadersCommand.class).name() + " to see available description comamnd");
             return;
         }
 
