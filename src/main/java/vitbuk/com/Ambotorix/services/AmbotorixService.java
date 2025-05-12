@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
+import vitbuk.com.Ambotorix.commands.DescriptionCommand;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
@@ -71,13 +72,17 @@ public class AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        StringBuilder message = new StringBuilder();
-        message.append("Leaders: \n" );
-        message.append("<i>To get description use " + CommandConstants.DESCRIPTION_NAME + " command or "
-                + CommandConstants.DESCRIPTION_NAME2 + " command </i> \n");
+        StringBuilder message = new StringBuilder("Leaders: \n");
+        message.append("<i>To get description use ")
+                .append(commandFactory.infoOf(DescriptionCommand.class).name())
+                .append(" command </i> \n");
 
         for (Leader l : leaders) {
-            message.append("/d_").append(l.getShortName()).append(" → ").append(l.getFullName()).append("\n");
+            message.append("/d_")
+                    .append(l.getShortName())
+                    .append(" → ")
+                    .append(l.getFullName())
+                    .append("\n");
         }
 
         sendMessage(update, message.toString());
