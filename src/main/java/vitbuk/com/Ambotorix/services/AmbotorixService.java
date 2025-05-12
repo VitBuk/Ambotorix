@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.DescriptionCommand;
+import vitbuk.com.Ambotorix.commands.HelpCommand;
 import vitbuk.com.Ambotorix.commands.LeadersCommand;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
@@ -118,7 +119,7 @@ public class AmbotorixService {
     }
 
     //logic for command -> /ban_[shortName]
-    public void sendBanLeader(Update update, String shortName) {
+    public void sendBan(Update update, String shortName) {
         Player player = lobbyService.findPlayerByName(update.getMessage().getChat().getUserName());
 
         // registration check
@@ -159,7 +160,7 @@ public class AmbotorixService {
 
     // logic for unknown command
     public void sendUnknown(Update update) {
-        sendMessage(update,"Unknown command. Use " + CommandConstants.HELP + " to get list of available commands." );
+        sendMessage(update,"Unknown command. Use " + commandFactory.infoOf(HelpCommand.class).name() + " to get list of available commands." );
     }
 
     //logic for command -> /register
