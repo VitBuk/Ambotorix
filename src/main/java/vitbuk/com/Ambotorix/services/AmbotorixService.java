@@ -245,8 +245,10 @@ public class AmbotorixService {
 
     //logic for command /mapRemove [name]
     public void sendMapRemove(Update update, CivMap civMap) {
+        String mappoolName = commandFactory.infoOf(MappoolCommand.class).name();
+        
         if (civMap == null) {
-            sendMessage(update, "There is no such map.Check map pool by using " + CommandConstants.MAPPOLL + " command.");
+            sendMessage(update, "There is no such map.Check map pool by using " + mappoolName + " command.");
             return;
         }
 
@@ -255,7 +257,7 @@ public class AmbotorixService {
             return;
         }
 
-        sendMessage(update, "There is no such map in map pool. Check map pool by using " + CommandConstants.MAPPOLL + " command");
+        sendMessage(update, "There is no such map in map pool. Check map pool by using " + mappoolName + " command");
     }
     public boolean isHost(Update update){
         return lobbyService.isHost(update.getMessage().getChat().getUserName());
