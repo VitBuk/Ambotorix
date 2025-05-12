@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.DescriptionCommand;
+import vitbuk.com.Ambotorix.commands.LeadersCommand;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
@@ -113,7 +114,7 @@ public class AmbotorixService {
             }
         }
 
-        sendMessage(update, "Unknown leader. Use " + CommandConstants.LEADERS + " to see available description command");
+        sendMessage(update, "Unknown leader. Use " + commandFactory.infoOf(LeadersCommand.class).name() + " to see available description command");
     }
 
     //logic for command -> /ban_[shortName]
