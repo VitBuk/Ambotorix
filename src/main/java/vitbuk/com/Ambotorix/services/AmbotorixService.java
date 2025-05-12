@@ -216,11 +216,17 @@ public class AmbotorixService {
     //logic for the command -> maplist
     public void sendMaplist(Update update) {
         StringBuilder sb = new StringBuilder("Maps: \n");
-        sb.append("<i>To add map to the pool use ").append(CommandConstants.MAPADD_NAME).append( " command </i> \n");
+        sb.append("<i>To add map to the pool use ")
+                .append(commandFactory.infoOf(MapAddCommand.class).name())
+                .append( " command </i> \n");
 
         for (CivMap cm : CivMap.values()) {
-            sb.append(CommandConstants.MAPADD).append("_").append(cm.toString());
-            sb.append(" → ").append(cm.toString()).append("\n");
+            sb.append(commandFactory.infoOf(MapAddCommand.class).name())
+                    .append("_")
+                    .append(cm.toString())
+                    .append(" → ")
+                    .append(cm.toString())
+                    .append("\n");
         }
 
         sendMessage(update, sb.toString());
