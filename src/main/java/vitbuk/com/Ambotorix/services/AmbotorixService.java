@@ -13,7 +13,6 @@ import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.*;
 import vitbuk.com.Ambotorix.commands.structure.Command;
-import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.commands.structure.CommandInfo;
 import vitbuk.com.Ambotorix.entities.CivMap;

@@ -34,7 +34,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
     @Override
     public void consume(Update update) {
         String messageText = update.getMessage().getText();
-        if (messageText == null || !messageText.startsWith(CommandConstants.PREFIX)) return;
+        if (messageText == null || !messageText.startsWith("/")) return;
 
         // we look at the first part of the message before first whitespace or underscore
         String[] parts = messageText.split("[\\s_]+");

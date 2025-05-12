@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Service;
 import vitbuk.com.Ambotorix.Constants;
-import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
