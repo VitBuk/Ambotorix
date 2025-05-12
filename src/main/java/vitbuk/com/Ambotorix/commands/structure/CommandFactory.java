@@ -29,10 +29,10 @@ public class CommandFactory {
     }
 
     public <T extends Command> CommandInfo infoOf(Class<T> type) {
-        Command bean = typeMap.get(type);
-        if (bean == null) {
+        Command command = typeMap.get(type);
+        if (command == null) {
             throw new IllegalArgumentException("No command registered for " + type.getSimpleName());
         }
-        return bean.getInfo();
+        return command.getInfo();
     }
 }
