@@ -11,9 +11,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
-import vitbuk.com.Ambotorix.commands.DescriptionCommand;
-import vitbuk.com.Ambotorix.commands.HelpCommand;
-import vitbuk.com.Ambotorix.commands.LeadersCommand;
+import vitbuk.com.Ambotorix.commands.*;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandConstants;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
@@ -194,15 +192,22 @@ public class AmbotorixService {
     public void sendMappool(Update update) {
         List<CivMap> mapPool =  lobbyService.getMappool();
         if (mapPool == null) {
-            sendMessage(update, "Lobby does not exist. To create lobby use " + CommandConstants.LOBBY + " command");
+            sendMessage(update, "Lobby does not exist. To create lobby use " + commandFactory.infoOf(LobbyCommand.class).name() + " command");
             return;
         }
 
         StringBuilder sb = new StringBuilder("Map pool: \n");
-        sb.append("<i>To remove map from map pool use ").append(CommandConstants.MAPREMOVE_NAME).append(" command </i> \n");
+        sb.append("<i>To remove map from map pool use ")
+                .append(commandFactory.infoOf(MapRemoveCommand.class).name())
+                .append(" command </i> \n");
+
         for (CivMap cm : mapPool) {
-            sb.append(CommandConstants.MAPREMOVE).append("_").append(cm.toString());
-            sb.append(" → ").append(cm.toString()).append("\n");
+            sb.append(commandFactory.infoOf(MapAddCommand.class).name())
+                    .append("_")
+                    .append(cm.toString())
+                    .append(" → ")
+                    .append(cm.toString())
+                    .append("\n");
         }
 
         sendMessage(update, sb.toString());
