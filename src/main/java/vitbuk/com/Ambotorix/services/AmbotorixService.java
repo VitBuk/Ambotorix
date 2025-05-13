@@ -264,6 +264,14 @@ public class AmbotorixService {
         return lobbyService.isHost(update.getMessage().getChat().getUserName());
     }
 
+    public boolean hasLobby(Update update) {
+        return lobbyService.getLobby() != null;
+    }
+
+    public void sendNoLobby(Update update) {
+        sendMessage(update, "Lobby is not up. Use command " + commandFactory.infoOf(LobbyCommand.class).name() + " to create new lobby");
+    }
+
     public void sendNotAHost(Update update) {
         sendMessage(update, "You can`t use host commands");
     }

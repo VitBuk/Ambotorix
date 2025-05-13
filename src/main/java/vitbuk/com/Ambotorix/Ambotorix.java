@@ -47,6 +47,11 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         }
 
         if (command instanceof HostCommand) {
+            if (!ambotorixService.hasLobby(update)) {
+                ambotorixService.sendNoLobby(update);
+                return;
+            }
+
             if (!ambotorixService.isHost(update)) {
                 ambotorixService.sendNotAHost(update);
                 return;
