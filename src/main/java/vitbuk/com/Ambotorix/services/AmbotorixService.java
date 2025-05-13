@@ -234,7 +234,9 @@ public class AmbotorixService {
     //logic for command -> /mapAdd [name]
     public void sendMapAdd(Update update, CivMap civMap) {
         if (civMap == null) {
-            sendMessage(update, "There is no such map. To get list of available maps use " + commandFactory.infoOf(MapAddCommand.class).name() + " command.");
+            sendMessage(update, "There is no such map. To get list of available maps use "
+                    + commandFactory.infoOf(MapAddCommand.class).name()
+                    + " command.");
             return;
         }
 

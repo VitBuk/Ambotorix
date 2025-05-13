@@ -53,6 +53,9 @@ public class LobbyService {
     }
 
     public boolean isHost(String userName) {
+        if (lobby == null) {
+
+        }
         String hostUserName = lobby.getHost().getUserName();
         return hostUserName != null && hostUserName.equalsIgnoreCase(userName);
     }
