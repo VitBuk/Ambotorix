@@ -23,7 +23,6 @@ import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
 import java.io.File;
-import java.sql.SQLOutput;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -93,9 +92,12 @@ public class AmbotorixService {
                 .keyboard(rows)
                 .build();
 
+        StringBuilder sb = new StringBuilder("Leaders: \n");
+        sb.append("<i> To get description use /d_[shortName] command or buttons below: </i>");
+
         SendMessage message  = SendMessage.builder()
                 .chatId(update.getMessage().getFrom().getId())
-                .text("Leaders: ")
+                .text(sb.toString())
                 .replyMarkup(markup)
                 .parseMode("HTML")
                 .build();
