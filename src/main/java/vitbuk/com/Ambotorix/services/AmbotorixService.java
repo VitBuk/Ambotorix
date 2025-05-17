@@ -119,7 +119,7 @@ public class AmbotorixService {
         for (Leader l : leaders) {
             if (l.getShortName().equalsIgnoreCase(shortName)) {
                 SendPhoto photoMessage = SendPhoto.builder()
-                        .chatId(update.getMessage().getFrom().getId())
+                        .chatId(extractChatId(update))
                         .photo(new InputFile(new File(l.getPicPath())))
                         .caption("<b>" + l.getFullName() + "</b>")
                         .parseMode("HTML")
@@ -148,7 +148,7 @@ public class AmbotorixService {
         try {
             telegramClient.execute(
                     AnswerCallbackQuery.builder()
-                            .callbackQueryId(callbackId)
+                            .callbackQueryId(extractChatId(update))
                             .build()
             );
         } catch (TelegramApiException e) {
@@ -401,5 +401,17 @@ public class AmbotorixService {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private String extractChatId(Update update) {
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery()
+                    .getMessage()
+                    .getChatId()
+                    .toString();
+        }
+        return update.getMessage()
+                .getChatId()
+                .toString();
     }
 }
