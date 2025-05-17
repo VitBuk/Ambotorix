@@ -113,7 +113,7 @@ public class AmbotorixService {
             }
         }
 
-        sendMessage(update, "Unknown leader. Use " + commandFactory.infoOf(LeadersCommand.class).name() + " to see available description command");
+        sendPrivateMessage(update, "Unknown leader. Use " + commandFactory.infoOf(LeadersCommand.class).name() + " to see available description command");
     }
 
     //logic for command -> /ban_[shortName]
