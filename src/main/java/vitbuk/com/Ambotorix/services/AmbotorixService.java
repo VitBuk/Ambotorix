@@ -118,12 +118,12 @@ public class AmbotorixService {
 
     //logic for command -> /ban_[shortName]
     public void sendBan(Update update, String shortName) {
-        Player player = lobbyService.findPlayerByName(update.getMessage().getChat().getUserName());
+        String userName = update.getMessage().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(userName);
 
         // registration check
-        if (!lobbyService.isRegistered(update.getMessage().getChat().getUserName())) {
-            sendMessage(update, "Player " +
-                    update.getMessage().getChat().getUserName() + " is not registered");
+        if (!lobbyService.isRegistered(userName)) {
+            sendMessage(update, "Player " + userName + " is not registered");
             return;
         }
 
