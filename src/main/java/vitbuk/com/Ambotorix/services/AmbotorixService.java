@@ -7,6 +7,9 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
@@ -72,20 +75,36 @@ public class AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        StringBuilder message = new StringBuilder("Leaders: \n");
-        message.append("<i>To get description use ")
-                .append(commandFactory.infoOf(DescriptionCommand.class).name())
-                .append(" command </i> \n");
-
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+        String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
         for (Leader l : leaders) {
-            message.append("/d_")
-                    .append(l.getShortName())
-                    .append(" → ")
-                    .append(l.getFullName())
-                    .append("\n");
+            InlineKeyboardButton button = InlineKeyboardButton.builder()
+                    .text(l.getFullName())
+                    .callbackData(dPrefix + l.getShortName())
+                    .build();
+
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(button);
+
+            rows.add(row);
         }
 
-        sendPrivateMessage(update, message.toString());
+        InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
+                .keyboard(rows)
+                .build();
+
+        SendMessage message  = SendMessage.builder()
+                .chatId(update.getMessage().getFrom().getId())
+                .text("Leaders: ")
+                .replyMarkup(markup)
+                .parseMode("HTML")
+                .build();
+
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     //logic for command -> /d_[shortName]
