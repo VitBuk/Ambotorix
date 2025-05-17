@@ -262,7 +262,7 @@ public class AmbotorixService {
         sendMessage(update, "There is no such map in map pool. Check map pool by using " + mappoolName + " command");
     }
     public boolean isHost(Update update){
-        return lobbyService.isHost(update.getMessage().getChat().getUserName());
+        return lobbyService.isHost(update.getMessage().getFrom().getUserName());
     }
 
     public boolean hasLobby(Update update) {
