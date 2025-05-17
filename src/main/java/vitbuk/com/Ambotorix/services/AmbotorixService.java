@@ -85,7 +85,7 @@ public class AmbotorixService {
                     .append("\n");
         }
 
-        sendMessage(update, message.toString());
+        sendPrivateMessage(update, message.toString());
     }
 
     //logic for command -> /d_[shortName]
@@ -329,6 +329,20 @@ public class AmbotorixService {
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(update.getMessage().getChatId())
+                .text(text)
+                .parseMode("HTML")
+                .build();
+
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void sendPrivateMessage(Update update, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(update.getMessage().getFrom().getId().toString())
                 .text(text)
                 .parseMode("HTML")
                 .build();

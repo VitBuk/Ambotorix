@@ -73,7 +73,6 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             }
         }
 
-        System.out.println("t:" + update.getMessage().getText());
         command.execute(update, ambotorixService);
     }
 
