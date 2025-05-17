@@ -163,7 +163,7 @@ public class AmbotorixService {
 
     //logic for command -> /register
     public void sendRegister(Update update) {
-        sendMessage(update, lobbyService.registerPlayer(update.getMessage().getChat().getUserName()));
+        sendMessage(update, lobbyService.registerPlayer(update.getMessage().getFrom().getUserName()));
     }
 
     //logic for command -> /start
