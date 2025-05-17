@@ -7,8 +7,11 @@ import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import vitbuk.com.Ambotorix.commands.structure.*;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
+
+import java.util.regex.Pattern;
 
 @Component
 public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
@@ -33,14 +36,14 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
     @Override
     public void consume(Update update) {
-        String messageText = update.getMessage().getText();
+        Message message = update.getMessage();
+        String messageText = message.getText();
+
         if (messageText == null || !messageText.startsWith("/")) return;
+        String cleaned = messageText.replaceAll("(?i)@" + Pattern.quote(Constants.BOT_USERNAME), "");
+        message.setText(cleaned);
 
-        // we look at the first part of the message before first whitespace or underscore
-        String[] parts = messageText.split("[\\s_]+");
-        System.out.println("part[0]:" + parts[0]);
-        Command command = commandFactory.getCommand(parts[0].trim());
-
+        Command command = getCommand(update);
         if (command == null) {
             ambotorixService.sendUnknown(update);
             return;
@@ -70,7 +73,14 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             }
         }
 
+        System.out.println("t:" + update.getMessage().getText());
         command.execute(update, ambotorixService);
+    }
+
+    private Command getCommand(Update update) {
+        String[] tokens = update.getMessage().getText().split("[\\s_]+");
+        String commandToken = tokens[0];
+        return commandFactory.getCommand(commandToken.trim());
     }
 
     @AfterBotRegistration
