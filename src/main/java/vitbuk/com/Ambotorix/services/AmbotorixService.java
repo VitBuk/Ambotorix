@@ -3,8 +3,10 @@ package vitbuk.com.Ambotorix.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -93,7 +95,8 @@ public class AmbotorixService {
                 .build();
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
-        sb.append("<i> To get description use /d_[shortName] command or buttons below: </i>");
+        sb.append("<i> To get description use /d_[shortName] \n")
+                .append(" command or buttons below: </i>");
 
         SendMessage message  = SendMessage.builder()
                 .chatId(update.getMessage().getFrom().getId())
@@ -116,7 +119,7 @@ public class AmbotorixService {
         for (Leader l : leaders) {
             if (l.getShortName().equalsIgnoreCase(shortName)) {
                 SendPhoto photoMessage = SendPhoto.builder()
-                        .chatId(update.getMessage().getChatId())
+                        .chatId(update.getMessage().getFrom().getId())
                         .photo(new InputFile(new File(l.getPicPath())))
                         .caption("<b>" + l.getFullName() + "</b>")
                         .parseMode("HTML")
@@ -135,6 +138,31 @@ public class AmbotorixService {
         }
 
         sendPrivateMessage(update, "Unknown leader. Use " + commandFactory.infoOf(LeadersCommand.class).name() + " to see available description command");
+    }
+
+    public void makeCallbackQuery(Update update){
+        CallbackQuery callbackQuery = update.getCallbackQuery();
+        String data = callbackQuery.getData();
+        String callbackId = callbackQuery.getId();
+
+        try {
+            telegramClient.execute(
+                    AnswerCallbackQuery.builder()
+                            .callbackQueryId(callbackId)
+                            .build()
+            );
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+
+        String dPrefix = commandFactory
+                .infoOf(DescriptionCommand.class)
+                .prefix();
+
+        if (data != null && data.startsWith(dPrefix)) {
+            String shortName = data.substring(dPrefix.length());
+            sendDescription(update, shortName);
+        }
     }
 
     //logic for command -> /ban_[shortName]

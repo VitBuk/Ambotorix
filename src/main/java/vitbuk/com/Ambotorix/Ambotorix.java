@@ -6,6 +6,7 @@ import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsume
 import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import vitbuk.com.Ambotorix.commands.structure.*;
@@ -36,6 +37,11 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
     @Override
     public void consume(Update update) {
+        if (update.hasCallbackQuery()) {
+            ambotorixService.makeCallbackQuery(update);
+            return;
+        }
+
         Message message = update.getMessage();
         String messageText = message.getText();
 
