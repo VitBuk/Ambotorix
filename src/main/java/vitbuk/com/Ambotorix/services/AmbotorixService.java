@@ -278,7 +278,7 @@ public class AmbotorixService {
     }
 
     public boolean isRegistered(Update update) {
-        return lobbyService.isRegistered(update.getMessage().getChat().getUserName());
+        return lobbyService.isRegistered(update.getMessage().getFrom().getUserName());
     }
 
     public void sendNotAPlayer(Update update) {
