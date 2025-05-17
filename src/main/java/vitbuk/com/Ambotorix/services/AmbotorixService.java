@@ -25,6 +25,10 @@ import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -112,6 +116,16 @@ public class AmbotorixService {
         }
     }
 
+    //logic for command -> /mods
+    public void sendMods(Update update) {
+        List<String> lines = readLines(Constants.MODS_PATH);
+        StringBuilder sb = new StringBuilder();
+        for (String s : lines) {
+            sb.append(s);
+        }
+
+        sendMessage(update, sb.toString());
+    }
     //logic for command -> /d_[shortName]
     public void sendDescription (Update update, String shortName){
         List<Leader> leaders = leaderService.getLeaders();
@@ -413,5 +427,13 @@ public class AmbotorixService {
         return update.getMessage()
                 .getChatId()
                 .toString();
+    }
+
+    private List<String> readLines (String filePath) {
+        try {
+            return Files.readAllLines(Path.of(filePath), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
