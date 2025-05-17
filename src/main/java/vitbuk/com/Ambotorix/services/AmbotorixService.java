@@ -62,7 +62,7 @@ public class AmbotorixService {
 
     // logic for command -> /lobby
     public void sendLobby(Update update) {
-        Player host = new Player(update.getMessage().getChat().getUserName());
+        Player host = new Player(update.getMessage().getFrom().getUserName());
         String message = lobbyService.createLobby(host);
 
         sendMessage(update, message);
