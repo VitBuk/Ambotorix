@@ -122,6 +122,7 @@ public class AmbotorixService {
         StringBuilder sb = new StringBuilder();
         for (String s : lines) {
             sb.append(s);
+            sb.append("\n");
         }
 
         sendMessage(update, sb.toString());
