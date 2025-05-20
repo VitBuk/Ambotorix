@@ -120,6 +120,11 @@ public class AmbotorixService {
     public void sendMods(Update update) {
         sendMessage(update, allLines(Constants.MODS_PATH));
     }
+
+    //logic for command -> /settings
+    public void sendSettings(Update update) {
+        sendMessage(update, allLines(Constants.SETTINGS_PATH));
+    }
     //logic for command -> /d_[shortName]
     public void sendDescription (Update update, String shortName){
         List<Leader> leaders = leaderService.getLeaders();
