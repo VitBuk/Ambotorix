@@ -80,7 +80,7 @@ public class AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        InlineKeyboardMarkup markup = leadersMarkup(update, leaders);
+        InlineKeyboardMarkup markup = leadersMarkup(leaders);
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
         sb.append("<i>To get description use /d_[shortName] \n")
@@ -362,7 +362,7 @@ public class AmbotorixService {
         for (Player p : lobby.getPlayers()) {
             sendMessage(update, "<b>" + p.getUserName() + ":</b>");
             SendPhoto sendPhoto = PickImageGenerator.createLeaderPickMessage(Long.valueOf(extractChatId(update)), p);
-            InlineKeyboardMarkup markup = leadersMarkup(update, p.getPicks());
+            InlineKeyboardMarkup markup = leadersMarkup(p.getPicks());
             sendPhoto.setReplyMarkup(markup);
 
             try{
