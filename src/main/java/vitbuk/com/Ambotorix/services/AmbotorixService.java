@@ -80,23 +80,7 @@ public class AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        List<InlineKeyboardRow> rows = new ArrayList<>();
-        String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
-        for (Leader l : leaders) {
-            InlineKeyboardButton button = InlineKeyboardButton.builder()
-                    .text(l.getFullName())
-                    .callbackData(dPrefix + l.getShortName())
-                    .build();
-
-            InlineKeyboardRow row = new InlineKeyboardRow();
-            row.add(button);
-
-            rows.add(row);
-        }
-
-        InlineKeyboardMarkup markup = InlineKeyboardMarkup.builder()
-                .keyboard(rows)
-                .build();
+        InlineKeyboardMarkup markup = leadersMarkup(update, leaders);
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
         sb.append("<i> To get description use /d_[shortName] \n")
@@ -125,6 +109,7 @@ public class AmbotorixService {
     public void sendSettings(Update update) {
         sendMessage(update, allLines(Constants.SETTINGS_PATH));
     }
+
     //logic for command -> /d_[shortName]
     public void sendDescription (Update update, String shortName){
         List<Leader> leaders = leaderService.getLeaders();
