@@ -11,7 +11,7 @@ public class StartCommand implements HostCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/start",
             "/start",
-            "Start generating players order, map and picks for current lobby (Host Command)");
+            "Generate players order, map and picks for current lobby (Host Command)");
     @Override
     public CommandInfo getInfo() {
         return INFO;
