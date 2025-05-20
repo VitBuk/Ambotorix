@@ -118,14 +118,7 @@ public class AmbotorixService {
 
     //logic for command -> /mods
     public void sendMods(Update update) {
-        List<String> lines = readLines(Constants.MODS_PATH);
-        StringBuilder sb = new StringBuilder();
-        for (String s : lines) {
-            sb.append(s);
-            sb.append("\n");
-        }
-
-        sendMessage(update, sb.toString());
+        sendMessage(update, allLines(Constants.MODS_PATH));
     }
     //logic for command -> /d_[shortName]
     public void sendDescription (Update update, String shortName){
@@ -436,5 +429,16 @@ public class AmbotorixService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String allLines (String path) {
+        List<String> lines = readLines(path);
+        StringBuilder sb = new StringBuilder();
+        for (String s : lines) {
+            sb.append(s);
+            sb.append("\n");
+        }
+
+        return sb.toString();
     }
 }
