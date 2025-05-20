@@ -273,7 +273,7 @@ public class AmbotorixService {
                     .append("\n");
         }
 
-        sendMessage(update, sb.toString());
+        sendPrivateMessage(update, sb.toString());
     }
 
     //logic for command -> /mapAdd [name]
