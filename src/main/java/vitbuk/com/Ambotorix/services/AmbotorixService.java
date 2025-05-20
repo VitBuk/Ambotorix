@@ -51,7 +51,12 @@ public class AmbotorixService {
 
     //logic for command -> credits
     public void sendCredits(Update update) {
-        sendMessage(update, "Bot is created by @VitBuk \n https://github.com/vitbuk");
+        sendMessage(update, "Bot is created by" + Constants.CREDITS_NAME + "\n" + Constants.CREDITS_GITHUB);
+    }
+
+    //logic for command -> discord
+    public void sendDiscord(Update update) {
+        sendMessage(update, "Our discord server: \n" + Constants.DISCORD);
     }
     //logic for command -> help
     public void sendHelp(Update update) {
