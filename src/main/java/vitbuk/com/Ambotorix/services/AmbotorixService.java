@@ -132,7 +132,7 @@ public class AmbotorixService {
         for (Leader l : leaders) {
             if (l.getShortName().equalsIgnoreCase(shortName)) {
                 SendPhoto photoMessage = SendPhoto.builder()
-                        .chatId((extractChatId(update)))
+                        .chatId(extractPrivateChatId(update))
                         .photo(new InputFile(new File(l.getPicPath())))
                         .caption("<b>" + l.getFullName() + "</b>")
                         .parseMode("HTML")
@@ -440,6 +440,19 @@ public class AmbotorixService {
         }
     }
 
+    private String extractPrivateChatId( Update update) {
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery()
+                    .getFrom()
+                    .getId()
+                    .toString();
+        }
+
+        return update.getMessage()
+                .getFrom()
+                .getId()
+                .toString();
+    }
     private String extractChatId(Update update) {
         if (update.hasCallbackQuery()) {
             return update.getCallbackQuery()
