@@ -180,18 +180,18 @@ public class AmbotorixService {
 
         //already banned check
         if (lobbyService.isBanned(leader)) {
-            sendMessage(update, "Leader " + leader.getFullName() + " is already banned");
+            sendMessage(update, leader.getFullName() + " is already banned");
             return;
         }
 
         //has bans slots check
-        if (!lobbyService.hasAvailableBans(player)) {
+        if (!lobbyService.hasAvailableBans(player) && !isHost(update)) {
             sendMessage(update, "Player " + player.getUserName() + " cant ban more leaders");
             return;
         }
 
         player.getBans().add(leader);
-        sendMessage(update, "Leader " + leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
+        sendMessage(update, leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
 
         StringBuilder sb = new StringBuilder("Bans: \n");
         for (Leader l: lobbyService.bannedLeaders()) {
