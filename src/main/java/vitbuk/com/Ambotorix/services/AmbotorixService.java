@@ -83,8 +83,8 @@ public class AmbotorixService {
         InlineKeyboardMarkup markup = leadersMarkup(update, leaders);
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
-        sb.append("<i> To get description use /d_[shortName] \n")
-                .append(" command or buttons below: </i>");
+        sb.append("<i>To get description use /d_[shortName] \n")
+                .append("command or buttons below: </i>");
 
         SendMessage message  = SendMessage.builder()
                 .chatId(update.getMessage().getFrom().getId())
