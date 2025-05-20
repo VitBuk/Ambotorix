@@ -11,7 +11,7 @@ public class CreditsCommand implements Command {
     private static final CommandInfo INFO = new CommandInfo(
             "/credits",
             "/credits",
-            "Bot created by @VitBuk. \n https://github.com/vitbuk");
+            "Show who created this bot");
     @Override
     public CommandInfo getInfo() {
         return INFO;
@@ -19,6 +19,6 @@ public class CreditsCommand implements Command {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        ambotorixService.sendCredints(Update update);
+        ambotorixService.sendCredits(update);
     }
 }

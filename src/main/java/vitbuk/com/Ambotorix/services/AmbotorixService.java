@@ -49,6 +49,10 @@ public class AmbotorixService {
         this.commandFactory = commandFactory;
     }
 
+    //logic for command -> credits
+    public void sendCredits(Update update) {
+        sendMessage(update, "Bot is created by @VitBuk \n https://github.com/vitbuk");
+    }
     //logic for command -> help
     public void sendHelp(Update update) {
         List<Command> commands = commandFactory.getAll()
