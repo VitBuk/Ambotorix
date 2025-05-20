@@ -156,21 +156,18 @@ public class AmbotorixService {
     public void makeCallbackQuery(Update update){
         CallbackQuery callbackQuery = update.getCallbackQuery();
         String data = callbackQuery.getData();
-        String callbackId = callbackQuery.getId();
 
         try {
             telegramClient.execute(
                     AnswerCallbackQuery.builder()
-                            .callbackQueryId(extractChatId(update))
+                            .callbackQueryId(callbackQuery.getId())
                             .build()
             );
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
 
-        String dPrefix = commandFactory
-                .infoOf(DescriptionCommand.class)
-                .prefix();
+        String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
 
         if (data != null && data.startsWith(dPrefix)) {
             String shortName = data.substring(dPrefix.length());
@@ -390,7 +387,7 @@ public class AmbotorixService {
     }
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
-                .chatId(update.getMessage().getChatId())
+                .chatId(extractChatId(update))
                 .text(text)
                 .parseMode("HTML")
                 .build();
@@ -404,7 +401,7 @@ public class AmbotorixService {
 
     private void sendPrivateMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
-                .chatId(update.getMessage().getFrom().getId().toString())
+                .chatId(extractChatId(update))
                 .text(text)
                 .parseMode("HTML")
                 .build();
