@@ -373,7 +373,7 @@ public class AmbotorixService {
         }
     }
 
-    private InlineKeyboardMarkup leadersMarkup(Update update, List<Leader> leaders) {
+    private InlineKeyboardMarkup leadersMarkup(List<Leader> leaders) {
         String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
         List<InlineKeyboardRow> rows = new ArrayList<>();
 
@@ -391,6 +391,26 @@ public class AmbotorixService {
                 .keyboard(rows)
                 .build();
     }
+
+    private InlineKeyboardMarkup mapsMarkup(List<CivMap> maps, Command command) {
+        String mPrefix = commandFactory.infoOf(command.getClass()).prefix();
+
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+        for (CivMap m : maps) {
+            InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                    .text(m.name())
+                    .callbackData(mPrefix + m.name())
+                    .build();
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(btn);
+            rows.add(row);
+        }
+
+        return InlineKeyboardMarkup.builder()
+                .keyboard(rows)
+                .build();
+    }
+
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(extractChatId(update))
