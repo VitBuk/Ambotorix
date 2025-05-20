@@ -375,15 +375,36 @@ public class AmbotorixService {
         lobby = leaderService.setLeadersPool(lobby);
 
         for (Player p : lobby.getPlayers()) {
-            sendMessage(update, "<b> " + p.getUserName() + ": </b>");
-            SendPhoto sendPhoto = PickImageGenerator.createLeaderPickMessage(update.getMessage().getChatId(), p);
-            sendPhoto.setCaption(leaderService.getShortNameMessage(p));
+            sendMessage(update, "<b>" + p.getUserName() + ":</b>");
+            SendPhoto sendPhoto = PickImageGenerator.createLeaderPickMessage(Long.valueOf(extractChatId(update)), p);
+            InlineKeyboardMarkup markup = leadersMarkup(update, p.getPicks());
+            sendPhoto.setReplyMarkup(markup);
+
             try{
                 telegramClient.execute(sendPhoto);
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private InlineKeyboardMarkup leadersMarkup(Update update, List<Leader> leaders) {
+        String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+
+        for (Leader l : leaders) {
+            InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                    .text(l.getFullName())
+                    .callbackData(dPrefix + l.getShortName())
+                    .build();
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(btn);
+            rows.add(row);
+        }
+
+        return InlineKeyboardMarkup.builder()
+                .keyboard(rows)
+                .build();
     }
     private void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
