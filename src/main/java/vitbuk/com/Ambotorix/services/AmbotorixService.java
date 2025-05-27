@@ -248,11 +248,12 @@ public class AmbotorixService {
 
     //logic for command -> /mappool
     public void sendMappool(Update update) {
-        List<CivMap> mapPool =  lobbyService.getMappool();
-        if (mapPool == null) {
-            sendMessage(update, "Lobby does not exist. To create lobby use " + commandFactory.infoOf(LobbyCommand.class).name() + " command");
+        if (!hasLobby(update)) {
+            sendNoLobby(update);
             return;
         }
+
+        List<CivMap> mapPool =  lobbyService.getMappool();
 
         StringBuilder sb = new StringBuilder("Map pool: \n");
         sb.append("<i>To remove map from map pool use ")
