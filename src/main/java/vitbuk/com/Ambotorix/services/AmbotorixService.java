@@ -392,25 +392,6 @@ public class AmbotorixService {
         }
     }
 
-    private InlineKeyboardMarkup leadersMarkup(List<Leader> leaders) {
-        String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
-        List<InlineKeyboardRow> rows = new ArrayList<>();
-
-        for (Leader l : leaders) {
-            InlineKeyboardButton btn = InlineKeyboardButton.builder()
-                    .text(l.getFullName())
-                    .callbackData(dPrefix + l.getShortName())
-                    .build();
-            InlineKeyboardRow row = new InlineKeyboardRow();
-            row.add(btn);
-            rows.add(row);
-        }
-
-        return InlineKeyboardMarkup.builder()
-                .keyboard(rows)
-                .build();
-    }
-
     private InlineKeyboardMarkup mapsMarkup(List<CivMap> maps, Command command) {
         String mPrefix = commandFactory.infoOf(command.getClass()).prefix();
 
