@@ -91,7 +91,7 @@ public class AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        InlineKeyboardMarkup markup = (leaders);
+        InlineKeyboardMarkup markup = markupService.leadersMarkup(leaders);
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
         sb.append("<i>To get description use /d_[shortName] \n")
@@ -280,21 +280,26 @@ public class AmbotorixService {
 
     //logic for the command -> maplist
     public void sendMaplist(Update update) {
+        List<CivMap> allMaps = Arrays.stream(CivMap.values()).toList();
+        InlineKeyboardMarkup markup = markupService.maplistMarkup(allMaps);
+
         StringBuilder sb = new StringBuilder("Maps: \n");
         sb.append("<i>To add map to the pool use ")
                 .append(commandFactory.infoOf(MapAddCommand.class).name())
                 .append( " command </i> \n");
 
-        for (CivMap cm : CivMap.values()) {
-            sb.append(commandFactory.infoOf(MapAddCommand.class).name())
-                    .append("_")
-                    .append(cm.toString())
-                    .append(" → ")
-                    .append(cm.toString())
-                    .append("\n");
-        }
+        SendMessage message  = SendMessage.builder()
+                .chatId(update.getMessage().getFrom().getId())
+                .text(sb.toString())
+                .replyMarkup(markup)
+                .parseMode("HTML")
+                .build();
 
-        sendPrivateMessage(update, sb.toString());
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     //logic for command -> /mapAdd [name]
@@ -383,7 +388,7 @@ public class AmbotorixService {
         for (Player p : lobby.getPlayers()) {
             sendMessage(update, "<b>" + p.getUserName() + ":</b>");
             SendPhoto sendPhoto = PickImageGenerator.createLeaderPickMessage(Long.valueOf(extractChatId(update)), p);
-            InlineKeyboardMarkup markup = leadersMarkup(p.getPicks());
+            InlineKeyboardMarkup markup = markupService.leadersMarkup(p.getPicks());
             sendPhoto.setReplyMarkup(markup);
 
             try{
@@ -392,25 +397,6 @@ public class AmbotorixService {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    private InlineKeyboardMarkup mapsMarkup(List<CivMap> maps, Command command) {
-        String mPrefix = commandFactory.infoOf(command.getClass()).prefix();
-
-        List<InlineKeyboardRow> rows = new ArrayList<>();
-        for (CivMap m : maps) {
-            InlineKeyboardButton btn = InlineKeyboardButton.builder()
-                    .text(m.name())
-                    .callbackData(mPrefix + m.name())
-                    .build();
-            InlineKeyboardRow row = new InlineKeyboardRow();
-            row.add(btn);
-            rows.add(row);
-        }
-
-        return InlineKeyboardMarkup.builder()
-                .keyboard(rows)
-                .build();
     }
 
     private void sendMessage(Update update, String text) {
