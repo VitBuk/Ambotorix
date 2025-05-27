@@ -331,6 +331,10 @@ public class AmbotorixService {
 
         sendMessage(update, "There is no such map in map pool. Check map pool by using " + mappoolName + " command");
     }
+
+    public void sendTerminate (Update update){
+
+    }
     public boolean isHost(Update update){
         return lobbyService.isHost(update.getMessage().getFrom().getUserName());
     }
