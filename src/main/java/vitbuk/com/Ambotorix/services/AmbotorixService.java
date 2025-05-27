@@ -255,6 +255,10 @@ public class AmbotorixService {
 
         List<CivMap> mapPool =  lobbyService.getMappool();
 
+        if (mapPool == null) {
+            sendBugReport(update);
+        }
+        
         StringBuilder sb = new StringBuilder("Map pool: \n");
         sb.append("<i>To remove map from map pool use ")
                 .append(commandFactory.infoOf(MapRemoveCommand.class).name())
