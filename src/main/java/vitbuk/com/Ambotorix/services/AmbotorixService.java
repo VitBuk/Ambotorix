@@ -40,13 +40,15 @@ public class AmbotorixService {
     private final LeaderService leaderService;
     private final LobbyService lobbyService;
     private final CommandFactory commandFactory;
+    private final MarkupService markupService;
 
     @Autowired
-    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory) {
+    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService) {
         this.telegramClient = new OkHttpTelegramClient(Constants.BOT_TOKEN);
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
         this.commandFactory = commandFactory;
+        this.markupService = markupService;
     }
 
     //logic for command -> credits
@@ -89,7 +91,7 @@ public class AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        InlineKeyboardMarkup markup = leadersMarkup(leaders);
+        InlineKeyboardMarkup markup = (leaders);
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
         sb.append("<i>To get description use /d_[shortName] \n")
