@@ -216,6 +216,11 @@ public class AmbotorixService {
 
     //logic for command -> /register
     public void sendRegister(Update update) {
+        if (!hasLobby(update)) {
+            sendNoLobby(update);
+            return;
+        }
+
         sendMessage(update, lobbyService.registerPlayer(update.getMessage().getFrom().getUserName()));
     }
 
