@@ -440,6 +440,10 @@ public class AmbotorixService {
         }
     }
 
+    private void sendBugReport(Update update) {
+        sendMessage(update, "Something wrong happened. Please contact @VitBuk to report bug.");
+    }
+
     private void sendPrivateMessage(Update update, String text) {
         String chatId;
         if (update.hasCallbackQuery()) {
