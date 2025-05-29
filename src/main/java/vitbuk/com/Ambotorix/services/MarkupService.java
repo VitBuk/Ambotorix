@@ -34,7 +34,7 @@ public class MarkupService {
         for (Leader l : leaders) {
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(l.getFullName())
-                    .callbackData(dPrefix + l.getShortName())
+                    .callbackData(dPrefix + " " + l.getShortName())
                     .build();
             InlineKeyboardRow row = new InlineKeyboardRow();
             row.add(btn);
@@ -51,9 +51,10 @@ public class MarkupService {
 
         List<InlineKeyboardRow> rows = new ArrayList<>();
         for (CivMap m : maps) {
+            System.out.println("mPrefix + m.toString(): " + mPrefix + m.toString());
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(m.name())
-                    .callbackData(mPrefix + m.name())
+                    .callbackData(mPrefix + " " + m.toString())
                     .build();
             InlineKeyboardRow row = new InlineKeyboardRow();
             row.add(btn);

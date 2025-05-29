@@ -10,8 +10,6 @@ import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.Constants;
@@ -164,10 +162,16 @@ public class AmbotorixService {
         }
 
         String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
+        String addPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
 
         if (data != null && data.startsWith(dPrefix)) {
             String shortName = data.substring(dPrefix.length());
             sendDescription(update, shortName);
+        }
+
+        if (data != null && data.startsWith(addPrefix)) {
+            String civMapName = data.substring(addPrefix.length()+1);
+            sendMapAdd(update, CivMap.fromDisplayNameIgnoreCase(civMapName).get());
         }
     }
 
