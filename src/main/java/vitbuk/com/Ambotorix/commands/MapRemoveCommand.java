@@ -12,7 +12,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 public class MapRemoveCommand implements HostCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/mapRemove",
-            "/mapRemove",
+            "/mapRemove [mapName]",
             "Removes map from mappool of the current lobby (Host Command)");
     @Override
     public CommandInfo getInfo() {

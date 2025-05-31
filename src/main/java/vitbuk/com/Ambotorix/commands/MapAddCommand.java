@@ -12,7 +12,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 public class MapAddCommand implements HostCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/mapAdd",
-            "/mapAdd",
+            "/mapAdd [map Name]",
             "Add map to a mappool of the lobby (Host command)");
     @Override
     public CommandInfo getInfo() {

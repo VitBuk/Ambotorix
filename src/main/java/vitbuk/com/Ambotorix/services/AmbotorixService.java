@@ -168,12 +168,12 @@ public class AmbotorixService {
         String addPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
 
         if (data != null && data.startsWith(dPrefix)) {
-            String shortName = data.substring(dPrefix.length()+1);
+            String shortName = data.substring(dPrefix.length()+1); // +1 is space or _ before shortname
             sendDescription(update, shortName);
         }
 
         if (data != null && data.startsWith(addPrefix)) {
-            String civMapName = data.substring(addPrefix.length()+1);
+            String civMapName = data.substring(addPrefix.length()+1); // +1 is space or _ before map name
             sendMapAdd(update, CivMap.fromDisplayNameIgnoreCase(civMapName).get());
         }
     }
