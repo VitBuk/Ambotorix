@@ -121,6 +121,9 @@ public class AmbotorixService {
 
     //logic for command -> /d_[shortName]
     public void sendDescription (Update update, String shortName){
+        System.out.println("sendDescription triggered:");
+        System.out.println("shortName: " + shortName);
+
         List<Leader> leaders = leaderService.getLeaders();
 
         for (Leader l : leaders) {
@@ -165,7 +168,7 @@ public class AmbotorixService {
         String addPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
 
         if (data != null && data.startsWith(dPrefix)) {
-            String shortName = data.substring(dPrefix.length());
+            String shortName = data.substring(dPrefix.length()+1);
             sendDescription(update, shortName);
         }
 
