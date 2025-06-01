@@ -8,6 +8,8 @@ import vitbuk.com.Ambotorix.commands.structure.HostCommand;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
+import java.util.Optional;
+
 @Component
 public class MapRemoveCommand implements HostCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
@@ -21,10 +23,22 @@ public class MapRemoveCommand implements HostCommand, DynamicCommand {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        String messageText = update.getMessage().getText().replace("_", "");
-        String mapName = messageText.substring(getInfo().prefix().length()).trim();
-        CivMap civMap = CivMap.fromDisplayNameIgnoreCase(mapName).get();
+        String text = update.getMessage().getText().trim();
+        String[] parts = text.split("\\s+", 2);
 
-        ambotorixService.sendMapRemove(update, civMap);
+        if (parts.length < 2 || parts[1].isBlank()) {
+            ambotorixService.sendNoSuchMap(update);
+            return;
+        }
+
+        String mapName = parts[1].trim();
+        Optional<CivMap> maybeMap = CivMap.fromDisplayNameIgnoreCase(mapName);
+
+        if (maybeMap.isEmpty()) {
+            ambotorixService.sendNoSuchMap(update);
+            return;
+        }
+
+        ambotorixService.sendMapRemove(update, maybeMap.get());
     }
 }
