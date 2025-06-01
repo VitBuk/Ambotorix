@@ -274,7 +274,7 @@ public class AmbotorixService {
                 .append(" command </i> \n");
 
         for (CivMap cm : mapPool) {
-            sb.append(commandFactory.infoOf(MapRemoveCommand.class).name())
+            sb.append(commandFactory.infoOf(MapRemoveCommand.class).prefix())
                     .append("_")
                     .append(cm.toString())
                     .append(" → ")
