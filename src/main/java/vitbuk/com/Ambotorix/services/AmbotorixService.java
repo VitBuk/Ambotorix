@@ -367,6 +367,11 @@ public class AmbotorixService {
                 commandFactory.infoOf(RegisterCommand.class).name() + " command");
     }
 
+    public void sendNoSuchMap(Update update) {
+        sendMessage(update, "No such map. Check " + commandFactory.infoOf(MaplistCommand.class).name()
+                + " command for list of available maps");
+    }
+
     private void sendSlotOrder(Update update) {
         List<Player> shuffledPlayers = lobbyService.randomSlotOrder();
         if (shuffledPlayers == null ) {
