@@ -41,6 +41,7 @@ public class LeaderService {
     public List<Leader> getLeaders() {
         return new ArrayList<>(leaders);
     }
+
     public List<String> getShortNames(){
         return getLeaders().stream()
                 .map(Leader::getShortName)

@@ -18,6 +18,8 @@ import vitbuk.com.Ambotorix.commands.*;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.commands.structure.CommandInfo;
+import vitbuk.com.Ambotorix.config.BotConfig;
+import vitbuk.com.Ambotorix.constants.MessageConstants;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -39,24 +41,27 @@ public class AmbotorixService {
     private final LobbyService lobbyService;
     private final CommandFactory commandFactory;
     private final MarkupService markupService;
+    private final BotConfig botConfig;
 
     @Autowired
-    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService) {
-        this.telegramClient = new OkHttpTelegramClient(Constants.BOT_TOKEN);
+    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
+                            BotConfig botConfig) {
+        this.telegramClient = new OkHttpTelegramClient(botConfig.getToken());
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
         this.commandFactory = commandFactory;
         this.markupService = markupService;
+        this.botConfig = botConfig;
     }
 
     //logic for command -> credits
     public void sendCredits(Update update) {
-        sendMessage(update, "Bot is created by" + Constants.CREDITS_NAME + "\n" + Constants.CREDITS_GITHUB);
+        sendMessage(update, "Bot is created by" + MessageConstants.CREDITS_NAME + "\n" + MessageConstants.CREDITS_GITHUB>);
     }
 
     //logic for command -> discord
     public void sendDiscord(Update update) {
-        sendMessage(update, "Our discord server: \n" + Constants.DISCORD);
+        sendMessage(update, "Our discord server: \n" + MessageConstants.DISCORD);
     }
     //logic for command -> help
     public void sendHelp(Update update) {

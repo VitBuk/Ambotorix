@@ -6,10 +6,10 @@ import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsume
 import org.telegram.telegrambots.longpolling.starter.AfterBotRegistration;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
-import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 import vitbuk.com.Ambotorix.commands.structure.*;
+import vitbuk.com.Ambotorix.config.BotConfig;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 import java.util.regex.Pattern;
@@ -19,15 +19,17 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
     private final AmbotorixService ambotorixService;
     private final CommandFactory commandFactory;
+    private final BotConfig botConfig;
 
-    public Ambotorix(AmbotorixService ambotorixService, CommandFactory commandFactory) {
+    public Ambotorix(AmbotorixService ambotorixService, CommandFactory commandFactory, BotConfig botConfig) {
         this.ambotorixService = ambotorixService;
         this.commandFactory = commandFactory;
+        this.botConfig = botConfig;
     }
 
     @Override
     public String getBotToken() {
-        return Constants.BOT_TOKEN;
+        return botConfig.getToken();
     }
 
     @Override
@@ -46,7 +48,7 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         String messageText = message.getText();
 
         if (messageText == null || !messageText.startsWith("/")) return;
-        String cleaned = messageText.replaceAll("(?i)@" + Pattern.quote(Constants.BOT_USERNAME), "");
+        String cleaned = messageText.replaceAll("(?i)@" + Pattern.quote(botConfig.getUsername()), "");
         message.setText(cleaned);
 
         Command command = getCommand(update);
