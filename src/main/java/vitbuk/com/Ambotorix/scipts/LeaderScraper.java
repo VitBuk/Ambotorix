@@ -29,15 +29,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class LeaderScraper {
 
     private static final Logger LOG = Logger.getLogger(LeaderScraper.class.getName());
 
-    private static final String BASE_URL = "https://calcalciffer.github.io/en_US/leaders_6.2.html";
-    private static final String IMAGE_BASE_URL = "https://calcalciffer.github.io/images/leaders/";
-    private static final Path IMAGE_FOLDER = Path.of("leaderImages");
-    private static final Path OUTPUT_JSON = Path.of("civ6_leaders.json");
+    private static final String BASE_URL = "https://civ6bbg.github.io/index.html";
+    private static final String IMAGE_BASE_URL = "https://civ6bbg.github.io/images/leaders/";
+    private static final Path RESOURCES_DIR = Path.of("src", "main", "resources");
+    private static final Path IMAGE_FOLDER  = RESOURCES_DIR.resolve("leaderImages");
+    private static final Path OUTPUT_JSON   = RESOURCES_DIR.resolve("civ6_leaders.json");
 
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
@@ -48,7 +50,6 @@ public class LeaderScraper {
                                                             .build();
 
     static {
-        // Регистрируем WebP reader один раз при загрузке класса
         IIORegistry.getDefaultInstance().registerServiceProvider(new WebPImageReaderSpi());
     }
 
@@ -57,7 +58,11 @@ public class LeaderScraper {
                             .timeout((int) REQUEST_TIMEOUT.toMillis())
                             .get();
 
-        Elements leaderSections = doc.select("div.leaders-data div.row");
+        Elements leaderSections = doc.select("div.row[id]")
+                                     .stream()
+                                     .filter(e -> !e.select("h2.civ-name").isEmpty())
+                                     .collect(Collectors.toCollection(Elements::new));
+
         List<Leader> leaders = new ArrayList<>();
         Files.createDirectories(IMAGE_FOLDER);
 
@@ -69,11 +74,14 @@ public class LeaderScraper {
             }
 
             String shortName = " ";
+
             String encodedFullName = URLEncoder.encode(fullName, StandardCharsets.UTF_8)
                                                .replace("+", "%20");
 
-            Path webpPath = IMAGE_FOLDER.resolve(fullName + ".webp");
-            Path pngPath = IMAGE_FOLDER.resolve(fullName + ".png");
+            String safeFileName = fullName.replaceAll("[\\\\/:*?\"<>|]", "_");
+
+            Path webpPath = IMAGE_FOLDER.resolve(safeFileName + ".webp");
+            Path pngPath  = IMAGE_FOLDER.resolve(safeFileName + ".png");
             String imgUrl = IMAGE_BASE_URL + encodedFullName + ".webp";
 
             if (downloadImage(imgUrl, webpPath)) {
@@ -91,9 +99,12 @@ public class LeaderScraper {
 
     private static String extractDescription(Element section) {
         StringBuilder description = new StringBuilder();
-        Elements abilities = section.select("h3.civ-ability-name, p.civ-ability-desc");
+        Elements abilities = section.select("h3.civ-ability-name, p.civ-ability-desc.actual-text");
         for (Element ability : abilities) {
-            description.append(ability.text()).append("\n");
+            String text = ability.text().trim();
+            if (!text.isEmpty()) {
+                description.append(text).append("\n");
+            }
         }
         return description.toString().trim();
     }
