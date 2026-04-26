@@ -12,7 +12,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-import vitbuk.com.Ambotorix.Constants;
 import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.*;
 import vitbuk.com.Ambotorix.commands.structure.Command;
@@ -56,7 +55,7 @@ public class AmbotorixService {
 
     //logic for command -> credits
     public void sendCredits(Update update) {
-        sendMessage(update, "Bot is created by" + MessageConstants.CREDITS_NAME + "\n" + MessageConstants.CREDITS_GITHUB>);
+        sendMessage(update, "Bot is created by" + MessageConstants.CREDITS_NAME + "\n" + MessageConstants.CREDITS_GITHUB);
     }
 
     //logic for command -> discord
@@ -116,12 +115,12 @@ public class AmbotorixService {
 
     //logic for command -> /mods
     public void sendMods(Update update) {
-        sendMessage(update, allLines(Constants.MODS_PATH));
+        sendMessage(update, allLines(MessageConstants.MODS_PATH));
     }
 
     //logic for command -> /settings
     public void sendSettings(Update update) {
-        sendMessage(update, allLines(Constants.SETTINGS_PATH));
+        sendMessage(update, allLines(MessageConstants.SETTINGS_PATH));
     }
 
     //logic for command -> /d_[shortName]

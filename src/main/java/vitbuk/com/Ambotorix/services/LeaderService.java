@@ -3,7 +3,7 @@ package vitbuk.com.Ambotorix.services;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.springframework.stereotype.Service;
-import vitbuk.com.Ambotorix.Constants;
+import vitbuk.com.Ambotorix.constants.MessageConstants;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
@@ -23,7 +23,7 @@ public class LeaderService {
 
     private List<Leader> loadLeaders() {
         Gson gson = new Gson();
-        try (FileReader reader = new FileReader(Constants.LEADERS_JSON_PATH)) {
+        try (FileReader reader = new FileReader(MessageConstants.LEADERS_PATH)) {
             Type listType = new TypeToken<List<Leader>>() {
             }.getType();
             List<Leader> loadedLeaders = gson.fromJson(reader, listType);
