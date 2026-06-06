@@ -1,5 +1,7 @@
 package vitbuk.com.Ambotorix.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -17,6 +19,7 @@ import java.util.List;
 @Service
 public class MarkupService {
 
+    private static final Logger log = LoggerFactory.getLogger(MarkupService.class);
     private final CommandFactory commandFactory;
 
     @Autowired
@@ -48,7 +51,6 @@ public class MarkupService {
 
         List<InlineKeyboardRow> rows = new ArrayList<>();
         for (CivMap m : maps) {
-            System.out.println("mPrefix + m.toString(): " + mPrefix + m.toString());
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(m.name())
                     .callbackData(mPrefix + " " + m.toString())

@@ -36,3 +36,13 @@ build/
 src/main/resources/application.properties
 src/main/resources/application-*.properties
 *MessageConstants.java
+
+# Local tooling and docs
+docs/
+.claude/
+
+# Generated data files
+src/main/resources/bbg_version.txt
+
+# Local env file with real secrets
+.env

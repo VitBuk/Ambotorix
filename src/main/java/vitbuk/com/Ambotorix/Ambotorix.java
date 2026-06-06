@@ -1,5 +1,7 @@
 package vitbuk.com.Ambotorix;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.longpolling.BotSession;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
@@ -16,6 +18,8 @@ import java.util.regex.Pattern;
 
 @Component
 public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
+
+    private static final Logger log = LoggerFactory.getLogger(Ambotorix.class);
 
     private final AmbotorixService ambotorixService;
     private final CommandFactory commandFactory;
@@ -57,6 +61,14 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             return;
         }
 
+        if (command instanceof AdminCommand) {
+            if (update.getMessage().getFrom() == null
+                    || !update.getMessage().getFrom().getId().equals(botConfig.getAdminId())) {
+                ambotorixService.sendMessage(update, "This command is for bot admin only.");
+                return;
+            }
+        }
+
         if (command instanceof HostCommand) {
             if (!ambotorixService.hasLobby(update)) {
                 ambotorixService.sendNoLobby(update);
@@ -81,6 +93,14 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             }
         }
 
+        if (command instanceof DynamicCommand) {
+            String[] tokens = update.getMessage().getText().split("[\\s_]+", 2);
+            if (tokens.length < 2 || tokens[1].isBlank()) {
+                ambotorixService.sendMessage(update, "Usage: " + command.getInfo().name());
+                return;
+            }
+        }
+
         command.execute(update, ambotorixService);
     }
 
@@ -92,6 +112,6 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
 
     @AfterBotRegistration
     public void afterRegistration(BotSession botSession) {
-        System.out.println("Registered bot running state is: " + botSession.isRunning());
+        log.info("Registered bot running state is: {}", botSession.isRunning());
     }
 }

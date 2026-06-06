@@ -5,40 +5,25 @@ import java.util.List;
 import java.util.Objects;
 
 public class Player {
-    String userName;
-    List<Leader> picks;
-    List<Leader> bans;
+    private String userName;
+    private Long userId;
+    private List<Leader> picks;
+    private List<Leader> bans;
 
-    public Player(String userName) {
+    public Player(String userName, Long userId) {
         this.userName = userName;
-        picks = new ArrayList<>();
-        bans = new ArrayList<>();
+        this.userId = userId;
+        this.picks = new ArrayList<>();
+        this.bans = new ArrayList<>();
     }
 
-    public String getUserName() {
-        return userName;
-    }
-
-
-    public List<Leader> getPicks() {
-        return picks;
-    }
-
-    public void setPicks(List<Leader> picks) {
-        this.picks = picks;
-    }
-
-    public List<Leader> getBans() {
-        return bans;
-    }
-
-    public void setBans(List<Leader> bans) {
-        this.bans = bans;
-    }
-
-    public void ban(Leader leader) {
-        bans.add(leader);
-    }
+    public String getUserName() { return userName; }
+    public Long getUserId() { return userId; }
+    public List<Leader> getPicks() { return picks; }
+    public void setPicks(List<Leader> picks) { this.picks = picks; }
+    public List<Leader> getBans() { return bans; }
+    public void setBans(List<Leader> bans) { this.bans = bans; }
+    public void ban(Leader leader) { bans.add(leader); }
 
     @Override
     public boolean equals(Object o) {
@@ -49,7 +34,5 @@ public class Player {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(userName);
-    }
+    public int hashCode() { return Objects.hash(userName); }
 }

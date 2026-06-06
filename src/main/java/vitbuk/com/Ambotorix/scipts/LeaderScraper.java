@@ -7,6 +7,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import vitbuk.com.Ambotorix.entities.Leader;
 
 import javax.imageio.ImageIO;
@@ -27,15 +29,15 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class LeaderScraper {
 
-    private static final Logger LOG = Logger.getLogger(LeaderScraper.class.getName());
+    private static final Logger log = LoggerFactory.getLogger(LeaderScraper.class);
 
     private static final String BASE_URL = "https://civ6bbg.github.io/index.html";
+    private static final String LEADERS_URL_TEMPLATE = "https://civ6bbg.github.io/en_US/leaders_%s.html";
     private static final String IMAGE_BASE_URL = "https://civ6bbg.github.io/images/leaders/";
     private static final Path RESOURCES_DIR = Path.of("src", "main", "resources");
     private static final Path IMAGE_FOLDER  = RESOURCES_DIR.resolve("leaderImages");
@@ -51,6 +53,66 @@ public class LeaderScraper {
 
     static {
         IIORegistry.getDefaultInstance().registerServiceProvider(new WebPImageReaderSpi());
+    }
+
+    public static String generateShortName(String fullName) {
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("(.+?)\\s*\\((.+?)\\)").matcher(fullName);
+        if (m.find()) {
+            String beforeParens = m.group(1).trim();
+            String inParens = m.group(2).trim()
+                    .toLowerCase().replaceAll("\\s+", "_").replaceAll("[^a-z0-9_]", "");
+            String[] words = beforeParens.split("\\s+");
+            String base = words[words.length - 1].toLowerCase().replaceAll("[^a-z0-9]", "");
+            return base + "_" + inParens;
+        }
+        String[] words = fullName.trim().split("\\s+");
+        return words[words.length - 1].toLowerCase().replaceAll("[^a-z0-9]", "");
+    }
+
+    public static List<Leader> scrapeLeaders(String version, Map<String, String> shortNameMap) throws IOException {
+        String url = String.format(LEADERS_URL_TEMPLATE, version);
+        Document doc = Jsoup.connect(url)
+                            .timeout((int) REQUEST_TIMEOUT.toMillis())
+                            .get();
+
+        Elements leaderSections = doc.select("div.row[id]")
+                                     .stream()
+                                     .filter(e -> !e.select("h2.civ-name").isEmpty())
+                                     .collect(Collectors.toCollection(Elements::new));
+
+        List<Leader> leaders = new ArrayList<>();
+        Files.createDirectories(IMAGE_FOLDER);
+
+        for (Element section : leaderSections) {
+            String fullName = section.attr("id");
+            if (fullName.isBlank()) {
+                log.warn("Skipping section without id");
+                continue;
+            }
+
+            String shortName = shortNameMap.computeIfAbsent(fullName, LeaderScraper::generateShortName);
+
+            String encodedFullName = URLEncoder.encode(fullName, StandardCharsets.UTF_8)
+                                               .replace("+", "%20");
+
+            String safeFileName = fullName.replaceAll("[\\\\/:*?\"<>|]", "_");
+
+            Path webpPath = IMAGE_FOLDER.resolve(safeFileName + ".webp");
+            Path pngPath  = IMAGE_FOLDER.resolve(safeFileName + ".png");
+            String imgUrl = IMAGE_BASE_URL + encodedFullName + ".webp";
+
+            if (downloadImage(imgUrl, webpPath)) {
+                if (convertWebPToPng(webpPath, pngPath)) {
+                    Files.deleteIfExists(webpPath);
+                }
+            }
+
+            String description = extractDescription(section);
+            leaders.add(new Leader(fullName, shortName, description, pngPath.toString()));
+        }
+
+        return leaders;
     }
 
     public static List<Leader> scrapeLeaders() throws IOException {
@@ -69,11 +131,11 @@ public class LeaderScraper {
         for (Element section : leaderSections) {
             String fullName = section.attr("id");
             if (fullName.isBlank()) {
-                LOG.warning("Skipping section without id");
+                log.warn("Skipping section without id");
                 continue;
             }
 
-            String shortName = " ";
+            String shortName = generateShortName(fullName);
 
             String encodedFullName = URLEncoder.encode(fullName, StandardCharsets.UTF_8)
                                                .replace("+", "%20");
@@ -123,20 +185,20 @@ public class LeaderScraper {
             );
 
             if (response.statusCode() == 200) {
-                LOG.info(() -> "Downloaded: " + savePath);
+                log.info("Downloaded: {}", savePath);
                 return true;
             }
 
-            LOG.warning(() -> "HTTP " + response.statusCode() + " for " + imageUrl);
+            log.warn("HTTP {} for {}", response.statusCode(), imageUrl);
             Files.deleteIfExists(savePath); // удалить пустой/частичный файл
             return false;
 
         } catch (IOException e) {
-            LOG.log(Level.WARNING, "Failed to download: " + imageUrl, e);
+            log.warn("Failed to download: {}", imageUrl, e);
             return false;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            LOG.log(Level.WARNING, "Download interrupted: " + imageUrl, e);
+            log.warn("Download interrupted: {}", imageUrl, e);
             return false;
         }
     }
@@ -144,13 +206,13 @@ public class LeaderScraper {
     public static boolean convertWebPToPng(Path webpPath, Path pngPath) {
         try (ImageInputStream input = ImageIO.createImageInputStream(webpPath.toFile())) {
             if (input == null) {
-                LOG.warning(() -> "Cannot open image stream: " + webpPath);
+                log.warn("Cannot open image stream: {}", webpPath);
                 return false;
             }
 
             Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
             if (!readers.hasNext()) {
-                LOG.warning("No suitable WebP reader found.");
+                log.warn("No suitable WebP reader found.");
                 return false;
             }
 
@@ -159,14 +221,14 @@ public class LeaderScraper {
                 reader.setInput(input);
                 BufferedImage image = reader.read(0);
                 ImageIO.write(image, "png", pngPath.toFile());
-                LOG.info(() -> "Converted to PNG: " + pngPath);
+                log.info("Converted to PNG: {}", pngPath);
                 return true;
             } finally {
                 reader.dispose();
             }
 
         } catch (IOException e) {
-            LOG.log(Level.WARNING, "Error converting WebP to PNG: " + webpPath, e);
+            log.warn("Error converting WebP to PNG: {}", webpPath, e);
             return false;
         }
     }
@@ -180,9 +242,9 @@ public class LeaderScraper {
                 gson.toJson(leaders, writer);
             }
 
-            LOG.info(() -> "Saved " + leaders.size() + " leaders to " + OUTPUT_JSON);
+            log.info("Saved {} leaders to {}", leaders.size(), OUTPUT_JSON);
         } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Scraping failed", e);
+            log.error("Scraping failed", e);
             System.exit(1);
         }
     }

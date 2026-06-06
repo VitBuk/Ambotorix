@@ -2,11 +2,15 @@ package vitbuk.com.Ambotorix.services;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import vitbuk.com.Ambotorix.constants.MessageConstants;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -15,26 +19,45 @@ import java.util.stream.Collectors;
 
 @Service
 public class LeaderService {
-    private final List<Leader> leaders;
 
-    public LeaderService(List<Leader> leaders) {
+    private static final Logger log = LoggerFactory.getLogger(LeaderService.class);
+
+    private volatile List<Leader> leaders;
+
+    @Value("${data.dir:src/main/resources}")
+    private String dataDir;
+
+    @PostConstruct
+    public void init() {
+        this.leaders = loadLeaders();
+    }
+
+    // Package-private constructor for unit tests
+    LeaderService(List<Leader> leaders) {
+        this.dataDir = "src/main/resources";
+        List<Leader> sorted = new ArrayList<>(leaders);
+        sorted.sort(Comparator.comparing(Leader::getFullName));
+        this.leaders = Collections.unmodifiableList(sorted);
+    }
+
+    public void reload() {
         this.leaders = loadLeaders();
     }
 
     private List<Leader> loadLeaders() {
         Gson gson = new Gson();
-        try (FileReader reader = new FileReader(MessageConstants.LEADERS_PATH)) {
-            Type listType = new TypeToken<List<Leader>>() {
-            }.getType();
-            List<Leader> loadedLeaders = gson.fromJson(reader, listType);
-            if (loadedLeaders != null) {
-                loadedLeaders.sort(Comparator.comparing(Leader::getFullName));
+        String path = dataDir + "/civ6_leaders.json";
+        try (FileReader reader = new FileReader(path)) {
+            Type listType = new TypeToken<List<Leader>>() {}.getType();
+            List<Leader> loaded = gson.fromJson(reader, listType);
+            if (loaded != null) {
+                loaded.sort(Comparator.comparing(Leader::getFullName));
             }
-            return Collections.unmodifiableList(loadedLeaders);
-
+            return loaded != null
+                    ? Collections.unmodifiableList(loaded)
+                    : Collections.emptyList();
         } catch (IOException e) {
-            e.printStackTrace();
-            return Collections.emptyList();
+            throw new RuntimeException("Failed to load leaders from " + path, e);
         }
     }
 
@@ -42,7 +65,7 @@ public class LeaderService {
         return new ArrayList<>(leaders);
     }
 
-    public List<String> getShortNames(){
+    public List<String> getShortNames() {
         return getLeaders().stream()
                 .map(Leader::getShortName)
                 .collect(Collectors.toList());
@@ -57,7 +80,8 @@ public class LeaderService {
         if (hasEnoughLeaders(nonBannedLeaders.size(), lobby.getPickSize(), lobby.getPlayers().size())) {
             lobby = setLeadersPoolToPlayers(nonBannedLeaders, lobby);
         } else {
-            System.out.println("Not enough leaders to get uniq poll to every player! Recommend to change pickSize.");
+            log.warn("Not enough leaders to assign unique pool to every player. pickSize={}, players={}, available={}",
+                    lobby.getPickSize(), lobby.getPlayers().size(), nonBannedLeaders.size());
         }
 
         return lobby;
@@ -68,15 +92,11 @@ public class LeaderService {
         for (Leader leader : player.getPicks()) {
             sb.append("/d_").append(leader.getShortName()).append(" ");
         }
-
         return sb.toString().trim();
     }
 
     public Leader getLeaderByShortName(String shortName) {
-        if (leaders == null ) {
-            return null;
-        }
-
+        if (leaders == null) return null;
         return leaders.stream()
                 .filter(l -> l.getShortName().equalsIgnoreCase(shortName))
                 .findFirst()
@@ -88,7 +108,7 @@ public class LeaderService {
     }
 
     private Lobby setLeadersPoolToPlayers(List<Leader> leaders, Lobby lobby) {
-        List<Leader> shuffledLeaders = getLeaders();
+        List<Leader> shuffledLeaders = new ArrayList<>(leaders);
         Collections.shuffle(shuffledLeaders, new Random());
         Iterator<Leader> leaderIterator = shuffledLeaders.iterator();
 
@@ -132,17 +152,14 @@ public class LeaderService {
 
         for (int i = 0; i < contentParagraphs.size(); i++) {
             String paragraph = contentParagraphs.get(i);
-
             formattedText.append("<b>").append(paragraph).append("</b>\n");
 
             if (i + 1 < contentParagraphs.size()) {
                 String nextParagraph = contentParagraphs.get(i + 1);
-
                 String[] sentences = nextParagraph.split("(?<=[.:])\\s+");
                 for (String sentence : sentences) {
                     formattedText.append(sentence.trim()).append("\n");
                 }
-
                 formattedText.append("\n");
                 i++;
             }

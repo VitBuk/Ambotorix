@@ -114,24 +114,14 @@ public class PickImageGenerator {
         g.drawString(text, startX, y);
     }
 
-    public static SendPhoto createLeaderPickMessage(Long chatId, Player player) {
-        File imageFile = generateLeaderPickImage(player);
+    public record LeaderPickPhoto(SendPhoto sendPhoto, File tempFile) {}
 
-        SendPhoto sp = SendPhoto
-                .builder()
+    public static LeaderPickPhoto createLeaderPickMessage(Long chatId, Player player) {
+        File imageFile = generateLeaderPickImage(player);
+        SendPhoto sp = SendPhoto.builder()
                 .chatId(chatId)
                 .photo(new InputFile(imageFile))
                 .build();
-
-        new Thread(() -> {
-            try {
-                Thread.sleep(5000);
-                imageFile.delete();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        return sp;
+        return new LeaderPickPhoto(sp, imageFile);
     }
 }

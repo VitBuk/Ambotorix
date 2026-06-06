@@ -1,8 +1,10 @@
 package vitbuk.com.Ambotorix.services;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -18,7 +20,6 @@ import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.commands.structure.CommandInfo;
 import vitbuk.com.Ambotorix.config.BotConfig;
-import vitbuk.com.Ambotorix.constants.MessageConstants;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -28,40 +29,57 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AmbotorixService {
+    private static final Logger log = LoggerFactory.getLogger(AmbotorixService.class);
+
     private final TelegramClient telegramClient;
     private final LeaderService leaderService;
     private final LobbyService lobbyService;
     private final CommandFactory commandFactory;
     private final MarkupService markupService;
     private final BotConfig botConfig;
+    private final DataUpdateService dataUpdateService;
+
+    @Value("${data.dir:src/main/resources}")
+    private String dataDir;
 
     @Autowired
-    public AmbotorixService(LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
-                            BotConfig botConfig) {
-        this.telegramClient = new OkHttpTelegramClient(botConfig.getToken());
+    public AmbotorixService(TelegramClient telegramClient, LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
+                            BotConfig botConfig, DataUpdateService dataUpdateService) {
+        this.telegramClient = telegramClient;
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
         this.commandFactory = commandFactory;
         this.markupService = markupService;
         this.botConfig = botConfig;
+        this.dataUpdateService = dataUpdateService;
     }
 
     //logic for command -> credits
     public void sendCredits(Update update) {
-        sendMessage(update, "Bot is created by" + MessageConstants.CREDITS_NAME + "\n" + MessageConstants.CREDITS_GITHUB);
+        sendMessage(update, "Bot is created by VitBuk\nhttps://github.com/VitBuk");
     }
 
     //logic for command -> discord
     public void sendDiscord(Update update) {
-        sendMessage(update, "Our discord server: \n" + MessageConstants.DISCORD);
+        sendMessage(update, "Our discord server: \nJoin our Discord: https://discord.gg/2h425TExSt");
     }
+    //logic for command -> /update
+    public void sendUpdate(Update update) {
+        sendMessage(update, "Checking for BBG updates...");
+        String result = dataUpdateService.checkAndUpdate();
+        sendMessage(update, result);
+    }
+
     //logic for command -> help
     public void sendHelp(Update update) {
         List<Command> commands = commandFactory.getAll()
@@ -83,8 +101,9 @@ public class AmbotorixService {
 
     // logic for command -> /lobby
     public void sendLobby(Update update) {
-        Player host = new Player(update.getMessage().getFrom().getUserName());
-        String message = lobbyService.createLobby(host);
+        Long chatId = extractChatIdLong(update);
+        Player host = new Player(update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId());
+        String message = lobbyService.createLobby(chatId, host);
 
         sendMessage(update, message);
     }
@@ -109,24 +128,23 @@ public class AmbotorixService {
         try {
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Failed to send leaders message: {}", e.getMessage(), e);
         }
     }
 
     //logic for command -> /mods
     public void sendMods(Update update) {
-        sendMessage(update, allLines(MessageConstants.MODS_PATH));
+        sendMessage(update, allLines(dataDir + "/mods"));
     }
 
     //logic for command -> /settings
     public void sendSettings(Update update) {
-        sendMessage(update, allLines(MessageConstants.SETTINGS_PATH));
+        sendMessage(update, allLines(dataDir + "/settings"));
     }
 
     //logic for command -> /d_[shortName]
     public void sendDescription (Update update, String shortName){
-        System.out.println("sendDescription triggered:");
-        System.out.println("shortName: " + shortName);
+        log.debug("sendDescription triggered for shortName: {}", shortName);
 
         List<Leader> leaders = leaderService.getLeaders();
 
@@ -142,7 +160,7 @@ public class AmbotorixService {
                 try {
                     telegramClient.execute(photoMessage);
                 } catch (TelegramApiException e) {
-                    e.printStackTrace();
+                    log.error("Failed to send leader photo: {}", e.getMessage(), e);
                 }
 
                 String formattedDescription = leaderService.formatDescription(l.getDescription());
@@ -165,7 +183,7 @@ public class AmbotorixService {
                             .build()
             );
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Failed to answer callback query: {}", e.getMessage(), e);
         }
 
         String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
@@ -184,11 +202,12 @@ public class AmbotorixService {
 
     //logic for command -> /ban_[shortName]
     public void sendBan(Update update, String shortName) {
+        Long chatId = extractChatIdLong(update);
         String userName = update.getMessage().getFrom().getUserName();
-        Player player = lobbyService.findPlayerByName(userName);
+        Player player = lobbyService.findPlayerByName(chatId, userName);
 
         // registration check
-        if (!lobbyService.isRegistered(userName)) {
+        if (!lobbyService.isRegistered(chatId, userName)) {
             sendMessage(update, "Player " + userName + " is not registered");
             return;
         }
@@ -201,13 +220,13 @@ public class AmbotorixService {
         }
 
         //already banned check
-        if (lobbyService.isBanned(leader)) {
+        if (lobbyService.isBanned(chatId, leader)) {
             sendMessage(update, leader.getFullName() + " is already banned");
             return;
         }
 
         //has bans slots check
-        if (!lobbyService.hasAvailableBans(player) && !isHost(update)) {
+        if (!lobbyService.hasAvailableBans(chatId, player) && !isHost(update)) {
             sendMessage(update, "Player " + player.getUserName() + " cant ban more leaders");
             return;
         }
@@ -216,7 +235,7 @@ public class AmbotorixService {
         sendMessage(update, leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
 
         StringBuilder sb = new StringBuilder("Bans: \n");
-        for (Leader l: lobbyService.bannedLeaders()) {
+        for (Leader l: lobbyService.bannedLeaders(chatId)) {
             sb.append(l.getFullName()).append(", ");
         }
         sendMessage(update, sb.toString());
@@ -234,14 +253,31 @@ public class AmbotorixService {
             return;
         }
 
-        sendMessage(update, lobbyService.registerPlayer(update.getMessage().getFrom().getUserName()));
+        Long chatId = extractChatIdLong(update);
+        sendMessage(update, lobbyService.registerPlayer(chatId, update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId()));
     }
 
     //logic for command -> /start
     public void sendStart(Update update) {
-        sendSlotOrder(update);
-        sendRandomMap(update);
-        sendPicks(update);
+        Long chatId = extractChatIdLong(update);
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) { sendNoLobby(update); return; }
+        if (lobby.isDraftInProgress()) {
+            sendMessage(update, "Draft is already in progress.");
+            return;
+        }
+        lobby.setDraftInProgress(true);
+        lobby.setDraftStartedAt(LocalDateTime.now());
+        try {
+            sendSlotOrder(update);
+            sendRandomMap(update);
+            sendPicks(update);
+        } catch (Exception e) {
+            log.error("Draft failed for chat {}, resetting draftInProgress", chatId, e);
+            lobby.setDraftInProgress(false);
+            lobby.setDraftStartedAt(null);
+            sendBugReport(update);
+        }
     }
     //logic for command -> /time
     public void sendTime(Update update) {
@@ -266,10 +302,12 @@ public class AmbotorixService {
             return;
         }
 
-        List<CivMap> mapPool =  lobbyService.getMappool();
+        Long chatId = extractChatIdLong(update);
+        List<CivMap> mapPool =  lobbyService.getMappool(chatId);
 
         if (mapPool == null) {
             sendBugReport(update);
+            return;
         }
 
         StringBuilder sb = new StringBuilder("Map pool: \n");
@@ -309,7 +347,7 @@ public class AmbotorixService {
         try {
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Failed to send maplist message: {}", e.getMessage(), e);
         }
     }
 
@@ -322,7 +360,8 @@ public class AmbotorixService {
             return;
         }
 
-        lobbyService.addMap(civMap);
+        Long chatId = extractChatIdLong(update);
+        lobbyService.addMap(chatId, civMap);
         sendMappool(update);
     }
 
@@ -335,7 +374,8 @@ public class AmbotorixService {
             return;
         }
 
-        if (lobbyService.removeMap(civMap)) {
+        Long chatId = extractChatIdLong(update);
+        if (lobbyService.removeMap(chatId, civMap)) {
             sendMappool(update);
             return;
         }
@@ -343,15 +383,20 @@ public class AmbotorixService {
         sendMessage(update, "There is no such map in map pool. Check map pool by using " + mappoolName + " command");
     }
 
-    public void sendTerminate (Update update){
-
+    public void sendTerminate(Update update) {
+        if (!hasLobby(update)) { sendNoLobby(update); return; }
+        Long chatId = extractChatIdLong(update);
+        lobbyService.removeLobby(chatId);
+        sendMessage(update, "Lobby terminated by @" + update.getMessage().getFrom().getUserName() + ".");
     }
     public boolean isHost(Update update){
-        return lobbyService.isHost(update.getMessage().getFrom().getUserName());
+        Long chatId = extractChatIdLong(update);
+        return lobbyService.isHost(chatId, update.getMessage().getFrom().getUserName());
     }
 
     public boolean hasLobby(Update update) {
-        return lobbyService.getLobby() != null;
+        Long chatId = extractChatIdLong(update);
+        return lobbyService.hasLobby(chatId);
     }
 
     public void sendNoLobby(Update update) {
@@ -363,7 +408,8 @@ public class AmbotorixService {
     }
 
     public boolean isRegistered(Update update) {
-        return lobbyService.isRegistered(update.getMessage().getFrom().getUserName());
+        Long chatId = extractChatIdLong(update);
+        return lobbyService.isRegistered(chatId, update.getMessage().getFrom().getUserName());
     }
 
     public void sendNotAPlayer(Update update) {
@@ -377,49 +423,167 @@ public class AmbotorixService {
     }
 
     private void sendSlotOrder(Update update) {
-        List<Player> shuffledPlayers = lobbyService.randomSlotOrder();
-        if (shuffledPlayers == null ) {
+        Long chatId = extractChatIdLong(update);
+        List<Player> shuffledPlayers = lobbyService.randomSlotOrder(chatId);
+        if (shuffledPlayers == null || shuffledPlayers.isEmpty()) {
             sendMessage(update, "0 players registered");
+            return;
         }
 
         StringBuilder sb = new StringBuilder("Slot order: \n");
-        for (int i=0; i<shuffledPlayers.size(); i++) {
-            sb.append(i)
+        for (int i = 0; i < shuffledPlayers.size(); i++) {
+            sb.append(i + 1)
                     .append(". ")
-                    .append(shuffledPlayers.get(i).getUserName());
+                    .append(shuffledPlayers.get(i).getUserName())
+                    .append("\n");
         }
 
         sendMessage(update, sb.toString());
     }
 
     private void sendRandomMap(Update update) {
-        CivMap randomMap = lobbyService.randomMap();
-        if (randomMap == null ) {
+        Long chatId = extractChatIdLong(update);
+        CivMap randomMap = lobbyService.randomMap(chatId);
+        if (randomMap == null) {
             sendMessage(update, "There is no maps in the map pool");
+            return;
         }
 
         sendMessage(update, "Map: " + randomMap.toString());
     }
 
     private void sendPicks(Update update) {
-        Lobby lobby = lobbyService.getLobby();
+        Long chatId = extractChatIdLong(update);
+        Lobby lobby = lobbyService.getLobby(chatId);
         lobby = leaderService.setLeadersPool(lobby);
 
         for (Player p : lobby.getPlayers()) {
             sendMessage(update, "<b>" + p.getUserName() + ":</b>");
-            SendPhoto sendPhoto = PickImageGenerator.createLeaderPickMessage(Long.valueOf(extractChatId(update)), p);
+            PickImageGenerator.LeaderPickPhoto result = PickImageGenerator.createLeaderPickMessage(chatId, p);
             InlineKeyboardMarkup markup = markupService.leadersMarkup(p.getPicks());
-            sendPhoto.setReplyMarkup(markup);
+            result.sendPhoto().setReplyMarkup(markup);
 
-            try{
-                telegramClient.execute(sendPhoto);
+            try {
+                telegramClient.execute(result.sendPhoto());
             } catch (TelegramApiException e) {
                 throw new RuntimeException(e);
+            } finally {
+                result.tempFile().delete();
             }
         }
     }
 
-    private void sendMessage(Update update, String text) {
+    public void sendStatus(Update update) {
+        Long chatId = extractChatIdLong(update);
+        if (!lobbyService.hasLobby(chatId)) {
+            sendMessage(update, "No active lobby. Use /lobby to create one.");
+            return;
+        }
+        Lobby lobby = lobbyService.getLobby(chatId);
+        sendMessage(update, "Lobby active | Host: @" + lobby.getHost().getUserName()
+                + " | Players: " + lobby.getPlayers().size()
+                + " | Draft: " + lobby.getDraftStrategyName());
+    }
+
+    public void sendLobbyInfo(Update update) {
+        Long chatId = extractChatIdLong(update);
+        if (!lobbyService.hasLobby(chatId)) {
+            sendNoLobby(update);
+            return;
+        }
+        Lobby lobby = lobbyService.getLobby(chatId);
+        String playerList = lobby.getPlayers().stream()
+                .map(Player::getUserName)
+                .collect(Collectors.joining(", "));
+        String mapList = lobby.getMapPool().stream()
+                .map(CivMap::toString)
+                .collect(Collectors.joining(", "));
+        String info = "Lobby by @" + lobby.getHost().getUserName()
+                + " | Draft: " + lobby.getDraftStrategyName() + "\n"
+                + "Players (" + lobby.getPlayers().size() + "): " + playerList + "\n"
+                + "Pick size: " + lobby.getPickSize()
+                + " | Bans per player: " + lobby.getBanSize() + "\n"
+                + "Map pool: " + mapList;
+        sendMessage(update, info);
+    }
+
+    public void sendSetBanSize(Update update, int n) {
+        if (n < 0) {
+            sendMessage(update, "Ban size must be 0 or greater.");
+            return;
+        }
+        Long chatId = extractChatIdLong(update);
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) { sendNoLobby(update); return; }
+        lobby.setBanSize(n);
+        sendMessage(update, "Ban size set to " + n + ".");
+    }
+
+    public void sendSetPickSize(Update update, int n) {
+        if (n < 1) {
+            sendMessage(update, "Pick size must be at least 1.");
+            return;
+        }
+        Long chatId = extractChatIdLong(update);
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) { sendNoLobby(update); return; }
+        lobby.setPickSize(n);
+        sendMessage(update, "Pick size set to " + n + ".");
+    }
+
+    public void sendSetDraft(Update update, String strategyName) {
+        if (!List.of("open", "secret").contains(strategyName)) {
+            sendMessage(update, "Unknown strategy. Available: open, secret");
+            return;
+        }
+        Long chatId = extractChatIdLong(update);
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) { sendNoLobby(update); return; }
+        lobby.setDraftStrategyName(strategyName);
+        sendMessage(update, "Draft strategy set to: " + strategyName + ".");
+    }
+
+    public void sendAdminLobbies(Update update) {
+        Map<Long, Lobby> all = lobbyService.getAllLobbies();
+        if (all.isEmpty()) {
+            sendMessage(update, "No active lobbies.");
+            return;
+        }
+        StringBuilder sb = new StringBuilder("Active lobbies:\n");
+        all.forEach((chatId, lobby) -> {
+            long ageMinutes = Duration.between(lobby.getCreated(), LocalDateTime.now()).toMinutes();
+            sb.append("chatId: ").append(chatId)
+              .append(" | host: @").append(lobby.getHost().getUserName())
+              .append(" | players: ").append(lobby.getPlayers().size())
+              .append(" | age: ").append(ageMinutes).append("m\n");
+        });
+        sendMessage(update, sb.toString());
+    }
+
+    public void sendAdminTerminate(Update update, Long targetChatId) {
+        if (!lobbyService.hasLobby(targetChatId)) {
+            sendMessage(update, "No lobby found for chatId: " + targetChatId);
+            return;
+        }
+        lobbyService.removeLobby(targetChatId);
+        sendToChat(targetChatId, "Lobby terminated by bot admin.");
+        sendMessage(update, "Lobby in chat " + targetChatId + " terminated.");
+    }
+
+    public void sendToChat(Long chatId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send message to chat {}: {}", chatId, e.getMessage(), e);
+        }
+    }
+
+    public void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(extractChatId(update))
                 .text(text)
@@ -429,7 +593,7 @@ public class AmbotorixService {
         try {
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Failed to send message: {}", e.getMessage(), e);
         }
     }
 
@@ -453,7 +617,7 @@ public class AmbotorixService {
         try {
             telegramClient.execute(message);
         } catch (TelegramApiException e) {
-            e.printStackTrace();
+            log.error("Failed to send private message: {}", e.getMessage(), e);
         }
     }
 
@@ -480,6 +644,13 @@ public class AmbotorixService {
         return update.getMessage()
                 .getChatId()
                 .toString();
+    }
+
+    public Long extractChatIdLong(Update update) {
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getMessage().getChatId();
+        }
+        return update.getMessage().getChatId();
     }
 
     private List<String> readLines (String filePath) {
