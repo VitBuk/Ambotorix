@@ -93,6 +93,14 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             }
         }
 
+        if (command instanceof DynamicCommand) {
+            String[] tokens = update.getMessage().getText().split("[\\s_]+", 2);
+            if (tokens.length < 2 || tokens[1].isBlank()) {
+                ambotorixService.sendMessage(update, "Usage: " + command.getInfo().name());
+                return;
+            }
+        }
+
         command.execute(update, ambotorixService);
     }
 

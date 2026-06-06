@@ -1,5 +1,7 @@
 package vitbuk.com.Ambotorix.commands.structure;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -9,6 +11,8 @@ import java.util.Map;
 
 @Service
 public class CommandFactory {
+    private static final Logger log = LoggerFactory.getLogger(CommandFactory.class);
+
     private final Map<String, Command> commandMap = new HashMap<>();
     private final Map<Class<? extends Command>, Command> typeMap = new HashMap<>();
 
@@ -20,7 +24,7 @@ public class CommandFactory {
     }
 
     public Command getCommand(String commandPrefix){
-        System.out.println("c: [" + commandMap.get(commandPrefix) + "]");
+        log.debug("Command lookup for '{}': {}", commandPrefix, commandMap.get(commandPrefix));
         return commandMap.get(commandPrefix);
     }
 

@@ -9,6 +9,7 @@ public class BotConfig {
 
     private String token;
     private String username;
+    private Long adminId;
 
     public String getToken() {
         return token;
@@ -24,5 +25,13 @@ public class BotConfig {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public Long getAdminId() {
+        return adminId;
+    }
+
+    public void setAdminId(Long adminId) {
+        this.adminId = adminId;
     }
 }

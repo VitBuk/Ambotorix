@@ -2,8 +2,10 @@ package vitbuk.com.Ambotorix.entities;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,6 +18,10 @@ public class Lobby {
     private Integer pickSize;
     private List<Player> players;
     private CivMap selectedMap;
+    private String draftStrategyName = "open";
+    private Map<String, Leader> pendingPicks = new HashMap<>();
+    private boolean draftInProgress = false;
+    private LocalDateTime draftStartedAt;
 
     public Lobby(Player host) {
         this.created = LocalDateTime.now();
@@ -118,6 +124,21 @@ public class Lobby {
 
         return false;
     }
+    public String getDraftStrategyName() { return draftStrategyName; }
+    public void setDraftStrategyName(String name) { this.draftStrategyName = name; }
+
+    public Map<String, Leader> getPendingPicks() { return pendingPicks; }
+    public void addPendingPick(String userName, Leader leader) { pendingPicks.put(userName, leader); }
+    public boolean hasPendingPick(String userName) { return pendingPicks.containsKey(userName); }
+    public boolean allPicksIn(int expectedCount) { return pendingPicks.size() >= expectedCount; }
+
+    public boolean isDraftInProgress() { return draftInProgress; }
+    public void setDraftInProgress(boolean draftInProgress) { this.draftInProgress = draftInProgress; }
+
+    public LocalDateTime getDraftStartedAt() { return draftStartedAt; }
+    public void setDraftStartedAt(LocalDateTime draftStartedAt) { this.draftStartedAt = draftStartedAt; }
+    public boolean isDraftStarted() { return draftStartedAt != null; }
+
     public void defaultSetup() {
         this.banSize = 1;
         this.pickSize = 6;

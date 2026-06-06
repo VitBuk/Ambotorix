@@ -8,7 +8,7 @@ import vitbuk.com.Ambotorix.commands.structure.PlayerCommand;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
-public class BanCommand implements DynamicCommand, PlayerCommand {
+public class BanCommand implements PlayerCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/ban",
             "/ban [shortName]",
