@@ -36,3 +36,7 @@ build/
 src/main/resources/application.properties
 src/main/resources/application-*.properties
 *MessageConstants.java
+
+# Local tooling and docs
+docs/
+.claude/
