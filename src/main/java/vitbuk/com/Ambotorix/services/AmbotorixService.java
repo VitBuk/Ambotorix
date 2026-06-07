@@ -20,6 +20,8 @@ import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.commands.structure.CommandInfo;
 import vitbuk.com.Ambotorix.config.BotConfig;
+import vitbuk.com.Ambotorix.draft.DraftStrategy;
+import vitbuk.com.Ambotorix.draft.DraftStrategyFactory;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -48,13 +50,14 @@ public class AmbotorixService {
     private final MarkupService markupService;
     private final BotConfig botConfig;
     private final DataUpdateService dataUpdateService;
+    private final DraftStrategyFactory draftStrategyFactory;
 
     @Value("${data.dir:src/main/resources}")
     private String dataDir;
 
     @Autowired
     public AmbotorixService(TelegramClient telegramClient, LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
-                            BotConfig botConfig, DataUpdateService dataUpdateService) {
+                            BotConfig botConfig, DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory) {
         this.telegramClient = telegramClient;
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
@@ -62,6 +65,7 @@ public class AmbotorixService {
         this.markupService = markupService;
         this.botConfig = botConfig;
         this.dataUpdateService = dataUpdateService;
+        this.draftStrategyFactory = draftStrategyFactory;
     }
 
     //logic for command -> credits
@@ -198,6 +202,15 @@ public class AmbotorixService {
             String civMapName = data.substring(addPrefix.length()+1); // +1 is space or _ before map name
             sendMapAdd(update, CivMap.fromDisplayNameIgnoreCase(civMapName).get());
         }
+
+        String pickPrefix = "/pick";
+        if (data != null && data.startsWith(pickPrefix + " ")) {
+            String payload = data.substring(pickPrefix.length() + 1);
+            String[] parts = payload.split(" ", 2);
+            Long lobbyChatId = Long.parseLong(parts[0]);
+            String shortName = parts[1];
+            sendPick(update, lobbyChatId, shortName);
+        }
     }
 
     //logic for command -> /ban_[shortName]
@@ -271,7 +284,8 @@ public class AmbotorixService {
         try {
             sendSlotOrder(update);
             sendRandomMap(update);
-            sendPicks(update);
+            DraftStrategy strategy = draftStrategyFactory.getStrategy(lobby.getDraftStrategyName());
+            strategy.execute(lobby, chatId, this);
         } catch (Exception e) {
             log.error("Draft failed for chat {}, resetting draftInProgress", chatId, e);
             lobby.setDraftInProgress(false);
@@ -279,6 +293,56 @@ public class AmbotorixService {
             sendBugReport(update);
         }
     }
+    public void sendPick(Update update, Long lobbyChatId, String shortName) {
+        Lobby lobby = lobbyService.getLobby(lobbyChatId);
+        if (lobby == null) { sendMessage(update, "No active lobby."); return; }
+        if (!lobby.isDraftInProgress()) { sendMessage(update, "No draft in progress."); return; }
+        if (!"secret".equals(lobby.getDraftStrategyName())) {
+            sendMessage(update, "/pick is only available in secret draft mode.");
+            return;
+        }
+
+        String userName = update.hasCallbackQuery()
+                ? update.getCallbackQuery().getFrom().getUserName()
+                : update.getMessage().getFrom().getUserName();
+        Long userChatId = update.hasCallbackQuery()
+                ? update.getCallbackQuery().getFrom().getId()
+                : update.getMessage().getFrom().getId();
+
+        if (!lobbyService.isRegistered(lobbyChatId, userName)) {
+            sendMessage(update, "You are not registered in this lobby.");
+            return;
+        }
+        if (lobby.hasPendingPick(userName)) {
+            sendMessage(update, "You already picked a leader.");
+            return;
+        }
+        Leader leader = leaderService.getLeaderByShortName(shortName);
+        if (leader == null) {
+            sendMessage(update, "Unknown leader: " + shortName + ". Check your DM for available shortnames.");
+            return;
+        }
+        Player player = lobbyService.findPlayerByName(lobbyChatId, userName);
+        if (player == null) {
+            sendMessage(update, "Player not found in lobby.");
+            return;
+        }
+        if (!player.getPicks().contains(leader)) {
+            sendMessage(update, "That leader is not in your pick pool.");
+            return;
+        }
+        lobby.addPendingPick(userName, leader);
+        sendToChat(userChatId, "You picked <b>" + leader.getFullName() + "</b>!");
+        sendToChat(lobbyChatId, "@" + userName + " has made their pick. ("
+                + lobby.getPendingPicks().size() + "/" + lobby.getPlayers().size() + ")");
+
+        if (lobby.allPicksIn(lobby.getPlayers().size())) {
+            draftStrategyFactory.getStrategy(lobby.getDraftStrategyName())
+                    .onAllPicksIn(lobby, lobbyChatId, this);
+            lobby.setDraftInProgress(false);
+        }
+    }
+
     //logic for command -> /time
     public void sendTime(Update update) {
         ZonedDateTime nowInRiga = ZonedDateTime.now(ZoneId.of("Europe/Riga"));
@@ -452,27 +516,6 @@ public class AmbotorixService {
         sendMessage(update, "Map: " + randomMap.toString());
     }
 
-    private void sendPicks(Update update) {
-        Long chatId = extractChatIdLong(update);
-        Lobby lobby = lobbyService.getLobby(chatId);
-        lobby = leaderService.setLeadersPool(lobby);
-
-        for (Player p : lobby.getPlayers()) {
-            sendMessage(update, "<b>" + p.getUserName() + ":</b>");
-            PickImageGenerator.LeaderPickPhoto result = PickImageGenerator.createLeaderPickMessage(chatId, p);
-            InlineKeyboardMarkup markup = markupService.leadersMarkup(p.getPicks());
-            result.sendPhoto().setReplyMarkup(markup);
-
-            try {
-                telegramClient.execute(result.sendPhoto());
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-            } finally {
-                result.tempFile().delete();
-            }
-        }
-    }
-
     public void sendStatus(Update update) {
         Long chatId = extractChatIdLong(update);
         if (!lobbyService.hasLobby(chatId)) {
@@ -532,8 +575,8 @@ public class AmbotorixService {
     }
 
     public void sendSetDraft(Update update, String strategyName) {
-        if (!List.of("open", "secret").contains(strategyName)) {
-            sendMessage(update, "Unknown strategy. Available: open, secret");
+        if (!draftStrategyFactory.getStrategyNames().contains(strategyName)) {
+            sendMessage(update, "Unknown strategy. Available: " + String.join(", ", draftStrategyFactory.getStrategyNames()));
             return;
         }
         Long chatId = extractChatIdLong(update);

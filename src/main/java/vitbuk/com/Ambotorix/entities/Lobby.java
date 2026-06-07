@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +20,7 @@ public class Lobby {
     private List<Player> players;
     private CivMap selectedMap;
     private String draftStrategyName = "open";
-    private Map<String, Leader> pendingPicks = new HashMap<>();
+    private Map<String, Leader> pendingPicks = new LinkedHashMap<>();
     private boolean draftInProgress = false;
     private LocalDateTime draftStartedAt;
 
