@@ -46,6 +46,20 @@ public class MarkupService {
                 .build();
     }
 
+    public InlineKeyboardMarkup pickMarkup(List<Leader> leaders, Long groupChatId) {
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+        for (Leader l : leaders) {
+            InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                    .text("Pick " + l.getFullName())
+                    .callbackData("/pick " + groupChatId + " " + l.getShortName())
+                    .build();
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(btn);
+            rows.add(row);
+        }
+        return InlineKeyboardMarkup.builder().keyboard(rows).build();
+    }
+
     public InlineKeyboardMarkup maplistMarkup(List<CivMap> maps) {
         String mPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
 
