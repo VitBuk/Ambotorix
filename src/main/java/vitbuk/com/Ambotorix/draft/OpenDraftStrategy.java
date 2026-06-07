@@ -3,6 +3,8 @@ package vitbuk.com.Ambotorix.draft;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.PickImageGenerator;
@@ -11,6 +13,8 @@ import vitbuk.com.Ambotorix.entities.Player;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 import vitbuk.com.Ambotorix.services.LeaderService;
 import vitbuk.com.Ambotorix.services.MarkupService;
+
+import java.io.File;
 
 @Component
 public class OpenDraftStrategy implements DraftStrategy {
@@ -33,17 +37,40 @@ public class OpenDraftStrategy implements DraftStrategy {
     public void execute(Lobby lobby, Long chatId, AmbotorixService service) {
         leaderService.setLeadersPool(lobby);
         for (Player player : lobby.getPlayers()) {
-            service.sendToChat(chatId, "<b>" + player.getUserName() + ":</b>");
             PickImageGenerator.LeaderPickPhoto result = PickImageGenerator.createLeaderPickMessage(chatId, player);
-            result.sendPhoto().setReplyMarkup(markupService.leadersMarkup(player.getPicks()));
+            File tempFile = result.tempFile();
             try {
+                // Group chat: name + image, no buttons
+                service.sendToChat(chatId, "<b>" + player.getUserName() + ":</b>");
                 telegramClient.execute(result.sendPhoto());
             } catch (TelegramApiException e) {
                 log.error("Failed to send pick image for player {}", player.getUserName(), e);
+                tempFile.delete();
                 throw new RuntimeException(e);
-            } finally {
-                result.tempFile().delete();
             }
+
+            // DM: same image with description buttons — non-fatal if it fails
+            if (player.getUserId() != null) {
+                try {
+                    sendDmWithButtons(player, tempFile);
+                } catch (TelegramApiException e) {
+                    log.warn("Could not send DM to player {} (userId={}): {}", player.getUserName(), player.getUserId(), e.getMessage());
+                }
+            } else {
+                log.warn("No userId for player {}, skipping DM", player.getUserName());
+            }
+            tempFile.delete();
         }
+    }
+
+    private void sendDmWithButtons(Player player, File imageFile) throws TelegramApiException {
+        SendPhoto dm = SendPhoto.builder()
+                .chatId(player.getUserId())
+                .photo(new InputFile(imageFile))
+                .parseMode("HTML")
+                .caption("Your leaders - tap to check descriptions:")
+                .replyMarkup(markupService.leadersMarkup(player.getPicks()))
+                .build();
+        telegramClient.execute(dm);
     }
 }

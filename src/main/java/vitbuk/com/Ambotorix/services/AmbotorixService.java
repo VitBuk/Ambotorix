@@ -14,11 +14,13 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
-import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.*;
+import vitbuk.com.Ambotorix.commands.structure.AdminCommand;
 import vitbuk.com.Ambotorix.commands.structure.Command;
+import vitbuk.com.Ambotorix.commands.structure.GeneralCommand;
+import vitbuk.com.Ambotorix.commands.structure.HostCommand;
+import vitbuk.com.Ambotorix.commands.structure.QuickStartCommand;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
-import vitbuk.com.Ambotorix.commands.structure.CommandInfo;
 import vitbuk.com.Ambotorix.config.BotConfig;
 import vitbuk.com.Ambotorix.draft.DraftStrategy;
 import vitbuk.com.Ambotorix.draft.DraftStrategyFactory;
@@ -70,7 +72,7 @@ public class AmbotorixService {
 
     //logic for command -> credits
     public void sendCredits(Update update) {
-        sendMessage(update, "Bot is created by VitBuk\nhttps://github.com/VitBuk");
+        sendMessage(update, "Bot is created by @VitBuk\nhttps://github.com/VitBuk");
     }
 
     //logic for command -> discord
@@ -86,19 +88,50 @@ public class AmbotorixService {
 
     //logic for command -> help
     public void sendHelp(Update update) {
-        List<Command> commands = commandFactory.getAll()
-                .stream()
-                .sorted(Comparator.comparing(c -> c.getInfo().prefix(), String.CASE_INSENSITIVE_ORDER))
-                .toList();
+        List<Command> all = commandFactory.getAll();
+        Comparator<Command> byPrefix = Comparator.comparing(c -> c.getInfo().prefix(), String.CASE_INSENSITIVE_ORDER);
 
-        StringBuilder sb = new StringBuilder("Commands:\n");
-        for (Command c : commands) {
-            CommandInfo info = c.getInfo();
-            sb.append(info.name())
-                    .append(" – ")
-                    .append(info.description())
-                    .append('\n');
-        }
+        // General: /help first, /leaders second, /credits last, rest alphabetical
+        List<Command> general = all.stream()
+                .filter(c -> c instanceof GeneralCommand)
+                .sorted((a, b) -> {
+                    if (a instanceof HelpCommand) return -1;
+                    if (b instanceof HelpCommand) return 1;
+                    if (a instanceof LeadersCommand) return -1;
+                    if (b instanceof LeadersCommand) return 1;
+                    if (a instanceof CreditsCommand) return 1;
+                    if (b instanceof CreditsCommand) return -1;
+                    return a.getInfo().prefix().compareToIgnoreCase(b.getInfo().prefix());
+                }).toList();
+
+        List<Command> quickStart = all.stream()
+                .filter(c -> c instanceof QuickStartCommand)
+                .sorted(byPrefix).toList();
+
+        List<Command> hostCmds = all.stream()
+                .filter(c -> c instanceof HostCommand)
+                .filter(c -> !(c instanceof QuickStartCommand))
+                .sorted(byPrefix).toList();
+
+        List<Command> playerCmds = all.stream()
+                .filter(c -> !(c instanceof GeneralCommand))
+                .filter(c -> !(c instanceof AdminCommand))
+                .filter(c -> !(c instanceof HostCommand))
+                .filter(c -> !(c instanceof QuickStartCommand))
+                .sorted(byPrefix).toList();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<b>General:</b>\n");
+        general.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
+
+        sb.append("\n<b>Quick start:</b>\n");
+        quickStart.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
+
+        sb.append("\n<b>Host commands:</b>\n");
+        hostCmds.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
+
+        sb.append("\n<b>Player commands:</b>\n");
+        playerCmds.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
 
         sendMessage(update, sb.toString());
     }
@@ -267,7 +300,27 @@ public class AmbotorixService {
         }
 
         Long chatId = extractChatIdLong(update);
-        sendMessage(update, lobbyService.registerPlayer(chatId, update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId()));
+        Long userId = update.getMessage().getFrom().getId();
+        String result = lobbyService.registerPlayer(chatId, update.getMessage().getFrom().getUserName(), userId);
+
+        if (canDm(userId)) {
+            sendMessage(update, result);
+            sendToChat(userId, "You're registered for the lobby! Your leader picks will be sent here when the draft starts.");
+        } else {
+            sendMessage(update, result + "\n\n⚠️ To receive your picks in DM, please start a private chat with @" + botConfig.getUsername().replaceFirst("^@", "") + " first.");
+        }
+    }
+
+    private boolean canDm(Long userId) {
+        try {
+            telegramClient.execute(SendMessage.builder()
+                    .chatId(userId)
+                    .text("✅ DM confirmed — you'll receive your leader picks here when a draft starts.")
+                    .build());
+            return true;
+        } catch (TelegramApiException e) {
+            return false;
+        }
     }
 
     //logic for command -> /start
@@ -516,38 +569,45 @@ public class AmbotorixService {
         sendMessage(update, "Map: " + randomMap.toString());
     }
 
-    public void sendStatus(Update update) {
+    public void sendLobbyInfo(Update update) {
         Long chatId = extractChatIdLong(update);
         if (!lobbyService.hasLobby(chatId)) {
             sendMessage(update, "No active lobby. Use /lobby to create one.");
             return;
         }
         Lobby lobby = lobbyService.getLobby(chatId);
-        sendMessage(update, "Lobby active | Host: @" + lobby.getHost().getUserName()
-                + " | Players: " + lobby.getPlayers().size()
-                + " | Draft: " + lobby.getDraftStrategyName());
-    }
 
-    public void sendLobbyInfo(Update update) {
-        Long chatId = extractChatIdLong(update);
-        if (!lobbyService.hasLobby(chatId)) {
-            sendNoLobby(update);
-            return;
-        }
-        Lobby lobby = lobbyService.getLobby(chatId);
         String playerList = lobby.getPlayers().stream()
                 .map(Player::getUserName)
                 .collect(Collectors.joining(", "));
-        String mapList = lobby.getMapPool().stream()
-                .map(CivMap::toString)
-                .collect(Collectors.joining(", "));
-        String info = "Lobby by @" + lobby.getHost().getUserName()
-                + " | Draft: " + lobby.getDraftStrategyName() + "\n"
-                + "Players (" + lobby.getPlayers().size() + "): " + playerList + "\n"
-                + "Pick size: " + lobby.getPickSize()
-                + " | Bans per player: " + lobby.getBanSize() + "\n"
-                + "Map pool: " + mapList;
-        sendMessage(update, info);
+        String mapList = lobby.getMapPool().isEmpty() ? "none"
+                : lobby.getMapPool().stream().map(CivMap::toString).collect(Collectors.joining(", "));
+        String draftStatus = lobby.isDraftInProgress() ? "in progress" : "waiting";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("<b>Lobby by @").append(lobby.getHost().getUserName()).append("</b>")
+                .append(" | Draft: ").append(lobby.getDraftStrategyName())
+                .append(" | Status: ").append(draftStatus).append("\n")
+                .append("Players (").append(lobby.getPlayers().size()).append("): ").append(playerList).append("\n")
+                .append("Pick size: ").append(lobby.getPickSize())
+                .append(" | Bans per player: ").append(lobby.getBanSize()).append("\n")
+                .append("Map pool: ").append(mapList);
+
+        if (lobby.getBanSize() > 0) {
+            sb.append("\n\n<b>Bans:</b>");
+            for (Player player : lobby.getPlayers()) {
+                sb.append("\n@").append(player.getUserName()).append(": ");
+                if (player.getBans().isEmpty()) {
+                    sb.append("—");
+                } else {
+                    sb.append(player.getBans().stream()
+                            .map(vitbuk.com.Ambotorix.entities.Leader::getFullName)
+                            .collect(Collectors.joining(", ")));
+                }
+            }
+        }
+
+        sendMessage(update, sb.toString());
     }
 
     public void sendSetBanSize(Update update, int n) {
