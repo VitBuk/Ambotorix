@@ -48,11 +48,13 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
             return;
         }
 
+        if (!update.hasMessage()) return;
         Message message = update.getMessage();
         String messageText = message.getText();
 
         if (messageText == null || !messageText.startsWith("/")) return;
-        String cleaned = messageText.replaceAll("(?i)@" + Pattern.quote(botConfig.getUsername()), "");
+        String username = botConfig.getUsername().replaceFirst("^@", "");
+        String cleaned = messageText.replaceAll("(?i)@" + Pattern.quote(username), "");
         message.setText(cleaned);
 
         Command command = getCommand(update);

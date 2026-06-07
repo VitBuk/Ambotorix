@@ -11,7 +11,7 @@ public class TerminateCommand implements HostCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/terminate",
             "/terminate",
-            "Terminate current lobby (Host Commmand)");
+            "Terminate current lobby (Host Command)");
     @Override
     public CommandInfo getInfo() {
         return INFO;
