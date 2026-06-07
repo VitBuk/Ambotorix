@@ -12,7 +12,7 @@ public class BanCommand implements PlayerCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/ban",
             "/ban [shortName]",
-            "Ban leader for current lobby (Player Command)");
+            "Ban leader for current lobby");
     @Override
     public CommandInfo getInfo() {
         return INFO;

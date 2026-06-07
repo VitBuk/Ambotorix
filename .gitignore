@@ -46,3 +46,6 @@ src/main/resources/bbg_version.txt
 
 # Local env file with real secrets
 .env
+
+# Docker local overrides
+docker-compose.override.yml

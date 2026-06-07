@@ -10,7 +10,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class SetPickSizeCommand implements HostCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
-            "/setPickSize", "/setPickSize [n]", "Set number of leaders per pick pool (Host Command)");
+            "/setPickSize", "/setPickSize [n]", "Set number of leaders per pick pool");
 
     @Override public CommandInfo getInfo() { return INFO; }
 

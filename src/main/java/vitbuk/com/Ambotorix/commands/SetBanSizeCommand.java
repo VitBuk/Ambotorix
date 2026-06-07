@@ -10,7 +10,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class SetBanSizeCommand implements HostCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
-            "/setBanSize", "/setBanSize [n]", "Set number of bans per player (Host Command)");
+            "/setBanSize", "/setBanSize [n]", "Set number of bans per player");
 
     @Override public CommandInfo getInfo() { return INFO; }
 

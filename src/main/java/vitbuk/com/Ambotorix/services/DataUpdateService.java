@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.regex.*;
+import java.util.stream.Collectors;
 
 @Service
 public class DataUpdateService {
@@ -80,12 +81,37 @@ public class DataUpdateService {
 
     private void runUpdate(String version) throws Exception {
         Map<String, String> shortNameMap = loadShortNames();
+        Set<String> knownBefore = new HashSet<>(shortNameMap.keySet());
+
         var leaders = LeaderScraper.scrapeLeaders(version, shortNameMap);
+
+        Set<String> newLeaders = shortNameMap.keySet().stream()
+                .filter(name -> !knownBefore.contains(name))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        if (!newLeaders.isEmpty()) {
+            saveShortNames(shortNameMap);
+            StringBuilder msg = new StringBuilder("⚠️ BBG ").append(version)
+                    .append(" — new leaders detected with auto-generated shortnames:\n");
+            newLeaders.forEach(name -> msg.append("• ").append(name)
+                    .append(" → ").append(shortNameMap.get(name)).append("\n"));
+            msg.append("\nUpdate leader_shortnames.json if you want different shortnames.");
+            notificationService.notifyError("New leaders in BBG " + version, msg.toString());
+            log.info("New leaders found: {}", newLeaders);
+        }
+
         saveLeadersJson(leaders);
-        saveShortNames(shortNameMap);
         saveCurrentVersion(version);
         leaderService.reload();
         log.info("BBG {} update complete: {} leaders loaded", version, leaders.size());
+    }
+
+    private void saveShortNames(Map<String, String> shortNames) throws IOException {
+        Path path = Path.of(dataDir, "leader_shortnames.json");
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
+            gson.toJson(shortNames, writer);
+        }
     }
 
     static String fetchLatestVersion() throws IOException {
@@ -132,14 +158,6 @@ public class DataUpdateService {
             Type mapType = new TypeToken<Map<String, String>>() {}.getType();
             Map<String, String> map = new Gson().fromJson(reader, mapType);
             return map != null ? new LinkedHashMap<>(map) : new LinkedHashMap<>();
-        }
-    }
-
-    private void saveShortNames(Map<String, String> shortNames) throws IOException {
-        Path path = Path.of(dataDir, "leader_shortnames.json");
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
-            gson.toJson(shortNames, writer);
         }
     }
 

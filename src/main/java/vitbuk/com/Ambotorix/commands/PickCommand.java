@@ -10,7 +10,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class PickCommand implements PlayerCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
-            "/pick", "/pick [shortName]", "Pick a leader in secret draft (Player Command)");
+            "/pick", "/pick [shortName]", "Pick a leader in secret draft");
 
     @Override public CommandInfo getInfo() { return INFO; }
 

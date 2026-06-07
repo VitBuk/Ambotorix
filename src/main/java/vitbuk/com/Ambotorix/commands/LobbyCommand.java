@@ -2,12 +2,12 @@ package vitbuk.com.Ambotorix.commands;
 
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import vitbuk.com.Ambotorix.commands.structure.QuickStartCommand;
+import vitbuk.com.Ambotorix.commands.structure.GeneralCommand;
 import vitbuk.com.Ambotorix.commands.structure.CommandInfo;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 
 @Component
-public class LobbyCommand implements QuickStartCommand {
+public class LobbyCommand implements GeneralCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/lobby",
             "/lobby",

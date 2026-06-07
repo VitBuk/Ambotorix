@@ -1,0 +1,10 @@
+services:
+  ambotorix:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ambotorix-data:/app/src/main/resources
+
+volumes:
+  ambotorix-data:
