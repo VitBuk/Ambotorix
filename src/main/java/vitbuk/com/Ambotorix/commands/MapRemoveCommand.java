@@ -15,7 +15,7 @@ public class MapRemoveCommand implements HostCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/mapRemove",
             "/mapRemove [mapName]",
-            "Removes map from mappool of the current lobby (Host Command)");
+            "Removes map from mappool of the current lobby");
     @Override
     public CommandInfo getInfo() {
         return INFO;

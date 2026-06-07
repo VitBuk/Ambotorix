@@ -60,14 +60,14 @@ public class MarkupService {
         return InlineKeyboardMarkup.builder().keyboard(rows).build();
     }
 
-    public InlineKeyboardMarkup maplistMarkup(List<CivMap> maps) {
+    public InlineKeyboardMarkup maplistMarkup(List<CivMap> maps, Long groupChatId) {
         String mPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
 
         List<InlineKeyboardRow> rows = new ArrayList<>();
         for (CivMap m : maps) {
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(m.name())
-                    .callbackData(mPrefix + " " + m.toString())
+                    .callbackData(mPrefix + " " + groupChatId + " " + m.toString())
                     .build();
             InlineKeyboardRow row = new InlineKeyboardRow();
             row.add(btn);

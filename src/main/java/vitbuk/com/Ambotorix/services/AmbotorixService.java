@@ -19,7 +19,6 @@ import vitbuk.com.Ambotorix.commands.structure.AdminCommand;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.GeneralCommand;
 import vitbuk.com.Ambotorix.commands.structure.HostCommand;
-import vitbuk.com.Ambotorix.commands.structure.QuickStartCommand;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.config.BotConfig;
 import vitbuk.com.Ambotorix.draft.DraftStrategy;
@@ -91,10 +90,14 @@ public class    AmbotorixService {
         List<Command> all = commandFactory.getAll();
         Comparator<Command> byPrefix = Comparator.comparing(c -> c.getInfo().prefix(), String.CASE_INSENSITIVE_ORDER);
 
-        // General: /help first, /leaders second, /credits last, rest alphabetical
+        // General: /lobby, /lobbyInfo, /help, /leaders, alpha, /credits last
         List<Command> general = all.stream()
                 .filter(c -> c instanceof GeneralCommand)
                 .sorted((a, b) -> {
+                    if (a instanceof LobbyCommand) return -1;
+                    if (b instanceof LobbyCommand) return 1;
+                    if (a instanceof LobbyInfoCommand) return -1;
+                    if (b instanceof LobbyInfoCommand) return 1;
                     if (a instanceof HelpCommand) return -1;
                     if (b instanceof HelpCommand) return 1;
                     if (a instanceof LeadersCommand) return -1;
@@ -104,28 +107,27 @@ public class    AmbotorixService {
                     return a.getInfo().prefix().compareToIgnoreCase(b.getInfo().prefix());
                 }).toList();
 
-        List<Command> quickStart = all.stream()
-                .filter(c -> c instanceof QuickStartCommand)
-                .sorted(byPrefix).toList();
-
         List<Command> hostCmds = all.stream()
                 .filter(c -> c instanceof HostCommand)
-                .filter(c -> !(c instanceof QuickStartCommand))
-                .sorted(byPrefix).toList();
+                .sorted((a, b) -> {
+                    if (a instanceof StartCommand) return -1;
+                    if (b instanceof StartCommand) return 1;
+                    return a.getInfo().prefix().compareToIgnoreCase(b.getInfo().prefix());
+                }).toList();
 
         List<Command> playerCmds = all.stream()
                 .filter(c -> !(c instanceof GeneralCommand))
                 .filter(c -> !(c instanceof AdminCommand))
                 .filter(c -> !(c instanceof HostCommand))
-                .filter(c -> !(c instanceof QuickStartCommand))
-                .sorted(byPrefix).toList();
+                .sorted((a, b) -> {
+                    if (a instanceof RegisterCommand) return -1;
+                    if (b instanceof RegisterCommand) return 1;
+                    return a.getInfo().prefix().compareToIgnoreCase(b.getInfo().prefix());
+                }).toList();
 
         StringBuilder sb = new StringBuilder();
         sb.append("<b>General:</b>\n");
         general.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
-
-        sb.append("\n<b>Quick start:</b>\n");
-        quickStart.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
 
         sb.append("\n<b>Host commands:</b>\n");
         hostCmds.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
@@ -200,7 +202,8 @@ public class    AmbotorixService {
                     log.error("Failed to send leader photo: {}", e.getMessage(), e);
                 }
 
-                String formattedDescription = leaderService.formatDescription(l.getDescription());
+                String formattedDescription = "<b>ShortName:</b> " + l.getShortName() + "\n\n"
+                        + leaderService.formatDescription(l.getDescription());
                 sendPrivateMessage(update, formattedDescription);
                 return;
             }
@@ -232,8 +235,19 @@ public class    AmbotorixService {
         }
 
         if (data != null && data.startsWith(addPrefix)) {
-            String civMapName = data.substring(addPrefix.length()+1); // +1 is space or _ before map name
-            sendMapAdd(update, CivMap.fromDisplayNameIgnoreCase(civMapName).get());
+            String payload = data.substring(addPrefix.length() + 1);
+            String[] parts = payload.split(" ", 2);
+            if (parts.length < 2) {
+                sendMessage(update, "This button is outdated. Please use /maplist again.");
+                return;
+            }
+            try {
+                Long lobbyChatId = Long.parseLong(parts[0]);
+                String civMapName = parts[1];
+                sendMapAdd(update, CivMap.fromDisplayNameIgnoreCase(civMapName).get(), lobbyChatId);
+            } catch (NumberFormatException e) {
+                sendMessage(update, "This button is outdated. Please use /maplist again.");
+            }
         }
 
         String pickPrefix = "/pick";
@@ -444,10 +458,41 @@ public class    AmbotorixService {
         sendMessage(update, sb.toString());
     }
 
+    // Looks up the lobby by lobbyChatId but responds to the update's chat (e.g. a DM callback)
+    public void sendMappool(Update update, Long lobbyChatId) {
+        if (!lobbyService.hasLobby(lobbyChatId)) {
+            sendNoLobby(update);
+            return;
+        }
+
+        List<CivMap> mapPool = lobbyService.getMappool(lobbyChatId);
+        if (mapPool == null) {
+            sendBugReport(update);
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("Map pool: \n");
+        sb.append("<i>To remove map from map pool use ")
+                .append(commandFactory.infoOf(MapRemoveCommand.class).name())
+                .append(" command </i> \n");
+
+        for (CivMap cm : mapPool) {
+            sb.append(commandFactory.infoOf(MapRemoveCommand.class).prefix())
+                    .append("_")
+                    .append(cm.toString())
+                    .append(" → ")
+                    .append(cm.toString())
+                    .append("\n");
+        }
+
+        sendMessage(update, sb.toString());
+    }
+
     //logic for the command -> maplist
     public void sendMaplist(Update update) {
         List<CivMap> allMaps = Arrays.stream(CivMap.values()).toList();
-        InlineKeyboardMarkup markup = markupService.maplistMarkup(allMaps);
+        Long groupChatId = update.getMessage().getChatId();
+        InlineKeyboardMarkup markup = markupService.maplistMarkup(allMaps, groupChatId);
 
         StringBuilder sb = new StringBuilder("Maps: \n");
         sb.append("<i>To add map to the pool use ")
@@ -480,6 +525,18 @@ public class    AmbotorixService {
         Long chatId = extractChatIdLong(update);
         lobbyService.addMap(chatId, civMap);
         sendMappool(update);
+    }
+
+    // Called from DM callback — lobbyChatId is the group chat where the lobby lives
+    public void sendMapAdd(Update update, CivMap civMap, Long lobbyChatId) {
+        if (civMap == null) {
+            sendMessage(update, "There is no such map. To get list of available maps use "
+                    + commandFactory.infoOf(MapAddCommand.class).name()
+                    + " command.");
+            return;
+        }
+        lobbyService.addMap(lobbyChatId, civMap);
+        sendMappool(update, lobbyChatId);
     }
 
     //logic for command /mapRemove [name]
