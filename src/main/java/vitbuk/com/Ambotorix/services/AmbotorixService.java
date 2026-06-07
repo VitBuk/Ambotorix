@@ -42,7 +42,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class AmbotorixService {
+public class    AmbotorixService {
     private static final Logger log = LoggerFactory.getLogger(AmbotorixService.class);
 
     private final TelegramClient telegramClient;
