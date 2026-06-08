@@ -5,5 +5,5 @@ This is my pet-project.
 2. Add refresh Bans by host command
 3. Add /photochallenge command
 4. Which commands better to accept in DM only (host tuning game settings?)
-5, Can we clear messages?
+5. Can we clear messages?
 6. One picture for all picks?
