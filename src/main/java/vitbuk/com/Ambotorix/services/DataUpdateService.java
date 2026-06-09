@@ -33,6 +33,9 @@ public class DataUpdateService {
     @Value("${data.dir:src/main/resources}")
     private String dataDir;
 
+    @Value("${data.update.on-startup:true}")
+    private boolean updateOnStartup;
+
     public DataUpdateService(LeaderService leaderService, NotificationService notificationService) {
         this.leaderService = leaderService;
         this.notificationService = notificationService;
@@ -40,6 +43,10 @@ public class DataUpdateService {
 
     @PostConstruct
     public void checkOnStartup() {
+        if (!updateOnStartup) {
+            log.info("Startup BBG version check disabled (data.update.on-startup=false); using on-disk data.");
+            return;
+        }
         log.info("Performing BBG version check on startup...");
         try {
             String latestVersion = fetchLatestVersion();
