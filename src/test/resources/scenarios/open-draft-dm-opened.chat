@@ -1,0 +1,21 @@
+--- SCENARIO: open draft — a player who opened a DM gets a private pick pool ---
+# Unlike the default case, a player who has messaged the bot privately is
+# reachable, so the draft also DMs them their pick pool with per-leader
+# description buttons — which they can actually tap.
+
+--- CHAT ---
+alice: /lobby
+bob: /register
+
+--- DM (bob) ---
+bob: /leaders                       # bob opens a private chat with the bot (now DM-reachable)
+ambotorix: <button "{leader}">      # /leaders replies with one button per leader
+
+--- CHAT ---
+alice: /start
+
+--- DM (bob) ---
+ambotorix: <image> <button "{leader}" x6 distinct>   # ONE message: pick-pool image + 6 distinct per-leader buttons
+bob: <press_button "{leader}">           # tap one leader for its description
+ambotorix: <image {leader}>              # bot replies with that leader's portrait image
+ambotorix: ShortName: *                  # ...followed by its description text
