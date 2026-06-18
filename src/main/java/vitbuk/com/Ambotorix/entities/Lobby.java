@@ -23,6 +23,8 @@ public class Lobby {
     private Map<String, Leader> pendingPicks = new LinkedHashMap<>();
     private boolean draftInProgress = false;
     private LocalDateTime draftStartedAt;
+    // Telegram forum topic (message_thread_id) the lobby lives in; null = General topic / non-forum group.
+    private Integer messageThreadId;
 
     public Lobby(Player host) {
         this.created = LocalDateTime.now();
@@ -139,6 +141,9 @@ public class Lobby {
     public LocalDateTime getDraftStartedAt() { return draftStartedAt; }
     public void setDraftStartedAt(LocalDateTime draftStartedAt) { this.draftStartedAt = draftStartedAt; }
     public boolean isDraftStarted() { return draftStartedAt != null; }
+
+    public Integer getMessageThreadId() { return messageThreadId; }
+    public void setMessageThreadId(Integer messageThreadId) { this.messageThreadId = messageThreadId; }
 
     public void defaultSetup() {
         this.banSize = 1;
