@@ -60,8 +60,11 @@ class ScenarioRunnerTest {
     @Autowired LobbyService lobbyService;
     @Autowired LeaderService leaderService;
 
-    /** Per-chat read position into the bot's history; reset per scenario. */
-    private Map<Long, Integer> cursors = new HashMap<>();
+    /** A chat plus the forum topic within it — the unit output is matched against, in order. */
+    private record Channel(long chatId, Integer threadId) {}
+
+    /** Per-channel read position into the bot's history; reset per scenario. */
+    private Map<Channel, Integer> cursors = new HashMap<>();
 
     @TestFactory
     Stream<DynamicTest> scenarios() throws IOException {
@@ -97,39 +100,40 @@ class ScenarioRunnerTest {
 
     private void executeSteps(Scenario scenario) {
         MatchContext ctx = new MatchContext(scenario.actorNames(), leaderNames());
-        Set<Long> assertedChats = new HashSet<>();
+        Set<Channel> assertedChannels = new HashSet<>();
         for (Scenario.Step step : scenario.steps()) {
             switch (step) {
                 case Scenario.Step.Say say ->
-                        client.deliverMessage(say.from().name(), say.from().userId(), say.chatId(), say.text());
+                        client.deliverMessage(say.from().name(), say.from().userId(), say.chatId(), say.threadId(), say.text());
                 case Scenario.Step.Tap tap -> executeTap(tap, ctx);
-                case Scenario.Step.ExpectMessage e -> { assertedChats.add(e.chatId()); expectMessage(e, ctx); }
-                case Scenario.Step.ExpectDrain e -> { assertedChats.add(e.chatId()); expectDrain(e); }
+                case Scenario.Step.ExpectMessage e -> { assertedChannels.add(channel(e)); expectMessage(e, ctx); }
+                case Scenario.Step.ExpectDrain e -> { assertedChannels.add(channel(e)); expectDrain(e); }
             }
         }
-        // Completeness: a chat we asserted anything about must be fully accounted for — no surprises left.
-        for (long chatId : assertedChats) {
-            Assertions.assertTrue(cursor(chatId) >= client.history(chatId).size(),
-                    () -> "Unexpected trailing output in chat " + chatId + ":" + renderFrom(chatId));
+        // Completeness: a channel we asserted anything about must be fully accounted for — no surprises left.
+        for (Channel ch : assertedChannels) {
+            Assertions.assertTrue(cursor(ch) >= client.history(ch.chatId(), ch.threadId()).size(),
+                    () -> "Unexpected trailing output in " + ch + ":" + renderFrom(ch));
         }
     }
 
-    /** Strict: the next unconsumed message in the chat must satisfy every predicate, else fail. */
+    /** Strict: the next unconsumed message in the channel must satisfy every predicate, else fail. */
     private void expectMessage(Scenario.Step.ExpectMessage e, MatchContext ctx) {
-        List<OutboundMessage> h = client.history(e.chatId());
-        int i = cursor(e.chatId());
+        Channel ch = channel(e);
+        List<OutboundMessage> h = client.history(ch.chatId(), ch.threadId());
+        int i = cursor(ch);
         if (i >= h.size()) {
-            Assertions.fail("Expected a message in chat " + e.chatId() + " satisfying "
+            Assertions.fail("Expected a message in " + ch + " satisfying "
                     + describe(e.predicates()) + " but no further output was sent.");
         }
         OutboundMessage m = h.get(i);
         for (Scenario.Step.Predicate p : e.predicates()) {
             if (!satisfies(p, m, ctx)) {
-                Assertions.fail("Next message in chat " + e.chatId() + " did not satisfy " + describe(p)
+                Assertions.fail("Next message in " + ch + " did not satisfy " + describe(p)
                         + ".\nGot: " + render(m) + "\nFull predicate: " + describe(e.predicates()));
             }
         }
-        cursors.put(e.chatId(), i + 1);
+        cursors.put(ch, i + 1);
     }
 
     private boolean satisfies(Scenario.Step.Predicate p, OutboundMessage m, MatchContext ctx) {
@@ -150,8 +154,9 @@ class ScenarioRunnerTest {
     }
 
     private void expectDrain(Scenario.Step.ExpectDrain e) {
-        Assertions.assertTrue(cursor(e.chatId()) >= client.history(e.chatId()).size(),
-                () -> "Expected no further output in chat " + e.chatId() + " but saw:" + renderFrom(e.chatId()));
+        Channel ch = channel(e);
+        Assertions.assertTrue(cursor(ch) >= client.history(ch.chatId(), ch.threadId()).size(),
+                () -> "Expected no further output in " + ch + " but saw:" + renderFrom(ch));
     }
 
     private static String describe(Scenario.Step.Predicate p) {
@@ -168,13 +173,13 @@ class ScenarioRunnerTest {
     }
 
     private void executeTap(Scenario.Step.Tap tap, MatchContext ctx) {
-        // Scan the whole history backward (not the cursor) for the most recent message with a button
-        // matching the pattern, then replay its callback data.
-        List<OutboundMessage> h = client.history(tap.chatId());
+        // Scan the whole channel history backward (not the cursor) for the most recent message with a
+        // button matching the pattern, then replay its callback data.
+        List<OutboundMessage> h = client.history(tap.chatId(), tap.threadId());
         for (int i = h.size() - 1; i >= 0; i--) {
             for (Button b : h.get(i).buttons()) {
                 if (LineMatcher.matches(tap.buttonGlob(), b.label(), ctx)) {
-                    client.deliverTap(tap.from().name(), tap.from().userId(), tap.chatId(), b.callbackData());
+                    client.deliverTap(tap.from().name(), tap.from().userId(), tap.chatId(), tap.threadId(), b.callbackData());
                     return;
                 }
             }
@@ -187,8 +192,12 @@ class ScenarioRunnerTest {
         return leaderService.getLeaders().stream().map(Leader::getFullName).toList();
     }
 
-    private int cursor(long chatId) {
-        return cursors.getOrDefault(chatId, 0);
+    private static Channel channel(Scenario.Step step) {
+        return new Channel(step.chatId(), step.threadId());
+    }
+
+    private int cursor(Channel ch) {
+        return cursors.getOrDefault(ch, 0);
     }
 
     private void resetState() {
@@ -197,10 +206,10 @@ class ScenarioRunnerTest {
         cursors = new HashMap<>();
     }
 
-    /** Render the still-unconsumed tail of a chat's history for failure diagnostics. */
-    private String renderFrom(long chatId) {
-        List<OutboundMessage> h = client.history(chatId);
-        int from = cursor(chatId);
+    /** Render the still-unconsumed tail of a channel's history for failure diagnostics. */
+    private String renderFrom(Channel ch) {
+        List<OutboundMessage> h = client.history(ch.chatId(), ch.threadId());
+        int from = cursor(ch);
         if (from >= h.size()) return "(nothing)";
         StringBuilder sb = new StringBuilder();
         for (int i = from; i < h.size(); i++) {

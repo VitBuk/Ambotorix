@@ -11,6 +11,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
@@ -141,8 +142,9 @@ public class    AmbotorixService {
     // logic for command -> /lobby
     public void sendLobby(Update update) {
         Long chatId = extractChatIdLong(update);
+        Integer threadId = extractThreadId(update);
         Player host = new Player(update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId());
-        String message = lobbyService.createLobby(chatId, host);
+        String message = lobbyService.createLobby(chatId, threadId, host);
 
         sendMessage(update, message);
     }
@@ -400,7 +402,7 @@ public class    AmbotorixService {
         }
         lobby.addPendingPick(userName, leader);
         sendToChat(userChatId, "You picked <b>" + leader.getFullName() + "</b>!");
-        sendToChat(lobbyChatId, "@" + userName + " has made their pick. ("
+        sendToChat(lobbyChatId, lobby.getMessageThreadId(), "@" + userName + " has made their pick. ("
                 + lobby.getPendingPicks().size() + "/" + lobby.getPlayers().size() + ")");
 
         if (lobby.allPicksIn(lobby.getPlayers().size())) {
@@ -725,14 +727,22 @@ public class    AmbotorixService {
             sendMessage(update, "No lobby found for chatId: " + targetChatId);
             return;
         }
+        Integer threadId = lobbyService.getLobby(targetChatId).getMessageThreadId();
         lobbyService.removeLobby(targetChatId);
-        sendToChat(targetChatId, "Lobby terminated by bot admin.");
+        sendToChat(targetChatId, threadId, "Lobby terminated by bot admin.");
         sendMessage(update, "Lobby in chat " + targetChatId + " terminated.");
     }
 
     public void sendToChat(Long chatId, String text) {
+        sendToChat(chatId, null, text);
+    }
+
+    // Same as sendToChat but pins the message to a Telegram forum topic (message_thread_id);
+    // pass null for the General topic / direct messages, which have no topics.
+    public void sendToChat(Long chatId, Integer threadId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
+                .messageThreadId(threadId)
                 .text(text)
                 .parseMode("HTML")
                 .build();
@@ -746,6 +756,7 @@ public class    AmbotorixService {
     public void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(extractChatId(update))
+                .messageThreadId(extractThreadId(update))
                 .text(text)
                 .parseMode("HTML")
                 .build();
@@ -811,6 +822,16 @@ public class    AmbotorixService {
             return update.getCallbackQuery().getMessage().getChatId();
         }
         return update.getMessage().getChatId();
+    }
+
+    // The Telegram forum topic an update originated in, so replies land in the same topic instead of
+    // defaulting to General. null when there is no topic (General topic, DMs, non-forum groups) or
+    // when a callback's originating message is no longer accessible.
+    public Integer extractThreadId(Update update) {
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getMessage() instanceof Message m ? m.getMessageThreadId() : null;
+        }
+        return update.getMessage() == null ? null : update.getMessage().getMessageThreadId();
     }
 
     private List<String> readLines (String filePath) {

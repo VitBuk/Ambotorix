@@ -26,11 +26,13 @@ public final class Scenario {
 
     public sealed interface Step {
         long chatId();
+        /** The forum topic the step acts in: null = General topic / DM, else a synthetic topic id. */
+        Integer threadId();
 
-        record Say(Actor from, long chatId, String text) implements Step {}
-        record Tap(Actor from, long chatId, String buttonGlob) implements Step {}
-        record ExpectMessage(long chatId, List<Predicate> predicates) implements Step {}
-        record ExpectDrain(long chatId) implements Step {}
+        record Say(Actor from, long chatId, Integer threadId, String text) implements Step {}
+        record Tap(Actor from, long chatId, Integer threadId, String buttonGlob) implements Step {}
+        record ExpectMessage(long chatId, Integer threadId, List<Predicate> predicates) implements Step {}
+        record ExpectDrain(long chatId, Integer threadId) implements Step {}
 
         /** A condition on a single recorded message. */
         sealed interface Predicate {
@@ -69,6 +71,7 @@ public final class Scenario {
 
     private static final Pattern HEADER = Pattern.compile("^---\\s*(.*?)\\s*---$");
     private static final Pattern DM = Pattern.compile("(?i)^DM\\s*\\(\\s*(.+?)\\s*\\)$");
+    private static final Pattern TOPIC = Pattern.compile("(?i)^TOPIC\\s*\\(\\s*(.+?)\\s*\\)$");
     private static final Pattern SCENARIO = Pattern.compile("(?i)^SCENARIO:\\s*(.+)$");
     private static final Pattern QUOTED = Pattern.compile("\"(.*)\"");
 
@@ -76,9 +79,12 @@ public final class Scenario {
         String name = "unnamed";
         Disposition disposition = Disposition.RUN;
         Map<String, Actor> actors = new LinkedHashMap<>();
+        Map<String, Integer> topics = new LinkedHashMap<>();
         List<Step> steps = new ArrayList<>();
         long[] nextActorId = {1L};
-        Long currentChat = GROUP_CHAT_ID;
+        int[] nextTopicId = {1};
+        long currentChat = GROUP_CHAT_ID;
+        Integer currentThread = null; // null = General topic of the group (or a DM)
 
         for (String rawLine : dsl.split("\n", -1)) {
             String line = stripComment(rawLine).trim();
@@ -89,12 +95,18 @@ public final class Scenario {
                 String inner = h.group(1).trim();
                 Matcher sc = SCENARIO.matcher(inner);
                 Matcher dm = DM.matcher(inner);
+                Matcher topic = TOPIC.matcher(inner);
                 if (sc.matches()) {
                     name = sc.group(1).trim();
                 } else if (inner.equalsIgnoreCase("CHAT")) {
                     currentChat = GROUP_CHAT_ID;
+                    currentThread = null;
+                } else if (topic.matches()) {
+                    currentChat = GROUP_CHAT_ID;
+                    currentThread = topicOf(topic.group(1).trim(), topics, nextTopicId);
                 } else if (dm.matches()) {
                     currentChat = actorOf(dm.group(1).trim(), actors, nextActorId).userId();
+                    currentThread = null;
                 } else if (inner.equalsIgnoreCase("XFAIL")) {
                     disposition = Disposition.XFAIL;
                 } else if (inner.equalsIgnoreCase("DISABLED") || inner.equalsIgnoreCase("IGNORE")) {
@@ -110,20 +122,25 @@ public final class Scenario {
 
             if (role.equals(BOT_ROLE)) {
                 if (payload.isEmpty()) {
-                    steps.add(new Step.ExpectDrain(currentChat));
+                    steps.add(new Step.ExpectDrain(currentChat, currentThread));
                 } else {
-                    steps.add(new Step.ExpectMessage(currentChat, parsePredicates(payload)));
+                    steps.add(new Step.ExpectMessage(currentChat, currentThread, parsePredicates(payload)));
                 }
             } else {
                 Actor actor = actorOf(role, actors, nextActorId);
                 if (payload.startsWith("<press_button")) {
-                    steps.add(new Step.Tap(actor, currentChat, extractGlob(payload)));
+                    steps.add(new Step.Tap(actor, currentChat, currentThread, extractGlob(payload)));
                 } else {
-                    steps.add(new Step.Say(actor, currentChat, payload));
+                    steps.add(new Step.Say(actor, currentChat, currentThread, payload));
                 }
             }
         }
         return new Scenario(name, disposition, GROUP_CHAT_ID, actors, steps);
+    }
+
+    /** A named forum topic gets a stable synthetic {@code message_thread_id} for the scenario. */
+    private static Integer topicOf(String name, Map<String, Integer> topics, int[] nextTopicId) {
+        return topics.computeIfAbsent(name, n -> nextTopicId[0]++);
     }
 
     private static Actor actorOf(String name, Map<String, Actor> actors, long[] nextActorId) {

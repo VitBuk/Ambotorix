@@ -38,7 +38,7 @@ public class SecretDraftStrategy implements DraftStrategy {
         for (Player player : lobby.getPlayers()) {
             Long userId = player.getUserId();
             if (userId == null) {
-                service.sendToChat(chatId,
+                service.sendToChat(chatId, lobby.getMessageThreadId(),
                         "@" + player.getUserName() + " — couldn't send DM. Please message the bot directly first, then use <code>/pick [shortName]</code> in this chat.");
                 continue;
             }
@@ -49,13 +49,13 @@ public class SecretDraftStrategy implements DraftStrategy {
                 telegramClient.execute(result.sendPhoto());
             } catch (TelegramApiException e) {
                 log.warn("Failed to DM player {} (userId={}): {}", player.getUserName(), userId, e.getMessage());
-                service.sendToChat(chatId,
+                service.sendToChat(chatId, lobby.getMessageThreadId(),
                         "@" + player.getUserName() + " — couldn't send DM. Please message the bot directly first, then use <code>/pick [shortName]</code> in this chat.");
             } finally {
                 result.tempFile().delete();
             }
         }
-        service.sendToChat(chatId, "Pick options sent to all players via DM. Use a pick button or <code>/pick [shortName]</code> in this chat.");
+        service.sendToChat(chatId, lobby.getMessageThreadId(), "Pick options sent to all players via DM. Use a pick button or <code>/pick [shortName]</code> in this chat.");
     }
 
     @Override
@@ -64,6 +64,6 @@ public class SecretDraftStrategy implements DraftStrategy {
         for (Map.Entry<String, Leader> entry : lobby.getPendingPicks().entrySet()) {
             sb.append("@").append(entry.getKey()).append(" → ").append(entry.getValue().getFullName()).append("\n");
         }
-        service.sendToChat(chatId, sb.toString());
+        service.sendToChat(chatId, lobby.getMessageThreadId(), sb.toString());
     }
 }

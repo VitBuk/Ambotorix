@@ -37,10 +37,19 @@ Tests run against the **real leader data** in `src/main/resources` with the netw
 
 ### Sections — who's talking to whom
 ```
---- CHAT ---          # the shared group chat
---- DM (alice) ---    # alice's private chat with the bot
+--- CHAT ---            # the shared group chat (the General topic)
+--- TOPIC (drafting) -- # a forum topic (sub-channel) inside the group chat
+--- DM (alice) ---      # alice's private chat with the bot
 ```
 A section sets the chat that the lines beneath it happen in.
+
+A Telegram forum group is one chat split into **topics** (sub-channels) that share a chat id but
+differ by `message_thread_id`. `--- TOPIC (name) ---` puts the lines beneath it in that topic of the
+group chat; `--- CHAT ---` is the General topic (no thread id). Each named topic gets a stable
+synthetic thread id, and the bot must answer a command in the topic it came from. Output is matched
+**per (chat, topic)**: each topic is its own ordered, strictly-matched channel, so a reply that leaks
+into the wrong topic fails the test. See
+[`topic-routing.chat`](resources/scenarios/topic-routing.chat).
 
 ### Lines
 | Line | Meaning |

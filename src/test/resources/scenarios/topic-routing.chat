@@ -1,0 +1,32 @@
+--- SCENARIO: commands are answered in the topic they came from ---
+# A Telegram forum group is one chat split into several topics (sub-channels) that share a
+# chat id but differ by message_thread_id. The bot used to drop every reply into the General
+# topic; it must instead answer in whichever topic the command arrived in. Here three
+# conversations run in parallel — two named topics plus General — and each reply must land in
+# its own topic, never leaking into another.
+
+--- TOPIC (drafting) ---
+alice: /lobby
+ambotorix: Lobby created by alice
+
+--- TOPIC (chatter) ---
+bob: /time
+ambotorix: *Current time*
+
+--- TOPIC (drafting) ---
+bob: /register
+ambotorix: Player bob added to lobby*        # * = the "open a private chat" DM warning
+
+--- CHAT ---                                  # the General topic (no message_thread_id)
+alice: /help
+ambotorix: *General:*
+
+# Each topic saw only its own replies — nothing crossed over.
+--- TOPIC (chatter) ---
+ambotorix:
+
+--- TOPIC (drafting) ---
+ambotorix:
+
+--- CHAT ---
+ambotorix:

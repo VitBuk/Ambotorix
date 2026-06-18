@@ -20,7 +20,14 @@ public class LobbyService {
     private final Map<Long, Lobby> lobbies = new ConcurrentHashMap<>();
 
     public String createLobby(Long chatId, Player host) {
-        Lobby existing = lobbies.putIfAbsent(chatId, new Lobby(host));
+        return createLobby(chatId, null, host);
+    }
+
+    /** Creates a lobby anchored to a Telegram forum topic ({@code threadId}; null = General topic). */
+    public String createLobby(Long chatId, Integer threadId, Player host) {
+        Lobby lobby = new Lobby(host);
+        lobby.setMessageThreadId(threadId);
+        Lobby existing = lobbies.putIfAbsent(chatId, lobby);
         if (existing != null) {
             return "Lobby already exists. " + existing.getHost().getUserName()
                     + " can terminate it using /terminate";

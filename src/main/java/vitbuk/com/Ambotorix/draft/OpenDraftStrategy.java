@@ -40,8 +40,9 @@ public class OpenDraftStrategy implements DraftStrategy {
             PickImageGenerator.LeaderPickPhoto result = PickImageGenerator.createLeaderPickMessage(chatId, player);
             File tempFile = result.tempFile();
             try {
-                // Group chat: name + image, no buttons
-                service.sendToChat(chatId, "<b>" + player.getUserName() + ":</b>");
+                // Group chat: name + image, no buttons — kept in the lobby's topic
+                service.sendToChat(chatId, lobby.getMessageThreadId(), "<b>" + player.getUserName() + ":</b>");
+                result.sendPhoto().setMessageThreadId(lobby.getMessageThreadId());
                 telegramClient.execute(result.sendPhoto());
             } catch (TelegramApiException e) {
                 log.error("Failed to send pick image for player {}", player.getUserName(), e);

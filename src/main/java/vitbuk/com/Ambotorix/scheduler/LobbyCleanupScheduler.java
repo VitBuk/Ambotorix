@@ -31,8 +31,9 @@ public class LobbyCleanupScheduler {
         List<Long> expired = lobbyService.getExpiredLobbyChatIds(autoTerminateHours);
         for (Long chatId : expired) {
             log.info("Auto-terminating lobby in chat {} ({}h after /start)", chatId, autoTerminateHours);
+            Integer threadId = lobbyService.getLobby(chatId).getMessageThreadId();
             lobbyService.removeLobby(chatId);
-            ambotorixService.sendToChat(chatId,
+            ambotorixService.sendToChat(chatId, threadId,
                 "Lobby automatically terminated after " + autoTerminateHours + " hours.");
         }
     }
