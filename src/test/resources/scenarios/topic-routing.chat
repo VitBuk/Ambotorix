@@ -1,13 +1,12 @@
---- SCENARIO: commands are answered in the topic they came from ---
-# A Telegram forum group is one chat split into several topics (sub-channels) that share a
-# chat id but differ by message_thread_id. The bot used to drop every reply into the General
-# topic; it must instead answer in whichever topic the command arrived in. Here three
-# conversations run in parallel — two named topics plus General — and each reply must land in
-# its own topic, never leaking into another.
+--- SCENARIO: commands answer in their own topic; the lobby status lives in its topic ---
+# A Telegram forum group is one chat split into several topics (sub-channels) that share a chat id
+# but differ by message_thread_id. Replies must land in the topic a command arrived in, and the
+# lobby's single status message must stay in the topic it was created in — never leaking into
+# General or another topic. Here several conversations run in parallel.
 
 --- TOPIC (drafting) ---
 alice: /lobby
-ambotorix: Lobby created by alice
+ambotorix: <status *Lobby by @alice*>        # status message created in the drafting topic
 
 --- TOPIC (chatter) ---
 bob: /time
@@ -15,18 +14,16 @@ ambotorix: *Current time*
 
 --- TOPIC (drafting) ---
 bob: /register
-ambotorix: Player bob added to lobby*        # * = the "open a private chat" DM warning
+ambotorix: <status *Players (2): alice, bob*>   # silently edited in place, still in this topic
 
 --- CHAT ---                                  # the General topic (no message_thread_id)
 alice: /help
 ambotorix: *General:*
 
-# Each topic saw only its own replies — nothing crossed over.
+# Each topic saw only its own replies; the status never left the drafting topic.
 --- TOPIC (chatter) ---
 ambotorix:
-
 --- TOPIC (drafting) ---
-ambotorix:
-
+ambotorix:                                    # drafting topic stream is empty — edits are silent
 --- CHAT ---
 ambotorix:

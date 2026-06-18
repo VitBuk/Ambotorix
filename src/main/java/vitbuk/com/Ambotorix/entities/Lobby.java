@@ -25,6 +25,10 @@ public class Lobby {
     private LocalDateTime draftStartedAt;
     // Telegram forum topic (message_thread_id) the lobby lives in; null = General topic / non-forum group.
     private Integer messageThreadId;
+    // The single live status message the bot keeps edited with all lobby metadata; null until posted.
+    private Integer statusMessageId;
+    // The randomised slot order fixed at draft start, so the status message renders it consistently.
+    private List<Player> slotOrder;
 
     public Lobby(Player host) {
         this.created = LocalDateTime.now();
@@ -144,6 +148,12 @@ public class Lobby {
 
     public Integer getMessageThreadId() { return messageThreadId; }
     public void setMessageThreadId(Integer messageThreadId) { this.messageThreadId = messageThreadId; }
+
+    public Integer getStatusMessageId() { return statusMessageId; }
+    public void setStatusMessageId(Integer statusMessageId) { this.statusMessageId = statusMessageId; }
+
+    public List<Player> getSlotOrder() { return slotOrder; }
+    public void setSlotOrder(List<Player> slotOrder) { this.slotOrder = slotOrder; }
 
     public void defaultSetup() {
         this.banSize = 1;

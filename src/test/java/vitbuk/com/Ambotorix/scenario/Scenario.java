@@ -33,6 +33,8 @@ public final class Scenario {
         record Tap(Actor from, long chatId, Integer threadId, String buttonGlob) implements Step {}
         record ExpectMessage(long chatId, Integer threadId, List<Predicate> predicates) implements Step {}
         record ExpectDrain(long chatId, Integer threadId) implements Step {}
+        /** Assert the channel's single live (edited) status message currently matches {@code pattern}; non-consuming. */
+        record ExpectStatus(long chatId, Integer threadId, String pattern) implements Step {}
 
         /** A condition on a single recorded message. */
         sealed interface Predicate {
@@ -40,6 +42,10 @@ public final class Scenario {
             /** Inline keyboard: every button matches {@code glob}; {@code count} (if set) is exact; {@code distinct} requires unique labels. */
             record Button(String glob, Integer count, boolean distinct) implements Predicate {}
             record Image(String captionGlob) implements Predicate {}
+            /** The channel's live status message (silently edited in place) currently matches {@code pattern}. */
+            record Status(String pattern) implements Predicate {}
+            /** The message backlinks to the channel's status message (it is a reply to it). */
+            record Backlink() implements Predicate {}
         }
     }
 
@@ -124,7 +130,14 @@ public final class Scenario {
                 if (payload.isEmpty()) {
                     steps.add(new Step.ExpectDrain(currentChat, currentThread));
                 } else {
-                    steps.add(new Step.ExpectMessage(currentChat, currentThread, parsePredicates(payload)));
+                    List<Step.Predicate> preds = parsePredicates(payload);
+                    if (preds.size() == 1 && preds.get(0) instanceof Step.Predicate.Status st) {
+                        steps.add(new Step.ExpectStatus(currentChat, currentThread, st.pattern()));
+                    } else if (preds.stream().anyMatch(p -> p instanceof Step.Predicate.Status)) {
+                        throw new IllegalArgumentException("<status> must be the only construct on its line: " + payload);
+                    } else {
+                        steps.add(new Step.ExpectMessage(currentChat, currentThread, preds));
+                    }
                 }
             } else {
                 Actor actor = actorOf(role, actors, nextActorId);
@@ -147,30 +160,41 @@ public final class Scenario {
         return actors.computeIfAbsent(name, n -> new Actor(n, nextActorId[0]++));
     }
 
-    /** Parse an {@code ambotorix:} payload into the predicates a single message must satisfy. */
+    /**
+     * Parse an {@code ambotorix:} payload into the predicates a single message must satisfy. Plain text
+     * runs become {@code Text} predicates; recognised {@code <...>} tokens become their construct, so a
+     * line can interleave both, e.g. {@code @bob picked {leader} <backlink>}.
+     */
     private static List<Step.Predicate> parsePredicates(String payload) {
-        List<Step.Predicate> constructs = parseConstructs(payload);
-        if (constructs != null) return constructs;
-        return List.of(new Step.Predicate.Text(payload));
-    }
-
-    /** Returns the {@code <...>} constructs on the line, or null if it is plain text. */
-    private static List<Step.Predicate> parseConstructs(String payload) {
-        if (!payload.startsWith("<")) return null;
         List<Step.Predicate> preds = new ArrayList<>();
+        StringBuilder text = new StringBuilder();
         int i = 0;
         while (i < payload.length()) {
             char c = payload.charAt(i);
-            if (Character.isWhitespace(c)) { i++; continue; }
-            if (c != '<') return null;             // text mixed with constructs → treat as plain text
-            int end = constructEnd(payload, i);
-            if (end < 0) return null;
-            Step.Predicate p = parseConstruct(payload.substring(i, end + 1));
-            if (p == null) return null;            // unknown construct → treat whole line as text
-            preds.add(p);
-            i = end + 1;
+            if (c == '<') {
+                int end = constructEnd(payload, i);
+                if (end >= 0) {
+                    Step.Predicate p = parseConstruct(payload.substring(i, end + 1));
+                    if (p != null) {                 // a recognised construct
+                        flushText(text, preds);
+                        preds.add(p);
+                        i = end + 1;
+                        continue;
+                    }
+                }
+            }
+            text.append(c);                          // ordinary char (or a non-construct '<')
+            i++;
         }
-        return preds.isEmpty() ? null : preds;
+        flushText(text, preds);
+        if (preds.isEmpty()) preds.add(new Step.Predicate.Text(payload));
+        return preds;
+    }
+
+    private static void flushText(StringBuilder text, List<Step.Predicate> preds) {
+        String t = text.toString().trim();
+        if (!t.isEmpty()) preds.add(new Step.Predicate.Text(t));
+        text.setLength(0);
     }
 
     /** Index of the {@code >} that closes the construct starting at {@code start}, ignoring quoted {@code >}. */
@@ -191,6 +215,8 @@ public final class Scenario {
         return switch (name) {
             case "button" -> parseButton(inner, glob);
             case "image" -> new Step.Predicate.Image(glob);
+            case "status" -> new Step.Predicate.Status(glob);
+            case "backlink" -> new Step.Predicate.Backlink();
             default -> null;
         };
     }

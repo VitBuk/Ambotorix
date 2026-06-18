@@ -1,0 +1,28 @@
+--- SCENARIO: lobby state lives in one silently-edited status message ---
+# The new model: registration, bans and host config no longer post a line each. They silently edit
+# a single status message that always reflects current lobby metadata, so the group stream stays
+# empty. <status ...> reads that one live message; it implicitly asserts it was created exactly once
+# (edited in place, never re-posted).
+
+--- CHAT ---
+alice: /lobby
+ambotorix: <status *Lobby by @alice*Status: waiting*Draft: open*>
+ambotorix: <status *Pick size: 6*Bans per player: 1*Players (1): alice*>
+
+bob: /register
+ambotorix: <status *Players (2): alice, bob*>
+carol: /register
+ambotorix: <status *Players (3): alice, bob, carol*>
+
+# Host config — still silent, still the same one message
+alice: /setDraft secret
+ambotorix: <status *Draft: secret*>
+alice: /setBanSize 2
+ambotorix: <status *Bans per player: 2*>
+
+# A ban shows up in the Bans section instead of a "banned by" announcement
+bob: /ban lincoln
+ambotorix: <status *Bans:*@bob: {leader}*>
+
+# Nothing was ever posted to the group stream — only the single edited status message exists
+ambotorix:
