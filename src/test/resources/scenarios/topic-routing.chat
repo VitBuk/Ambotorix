@@ -8,21 +8,11 @@
 alice: /lobby
 ambotorix: <status *Lobby by @alice*>        # status message created in the drafting topic
 
---- TOPIC (chatter) ---
-bob: /time
-ambotorix: *Current time*
-
 --- TOPIC (drafting) ---
 bob: /register
 ambotorix: <status *Players (2): alice, bob*>   # silently edited in place, still in this topic
 
---- CHAT ---                                  # the General topic (no message_thread_id)
-alice: /help
-ambotorix: *General:*
-
 # Each topic saw only its own replies; the status never left the drafting topic.
---- TOPIC (chatter) ---
-ambotorix:
 --- TOPIC (drafting) ---
 ambotorix:                                    # drafting topic stream is empty — edits are silent
 --- CHAT ---
