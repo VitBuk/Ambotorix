@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
+import vitbuk.com.Ambotorix.commands.BanCommand;
 import vitbuk.com.Ambotorix.commands.DescriptionCommand;
 import vitbuk.com.Ambotorix.commands.MapAddCommand;
 import vitbuk.com.Ambotorix.commands.MapRemoveCommand;
@@ -69,6 +70,25 @@ public class MarkupService {
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(m.name())
                     .callbackData(mPrefix + " " + groupChatId + " " + m.toString())
+                    .build();
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(btn);
+            rows.add(row);
+        }
+
+        return InlineKeyboardMarkup.builder()
+                .keyboard(rows)
+                .build();
+    }
+
+    public InlineKeyboardMarkup banButtonsMarkup(List<Leader> leaders, Long groupChatId) {
+        String banPrefix = commandFactory.infoOf(BanCommand.class).prefix();
+
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+        for (Leader l : leaders) {
+            InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                    .text(l.getFullName())
+                    .callbackData(banPrefix + " " + groupChatId + " " + l.getShortName())
                     .build();
             InlineKeyboardRow row = new InlineKeyboardRow();
             row.add(btn);

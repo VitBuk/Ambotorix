@@ -236,6 +236,7 @@ public class    AmbotorixService {
         String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
         String addPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
         String removePrefix = commandFactory.infoOf(MapRemoveCommand.class).prefix();
+        String banPrefix = commandFactory.infoOf(BanCommand.class).prefix();
 
         if (data != null && data.startsWith(dPrefix)) {
             String shortName = data.substring(dPrefix.length()+1); // +1 is space or _ before shortname
@@ -279,6 +280,19 @@ public class    AmbotorixService {
             }
         }
 
+        if (data != null && data.startsWith(banPrefix + " ")) {
+            String payload = data.substring(banPrefix.length() + 1);
+            String[] parts = payload.split(" ", 2);
+            if (parts.length == 2) {
+                try {
+                    Long lobbyChatId = Long.parseLong(parts[0]);
+                    sendBanFromCallback(update, lobbyChatId, parts[1]);
+                } catch (NumberFormatException e) {
+                    sendPrivateMessage(update, "This button is outdated. Please use /banButtons again.");
+                }
+            }
+        }
+
         String pickPrefix = "/pick";
         if (data != null && data.startsWith(pickPrefix + " ")) {
             String payload = data.substring(pickPrefix.length() + 1);
@@ -287,6 +301,80 @@ public class    AmbotorixService {
             String shortName = parts[1];
             sendPick(update, lobbyChatId, shortName);
         }
+    }
+
+    //logic for command -> /clearBans
+    public void sendClearBans(Update update) {
+        Long chatId = extractChatIdLong(update);
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) { sendNoLobby(update); return; }
+        if (lobby.isDraftInProgress()) {
+            sendPrivateMessage(update, "Cannot clear bans while draft is in progress.");
+            return;
+        }
+        lobbyService.clearAllBans(chatId);
+        refreshStatus(chatId);
+    }
+
+    //logic for command -> /banButtons
+    public void sendBanButtons(Update update) {
+        Long chatId = extractChatIdLong(update);
+        String userName = update.getMessage().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(chatId, userName);
+
+        if (player == null) { sendPrivateMessage(update, "You are not registered in this lobby."); return; }
+        if (!lobbyService.hasAvailableBans(chatId, player)) {
+            sendPrivateMessage(update, "You have no ban slots remaining.");
+            return;
+        }
+
+        List<Leader> available = leaderService.getLeaders().stream()
+                .filter(l -> !lobbyService.isBanned(chatId, l))
+                .toList();
+
+        if (available.isEmpty()) {
+            sendPrivateMessage(update, "All leaders have already been banned.");
+            return;
+        }
+
+        SendMessage message = SendMessage.builder()
+                .chatId(update.getMessage().getFrom().getId())
+                .text("Choose a leader to ban:")
+                .replyMarkup(markupService.banButtonsMarkup(available, chatId))
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send ban buttons: {}", e.getMessage(), e);
+        }
+    }
+
+    // Called from DM callback — lobbyChatId is the group chat where the lobby lives
+    public void sendBanFromCallback(Update update, Long lobbyChatId, String shortName) {
+        String userName = update.getCallbackQuery().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(lobbyChatId, userName);
+
+        if (!lobbyService.isRegistered(lobbyChatId, userName)) {
+            sendPrivateMessage(update, "You are not registered in this lobby.");
+            return;
+        }
+        Leader leader = leaderService.getLeaderByShortName(shortName);
+        if (leader == null) {
+            sendPrivateMessage(update, "Unknown leader: " + shortName);
+            return;
+        }
+        if (lobbyService.isBanned(lobbyChatId, leader)) {
+            sendPrivateMessage(update, leader.getFullName() + " is already banned.");
+            return;
+        }
+        if (!lobbyService.hasAvailableBans(lobbyChatId, player) && !lobbyService.isHost(lobbyChatId, userName)) {
+            sendPrivateMessage(update, "You have no ban slots remaining.");
+            return;
+        }
+        player.getBans().add(leader);
+        refreshStatus(lobbyChatId);
+        sendPrivateMessage(update, "✅ Banned " + leader.getFullName() + ".");
     }
 
     //logic for command -> /ban_[shortName]

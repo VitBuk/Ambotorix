@@ -117,6 +117,11 @@ public class LobbyService {
         return lobby != null && lobby.addMap(civMap);
     }
 
+    public void clearAllBans(Long chatId) {
+        Lobby lobby = lobbies.get(chatId);
+        if (lobby != null) lobby.clearAllBans();
+    }
+
     public boolean removeMap(Long chatId, CivMap civMap) {
         Lobby lobby = lobbies.get(chatId);
         return lobby != null && lobby.removeMap(civMap);

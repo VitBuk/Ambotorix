@@ -125,6 +125,10 @@ public class Lobby {
         return true;
     }
 
+    public void clearAllBans() {
+        players.forEach(p -> p.getBans().clear());
+    }
+
     public boolean removeMap (CivMap civMap) {
         if (mapPool.contains(civMap)) {
             mapPool.remove(civMap);
