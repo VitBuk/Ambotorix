@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -21,7 +22,6 @@ import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.GeneralCommand;
 import vitbuk.com.Ambotorix.commands.structure.HostCommand;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
-import vitbuk.com.Ambotorix.config.BotConfig;
 import vitbuk.com.Ambotorix.draft.DraftStrategy;
 import vitbuk.com.Ambotorix.draft.DraftStrategyFactory;
 import vitbuk.com.Ambotorix.entities.CivMap;
@@ -50,7 +50,6 @@ public class    AmbotorixService {
     private final LobbyService lobbyService;
     private final CommandFactory commandFactory;
     private final MarkupService markupService;
-    private final BotConfig botConfig;
     private final DataUpdateService dataUpdateService;
     private final DraftStrategyFactory draftStrategyFactory;
 
@@ -59,13 +58,12 @@ public class    AmbotorixService {
 
     @Autowired
     public AmbotorixService(TelegramClient telegramClient, LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
-                            BotConfig botConfig, DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory) {
+                            DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory) {
         this.telegramClient = telegramClient;
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
         this.commandFactory = commandFactory;
         this.markupService = markupService;
-        this.botConfig = botConfig;
         this.dataUpdateService = dataUpdateService;
         this.draftStrategyFactory = draftStrategyFactory;
     }
@@ -144,9 +142,16 @@ public class    AmbotorixService {
         Long chatId = extractChatIdLong(update);
         Integer threadId = extractThreadId(update);
         Player host = new Player(update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId());
-        String message = lobbyService.createLobby(chatId, threadId, host);
 
-        sendMessage(update, message);
+        boolean existed = lobbyService.hasLobby(chatId);
+        String message = lobbyService.createLobby(chatId, threadId, host);
+        if (existed) {
+            sendMessage(update, message); // "lobby already exists" — a real error, post it
+            return;
+        }
+        // Fresh lobby: instead of a throwaway "created" line, post the single live status message
+        // that we keep edited for the rest of the session.
+        postStatus(chatId);
     }
 
     // logic for command -> /leaders
@@ -294,13 +299,8 @@ public class    AmbotorixService {
         }
 
         player.getBans().add(leader);
-        sendMessage(update, leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
-
-        StringBuilder sb = new StringBuilder("Bans: \n");
-        for (Leader l: lobbyService.bannedLeaders(chatId)) {
-            sb.append(l.getFullName()).append(", ");
-        }
-        sendMessage(update, sb.toString());
+        // Bans show up in the live status message instead of a per-ban announcement.
+        refreshStatus(chatId);
     }
 
     // logic for unknown command
@@ -317,25 +317,20 @@ public class    AmbotorixService {
 
         Long chatId = extractChatIdLong(update);
         Long userId = update.getMessage().getFrom().getId();
-        String result = lobbyService.registerPlayer(chatId, update.getMessage().getFrom().getUserName(), userId);
+        lobbyService.registerPlayer(chatId, update.getMessage().getFrom().getUserName(), userId);
 
-        if (canDm(userId)) {
-            sendMessage(update, result);
-            sendToChat(userId, "You're registered for the lobby! Your leader picks will be sent here when the draft starts.");
-        } else {
-            sendMessage(update, result + "\n\n⚠️ To receive your picks in DM, please start a private chat with @" + botConfig.getUsername().replaceFirst("^@", "") + " first.");
-        }
-    }
+        // Registration is reflected silently in the live status message — no per-join group line.
+        refreshStatus(chatId);
 
-    private boolean canDm(Long userId) {
+        // Best-effort DM confirmation. If it fails the player simply isn't DM-reachable yet; that's
+        // handled when the draft starts (open posts pools publicly, secret notes it in the group).
         try {
             telegramClient.execute(SendMessage.builder()
                     .chatId(userId)
-                    .text("✅ DM confirmed — you'll receive your leader picks here when a draft starts.")
+                    .text("You're registered for the lobby! Your leader picks will arrive here when the draft starts.")
                     .build());
-            return true;
-        } catch (TelegramApiException e) {
-            return false;
+        } catch (TelegramApiException ignored) {
+            // not reachable — no action needed now
         }
     }
 
@@ -351,8 +346,14 @@ public class    AmbotorixService {
         lobby.setDraftInProgress(true);
         lobby.setDraftStartedAt(LocalDateTime.now());
         try {
-            sendSlotOrder(update);
-            sendRandomMap(update);
+            // Fix the random slot order and map, fold them into the status message, and announce the
+            // milestone with a single mention that backlinks (replies) to the status message.
+            lobby.setSlotOrder(lobbyService.randomSlotOrder(chatId));
+            lobby.setSelectedMap(lobbyService.randomMap(chatId));
+            refreshStatus(chatId);
+            postMilestone(chatId, "🎮 Draft started by @" + lobby.getHost().getUserName()
+                    + "! Slot order and map are up ☝️");
+
             DraftStrategy strategy = draftStrategyFactory.getStrategy(lobby.getDraftStrategyName());
             strategy.execute(lobby, chatId, this);
         } catch (Exception e) {
@@ -402,13 +403,16 @@ public class    AmbotorixService {
         }
         lobby.addPendingPick(userName, leader);
         sendToChat(userChatId, "You picked <b>" + leader.getFullName() + "</b>!");
-        sendToChat(lobbyChatId, lobby.getMessageThreadId(), "@" + userName + " has made their pick. ("
-                + lobby.getPendingPicks().size() + "/" + lobby.getPlayers().size() + ")");
 
         if (lobby.allPicksIn(lobby.getPlayers().size())) {
+            // Reveal: mark the draft done first so the status renders the final picks, then let the
+            // strategy edit the status and post the all-picks-in milestone.
+            lobby.setDraftInProgress(false);
             draftStrategyFactory.getStrategy(lobby.getDraftStrategyName())
                     .onAllPicksIn(lobby, lobbyChatId, this);
-            lobby.setDraftInProgress(false);
+        } else {
+            // Pick progress (k/N) is shown in the live status message, silently — no per-pick line.
+            refreshStatus(lobbyChatId);
         }
     }
 
@@ -438,36 +442,6 @@ public class    AmbotorixService {
         Long chatId = extractChatIdLong(update);
         List<CivMap> mapPool =  lobbyService.getMappool(chatId);
 
-        if (mapPool == null) {
-            sendBugReport(update);
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder("Map pool: \n");
-        sb.append("<i>To remove map from map pool use ")
-                .append(commandFactory.infoOf(MapRemoveCommand.class).name())
-                .append(" command </i> \n");
-
-        for (CivMap cm : mapPool) {
-            sb.append(commandFactory.infoOf(MapRemoveCommand.class).prefix())
-                    .append("_")
-                    .append(cm.toString())
-                    .append(" → ")
-                    .append(cm.toString())
-                    .append("\n");
-        }
-
-        sendMessage(update, sb.toString());
-    }
-
-    // Looks up the lobby by lobbyChatId but responds to the update's chat (e.g. a DM callback)
-    public void sendMappool(Update update, Long lobbyChatId) {
-        if (!lobbyService.hasLobby(lobbyChatId)) {
-            sendNoLobby(update);
-            return;
-        }
-
-        List<CivMap> mapPool = lobbyService.getMappool(lobbyChatId);
         if (mapPool == null) {
             sendBugReport(update);
             return;
@@ -526,7 +500,8 @@ public class    AmbotorixService {
 
         Long chatId = extractChatIdLong(update);
         lobbyService.addMap(chatId, civMap);
-        sendMappool(update);
+        // Map pool lives in the live status message; editing it is the host's feedback.
+        refreshStatus(chatId);
     }
 
     // Called from DM callback — lobbyChatId is the group chat where the lobby lives
@@ -538,7 +513,9 @@ public class    AmbotorixService {
             return;
         }
         lobbyService.addMap(lobbyChatId, civMap);
-        sendMappool(update, lobbyChatId);
+        refreshStatus(lobbyChatId);
+        // The button was tapped in a DM, so acknowledge there since the status edit is in the group.
+        sendMessage(update, "✅ Added " + civMap + " to the map pool.");
     }
 
     //logic for command /mapRemove [name]
@@ -552,7 +529,7 @@ public class    AmbotorixService {
 
         Long chatId = extractChatIdLong(update);
         if (lobbyService.removeMap(chatId, civMap)) {
-            sendMappool(update);
+            refreshStatus(chatId);
             return;
         }
 
@@ -598,36 +575,84 @@ public class    AmbotorixService {
                 + " command for list of available maps");
     }
 
-    private void sendSlotOrder(Update update) {
-        Long chatId = extractChatIdLong(update);
-        List<Player> shuffledPlayers = lobbyService.randomSlotOrder(chatId);
-        if (shuffledPlayers == null || shuffledPlayers.isEmpty()) {
-            sendMessage(update, "0 players registered");
-            return;
-        }
+    // ---- Single live status message: created once, then edited; milestones get a backlinking reply ----
 
-        StringBuilder sb = new StringBuilder("Slot order: \n");
-        for (int i = 0; i < shuffledPlayers.size(); i++) {
-            sb.append(i + 1)
-                    .append(". ")
-                    .append(shuffledPlayers.get(i).getUserName())
-                    .append("\n");
-        }
-
-        sendMessage(update, sb.toString());
+    /** Post the lobby's status message for the first time and remember its id for future edits. */
+    public void postStatus(Long chatId) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) return;
+        Integer id = sendStatusMessage(chatId, lobby.getMessageThreadId(), renderStatus(lobby));
+        lobby.setStatusMessageId(id);
     }
 
-    private void sendRandomMap(Update update) {
-        Long chatId = extractChatIdLong(update);
-        CivMap randomMap = lobbyService.randomMap(chatId);
-        if (randomMap == null) {
-            sendMessage(update, "There is no maps in the map pool");
+    /** Re-render the status into the existing live message (editing it in place), or post it if absent. */
+    public void refreshStatus(Long chatId) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) return;
+        if (lobby.getStatusMessageId() == null) {
+            postStatus(chatId);
             return;
         }
-
-        sendMessage(update, "Map: " + randomMap.toString());
+        editStatusMessage(chatId, lobby.getStatusMessageId(), renderStatus(lobby));
     }
 
+    /** A milestone notification (e.g. draft started / all picks in) that replies to — backlinks — the status message. */
+    public void postMilestone(Long chatId, String text) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        Integer threadId = lobby == null ? null : lobby.getMessageThreadId();
+        Integer replyTo = lobby == null ? null : lobby.getStatusMessageId();
+        sendReply(chatId, threadId, replyTo, text);
+    }
+
+    // The status message is posted silently (no ping) — it is ambient state; the milestone replies do the pinging.
+    private Integer sendStatusMessage(Long chatId, Integer threadId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .messageThreadId(threadId)
+                .text(text)
+                .parseMode("HTML")
+                .disableNotification(true)
+                .build();
+        try {
+            Message sent = telegramClient.execute(message);
+            return sent == null ? null : sent.getMessageId();
+        } catch (TelegramApiException e) {
+            log.error("Failed to post status message to chat {}: {}", chatId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private void editStatusMessage(Long chatId, Integer messageId, String text) {
+        EditMessageText edit = EditMessageText.builder()
+                .chatId(chatId.toString())
+                .messageId(messageId)
+                .text(text)
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(edit);
+        } catch (TelegramApiException e) {
+            log.error("Failed to edit status message {} in chat {}: {}", messageId, chatId, e.getMessage(), e);
+        }
+    }
+
+    private void sendReply(Long chatId, Integer threadId, Integer replyToMessageId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .messageThreadId(threadId)
+                .replyToMessageId(replyToMessageId)
+                .text(text)
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send reply to chat {}: {}", chatId, e.getMessage(), e);
+        }
+    }
+
+    // logic for command -> /lobbyInfo. The live status message already carries everything, so this
+    // just drops an anchor (a reply that backlinks to it) so players can jump to it.
     public void sendLobbyInfo(Update update) {
         Long chatId = extractChatIdLong(update);
         if (!lobbyService.hasLobby(chatId)) {
@@ -635,22 +660,40 @@ public class    AmbotorixService {
             return;
         }
         Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby.getStatusMessageId() == null) {
+            // No status message yet (shouldn't normally happen) — post a fresh one.
+            postStatus(chatId);
+            return;
+        }
+        sendReply(chatId, lobby.getMessageThreadId(), lobby.getStatusMessageId(), "📌 Lobby status ☝️");
+    }
 
+    /** Builds the full lobby status text — all metadata plus draft progress — kept in one edited message. */
+    public String renderStatus(Lobby lobby) {
         String playerList = lobby.getPlayers().stream()
                 .map(Player::getUserName)
                 .collect(Collectors.joining(", "));
-        String mapList = lobby.getMapPool().isEmpty() ? "none"
-                : lobby.getMapPool().stream().map(CivMap::toString).collect(Collectors.joining(", "));
-        String draftStatus = lobby.isDraftInProgress() ? "in progress" : "waiting";
+        String draftStatus = !lobby.isDraftStarted() ? "waiting"
+                : (lobby.isDraftInProgress() ? "drafting" : "done");
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<b>Lobby by @").append(lobby.getHost().getUserName()).append("</b>")
-                .append(" | Draft: ").append(lobby.getDraftStrategyName())
-                .append(" | Status: ").append(draftStatus).append("\n")
-                .append("Players (").append(lobby.getPlayers().size()).append("): ").append(playerList).append("\n")
-                .append("Pick size: ").append(lobby.getPickSize())
-                .append(" | Bans per player: ").append(lobby.getBanSize()).append("\n")
-                .append("Map pool: ").append(mapList);
+        sb.append("🎲 <b>Lobby by @").append(lobby.getHost().getUserName()).append("</b>\n")
+                .append("Status: ").append(draftStatus);
+
+        // Every tunable parameter, kept current as the host defines it.
+        sb.append("\n\n<b>Settings:</b>")
+                .append("\nDraft: ").append(lobby.getDraftStrategyName())
+                .append("\nPick size: ").append(lobby.getPickSize())
+                .append("\nBans per player: ").append(lobby.getBanSize());
+        if (!lobby.isDraftStarted()) {
+            String mapList = lobby.getMapPool().isEmpty() ? "none"
+                    : lobby.getMapPool().stream().map(CivMap::toString).collect(Collectors.joining(", "));
+            sb.append("\nMap pool: ").append(mapList);
+        } else {
+            sb.append("\nMap: ").append(lobby.getSelectedMap() == null ? "—" : lobby.getSelectedMap().toString());
+        }
+
+        sb.append("\n\n<b>Players (").append(lobby.getPlayers().size()).append("):</b> ").append(playerList);
 
         if (lobby.getBanSize() > 0) {
             sb.append("\n\n<b>Bans:</b>");
@@ -660,13 +703,32 @@ public class    AmbotorixService {
                     sb.append("—");
                 } else {
                     sb.append(player.getBans().stream()
-                            .map(vitbuk.com.Ambotorix.entities.Leader::getFullName)
+                            .map(Leader::getFullName)
                             .collect(Collectors.joining(", ")));
                 }
             }
         }
 
-        sendMessage(update, sb.toString());
+        if (lobby.isDraftStarted() && lobby.getSlotOrder() != null && !lobby.getSlotOrder().isEmpty()) {
+            sb.append("\n\n<b>Slot order:</b>");
+            List<Player> order = lobby.getSlotOrder();
+            for (int i = 0; i < order.size(); i++) {
+                sb.append("\n").append(i + 1).append(". ").append(order.get(i).getUserName());
+            }
+        }
+
+        // Secret-draft pick progress / reveal.
+        if ("secret".equals(lobby.getDraftStrategyName()) && lobby.isDraftInProgress()) {
+            sb.append("\n\n<b>Picks:</b> ").append(lobby.getPendingPicks().size())
+                    .append("/").append(lobby.getPlayers().size()).append(" in");
+        } else if (!lobby.getPendingPicks().isEmpty()) {
+            sb.append("\n\n<b>Picks:</b>");
+            for (Map.Entry<String, Leader> e : lobby.getPendingPicks().entrySet()) {
+                sb.append("\n@").append(e.getKey()).append(" → ").append(e.getValue().getFullName());
+            }
+        }
+
+        return sb.toString();
     }
 
     public void sendSetBanSize(Update update, int n) {
@@ -678,7 +740,7 @@ public class    AmbotorixService {
         Lobby lobby = lobbyService.getLobby(chatId);
         if (lobby == null) { sendNoLobby(update); return; }
         lobby.setBanSize(n);
-        sendMessage(update, "Ban size set to " + n + ".");
+        refreshStatus(chatId);
     }
 
     public void sendSetPickSize(Update update, int n) {
@@ -690,7 +752,7 @@ public class    AmbotorixService {
         Lobby lobby = lobbyService.getLobby(chatId);
         if (lobby == null) { sendNoLobby(update); return; }
         lobby.setPickSize(n);
-        sendMessage(update, "Pick size set to " + n + ".");
+        refreshStatus(chatId);
     }
 
     public void sendSetDraft(Update update, String strategyName) {
@@ -702,7 +764,7 @@ public class    AmbotorixService {
         Lobby lobby = lobbyService.getLobby(chatId);
         if (lobby == null) { sendNoLobby(update); return; }
         lobby.setDraftStrategyName(strategyName);
-        sendMessage(update, "Draft strategy set to: " + strategyName + ".");
+        refreshStatus(chatId);
     }
 
     public void sendAdminLobbies(Update update) {

@@ -108,6 +108,7 @@ class ScenarioRunnerTest {
                 case Scenario.Step.Tap tap -> executeTap(tap, ctx);
                 case Scenario.Step.ExpectMessage e -> { assertedChannels.add(channel(e)); expectMessage(e, ctx); }
                 case Scenario.Step.ExpectDrain e -> { assertedChannels.add(channel(e)); expectDrain(e); }
+                case Scenario.Step.ExpectStatus e -> { assertedChannels.add(channel(e)); expectStatus(e, ctx); }
             }
         }
         // Completeness: a channel we asserted anything about must be fully accounted for — no surprises left.
@@ -127,8 +128,9 @@ class ScenarioRunnerTest {
                     + describe(e.predicates()) + " but no further output was sent.");
         }
         OutboundMessage m = h.get(i);
+        Integer statusId = client.statusMessageId(ch.chatId(), ch.threadId());
         for (Scenario.Step.Predicate p : e.predicates()) {
-            if (!satisfies(p, m, ctx)) {
+            if (!satisfies(p, m, ctx, statusId)) {
                 Assertions.fail("Next message in " + ch + " did not satisfy " + describe(p)
                         + ".\nGot: " + render(m) + "\nFull predicate: " + describe(e.predicates()));
             }
@@ -136,12 +138,34 @@ class ScenarioRunnerTest {
         cursors.put(ch, i + 1);
     }
 
-    private boolean satisfies(Scenario.Step.Predicate p, OutboundMessage m, MatchContext ctx) {
+    /** Assert the channel's single live status message currently matches; does not consume the stream cursor. */
+    private void expectStatus(Scenario.Step.ExpectStatus e, MatchContext ctx) {
+        Channel ch = channel(e);
+        OutboundMessage status = client.statusMessage(ch.chatId(), ch.threadId());
+        if (status == null) {
+            Assertions.fail("Expected a live status message in " + ch + " matching \"" + e.pattern()
+                    + "\" but none was posted.");
+        }
+        int creates = client.statusCreateCount(ch.chatId(), ch.threadId());
+        Assertions.assertEquals(1, creates,
+                () -> "Status message in " + ch + " was created " + creates
+                        + " times — it must be edited in place, not re-posted.");
+        if (!LineMatcher.matches(e.pattern(), status.text(), ctx)) {
+            Assertions.fail("Live status in " + ch + " did not match \"" + e.pattern() + "\".\nGot: \""
+                    + (status.text() == null ? "" : status.text()) + "\"");
+        }
+    }
+
+    private boolean satisfies(Scenario.Step.Predicate p, OutboundMessage m, MatchContext ctx, Integer statusId) {
         return switch (p) {
             case Scenario.Step.Predicate.Text t -> !m.hasPhoto() && LineMatcher.matches(t.pattern(), m.text(), ctx);
             case Scenario.Step.Predicate.Image im -> m.hasPhoto()
                     && LineMatcher.matches(im.captionGlob(), m.text() == null ? "" : m.text(), ctx);
             case Scenario.Step.Predicate.Button b -> satisfiesButtons(b, m.buttons(), ctx);
+            case Scenario.Step.Predicate.Backlink b -> statusId != null
+                    && m.replyToMessageId() != null && m.replyToMessageId().equals(statusId);
+            case Scenario.Step.Predicate.Status s ->
+                    throw new IllegalStateException("<status> is asserted as its own line, not against a stream message");
         };
     }
 
@@ -165,6 +189,8 @@ class ScenarioRunnerTest {
             case Scenario.Step.Predicate.Image im -> "image caption \"" + im.captionGlob() + "\"";
             case Scenario.Step.Predicate.Button b -> (b.count() != null ? "exactly " + b.count() + " " : "")
                     + (b.distinct() ? "distinct " : "") + "buttons all matching \"" + b.glob() + "\"";
+            case Scenario.Step.Predicate.Status s -> "live status matching \"" + s.pattern() + "\"";
+            case Scenario.Step.Predicate.Backlink b -> "a backlink (reply) to the status message";
         };
     }
 

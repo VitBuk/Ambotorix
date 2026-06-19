@@ -6,14 +6,11 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import vitbuk.com.Ambotorix.PickImageGenerator;
-import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
 import vitbuk.com.Ambotorix.services.AmbotorixService;
 import vitbuk.com.Ambotorix.services.LeaderService;
 import vitbuk.com.Ambotorix.services.MarkupService;
-
-import java.util.Map;
 
 @Component
 public class SecretDraftStrategy implements DraftStrategy {
@@ -55,15 +52,13 @@ public class SecretDraftStrategy implements DraftStrategy {
                 result.tempFile().delete();
             }
         }
-        service.sendToChat(chatId, lobby.getMessageThreadId(), "Pick options sent to all players via DM. Use a pick button or <code>/pick [shortName]</code> in this chat.");
+        // Pick pools went out as DMs; pick progress is tracked silently in the live status message.
     }
 
     @Override
     public void onAllPicksIn(Lobby lobby, Long chatId, AmbotorixService service) {
-        StringBuilder sb = new StringBuilder("🎉 All picks are in!\n\n");
-        for (Map.Entry<String, Leader> entry : lobby.getPendingPicks().entrySet()) {
-            sb.append("@").append(entry.getKey()).append(" → ").append(entry.getValue().getFullName()).append("\n");
-        }
-        service.sendToChat(chatId, lobby.getMessageThreadId(), sb.toString());
+        // The final picks are revealed in the status message; the milestone mention just pings + backlinks.
+        service.refreshStatus(chatId);
+        service.postMilestone(chatId, "🎉 All picks are in! See the reveal ☝️");
     }
 }

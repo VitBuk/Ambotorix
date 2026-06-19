@@ -6,6 +6,7 @@ import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.methods.stickers.*;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageMedia;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.File;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -57,14 +58,26 @@ public class TestTelegramClient implements TelegramClient {
 
     public record Button(String label, String callbackData) {}
 
-    public record OutboundMessage(Kind kind, long chatId, Integer threadId, String text, boolean hasPhoto, List<Button> buttons) {}
+    /**
+     * One captured outbound message. {@code messageId} is the synthetic id the bot sees back (so it can
+     * later edit or be replied to); {@code replyToMessageId} is the message this one backlinks to (null
+     * if none); {@code edited} is true once an {@code EditMessageText} has updated it in place.
+     */
+    public record OutboundMessage(Kind kind, long chatId, Integer threadId, int messageId,
+                                  Integer replyToMessageId, String text, boolean hasPhoto,
+                                  boolean edited, List<Button> buttons) {}
 
     /** A logical output channel: a chat plus the forum topic within it (null = General topic / DM). */
     private record ChannelKey(long chatId, Integer threadId) {}
 
     private final Map<ChannelKey, List<OutboundMessage>> history = new HashMap<>();
+    /** The single live "status" message per channel — posted silently, then edited in place (never in the stream). */
+    private final Map<ChannelKey, OutboundMessage> statusSlot = new HashMap<>();
+    /** How many times a brand-new status message was created per channel — must stay 1 (edited, not re-posted). */
+    private final Map<ChannelKey, Integer> statusCreates = new HashMap<>();
     private final Set<Long> reachableChats = new HashSet<>();
     private final AtomicInteger updateSeq = new AtomicInteger(1);
+    private final AtomicInteger outboundSeq = new AtomicInteger(1);
     private Consumer<Update> bot;
 
     // ---- wiring ----
@@ -72,12 +85,30 @@ public class TestTelegramClient implements TelegramClient {
 
     public void reset() {
         history.clear();
+        statusSlot.clear();
+        statusCreates.clear();
         reachableChats.clear();
     }
 
     /** Append-only record of everything the bot sent to {@code chatId} in topic {@code threadId}, oldest first. */
     public List<OutboundMessage> history(long chatId, Integer threadId) {
         return history.computeIfAbsent(new ChannelKey(chatId, threadId), k -> new ArrayList<>());
+    }
+
+    /** The current (latest-edited) live status message of a channel, or null if none was posted. */
+    public OutboundMessage statusMessage(long chatId, Integer threadId) {
+        return statusSlot.get(new ChannelKey(chatId, threadId));
+    }
+
+    /** How many distinct status messages were created for a channel — 1 means "edited in place, not re-posted". */
+    public int statusCreateCount(long chatId, Integer threadId) {
+        return statusCreates.getOrDefault(new ChannelKey(chatId, threadId), 0);
+    }
+
+    /** Message id of a channel's live status message (the target a milestone reply backlinks to), or null. */
+    public Integer statusMessageId(long chatId, Integer threadId) {
+        OutboundMessage m = statusSlot.get(new ChannelKey(chatId, threadId));
+        return m == null ? null : m.messageId();
     }
 
     // ---- inbound: synthesize + deliver ----
@@ -122,13 +153,42 @@ public class TestTelegramClient implements TelegramClient {
 
     // ---- outbound capture ----
 
-    private void recordOrFail(Kind kind, long chatId, Integer threadId, String text, boolean hasPhoto, ReplyKeyboard markup)
-            throws TelegramApiException {
+    private void requireReachable(long chatId) throws TelegramApiException {
         if (!reachableChats.contains(chatId)) {
             throw new TelegramApiException("Forbidden: bot can't initiate conversation with chat " + chatId
                     + " (no prior inbound activity)");
         }
-        history(chatId, threadId).add(new OutboundMessage(kind, chatId, threadId, text, hasPhoto, buttonsOf(markup)));
+    }
+
+    /** A silent message (disable_notification) is the live status message: it goes to the status slot, not the stream. */
+    private void putStatus(long chatId, Integer threadId, OutboundMessage msg) throws TelegramApiException {
+        requireReachable(chatId);
+        ChannelKey key = new ChannelKey(chatId, threadId);
+        statusSlot.put(key, msg);
+        statusCreates.merge(key, 1, Integer::sum);
+    }
+
+    private void recordStream(long chatId, Integer threadId, OutboundMessage msg) throws TelegramApiException {
+        requireReachable(chatId);
+        history(chatId, threadId).add(msg);
+    }
+
+    /** Apply an in-place edit to the status message identified by (chatId, messageId). */
+    private void applyEdit(long chatId, int messageId, String text) throws TelegramApiException {
+        for (Map.Entry<ChannelKey, OutboundMessage> e : statusSlot.entrySet()) {
+            OutboundMessage cur = e.getValue();
+            if (e.getKey().chatId() == chatId && cur.messageId() == messageId) {
+                e.setValue(new OutboundMessage(cur.kind(), cur.chatId(), cur.threadId(), cur.messageId(),
+                        cur.replyToMessageId(), text, cur.hasPhoto(), true, cur.buttons()));
+                return;
+            }
+        }
+        throw new TelegramApiException("EditMessageText: no live message " + messageId + " in chat " + chatId);
+    }
+
+    private Message stub(long chatId, int messageId) {
+        Chat chat = Chat.builder().id(chatId).type(chatId > 0 && chatId < 1000 ? "private" : "group").build();
+        return Message.builder().messageId(messageId).chat(chat).date(0).build();
     }
 
     private List<Button> buttonsOf(ReplyKeyboard markup) {
@@ -144,10 +204,23 @@ public class TestTelegramClient implements TelegramClient {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends Serializable, Method extends BotApiMethod<T>> T execute(Method method) throws TelegramApiException {
         if (method instanceof SendMessage sm) {
-            recordOrFail(Kind.TEXT, Long.parseLong(sm.getChatId()), sm.getMessageThreadId(), sm.getText(), false,
-                    sm.getReplyMarkup());
+            long chatId = Long.parseLong(sm.getChatId());
+            int id = outboundSeq.getAndIncrement();
+            OutboundMessage msg = new OutboundMessage(Kind.TEXT, chatId, sm.getMessageThreadId(), id,
+                    sm.getReplyToMessageId(), sm.getText(), false, false, buttonsOf(sm.getReplyMarkup()));
+            if (Boolean.TRUE.equals(sm.getDisableNotification())) {
+                putStatus(chatId, sm.getMessageThreadId(), msg);
+            } else {
+                recordStream(chatId, sm.getMessageThreadId(), msg);
+            }
+            return (T) stub(chatId, id);
+        }
+        if (method instanceof EditMessageText et) {
+            applyEdit(Long.parseLong(et.getChatId()), et.getMessageId(), et.getText());
+            return (T) Boolean.TRUE;
         }
         // AnswerCallbackQuery and anything else: acknowledged, not a chat send.
         return null;
@@ -155,9 +228,12 @@ public class TestTelegramClient implements TelegramClient {
 
     @Override
     public Message execute(SendPhoto sendPhoto) throws TelegramApiException {
-        recordOrFail(Kind.PHOTO, Long.parseLong(sendPhoto.getChatId()), sendPhoto.getMessageThreadId(),
-                sendPhoto.getCaption(), true, sendPhoto.getReplyMarkup());
-        return null;
+        long chatId = Long.parseLong(sendPhoto.getChatId());
+        int id = outboundSeq.getAndIncrement();
+        OutboundMessage msg = new OutboundMessage(Kind.PHOTO, chatId, sendPhoto.getMessageThreadId(), id, null,
+                sendPhoto.getCaption(), true, false, buttonsOf(sendPhoto.getReplyMarkup()));
+        recordStream(chatId, sendPhoto.getMessageThreadId(), msg);
+        return stub(chatId, id);
     }
 
     // ---- everything else: not used by the bot ----

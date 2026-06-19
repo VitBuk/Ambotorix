@@ -1,33 +1,25 @@
---- SCENARIO: open draft (default public mode) ---
-# Players register from the group without opening a private chat with the bot, so
-# the bot cannot DM them. Every pick pool is therefore posted publicly as a
-# generated image in the group with no buttons, and each registration carries a
-# "start a private chat" warning. No DMs are sent — this mirrors live behavior.
+--- SCENARIO: open draft posts pools publicly; status holds the metadata ---
+# Players register from the group without opening a private chat, so the bot cannot DM them: each
+# pick pool is posted publicly as a generated image. Slot order and the chosen map live in the
+# status message; only the draft-start milestone pings the group (a reply that backlinks the status).
 
 --- CHAT ---
 alice: /lobby
-ambotorix: Lobby created by alice
 bob: /register
-ambotorix: Player bob added to lobby*       # * = the "start a private chat" DM warning
 carol: /register
-ambotorix: Player carol added to lobby*
+ambotorix: <status *Status: waiting*Players (3): alice, bob, carol*>
 
---- CHAT ---
 alice: /start
-ambotorix: Slot order: 1. {player} 2. {player} 3. {player}
-ambotorix: Map: {map}
-ambotorix: alice:
-ambotorix: <image>          # alice's pick pool, posted publicly as a generated image
-ambotorix: bob:
-ambotorix: <image>
-ambotorix: carol:
-ambotorix: <image>
+ambotorix: 🎮 Draft started by @alice* <backlink>
+ambotorix: <status *Status: drafting*Map: {map}*Slot order:*>
+# One combined image; its caption lists every player and their pool, so the contents are assertable
+ambotorix: <image *Pick pools*alice: *bob: *carol: *>
+ambotorix:                        # group stream fully accounted for (one milestone + one image)
 
+# Players who never opened a private chat receive nothing in DM
 --- DM (alice) ---
-ambotorix:        # nothing — alice never opened a private chat, so no DM is delivered
-
+ambotorix:
 --- DM (bob) ---
 ambotorix:
-
 --- DM (carol) ---
 ambotorix:
