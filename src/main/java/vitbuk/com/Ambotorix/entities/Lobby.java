@@ -119,8 +119,10 @@ public class Lobby {
         return getBannedLeaders().contains(leader);
     }
 
-    public void addMap(CivMap civMap) {
+    public boolean addMap(CivMap civMap) {
+        if (mapPool.contains(civMap)) return false;
         mapPool.add(civMap);
+        return true;
     }
 
     public boolean removeMap (CivMap civMap) {

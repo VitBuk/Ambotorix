@@ -499,8 +499,10 @@ public class    AmbotorixService {
         }
 
         Long chatId = extractChatIdLong(update);
-        lobbyService.addMap(chatId, civMap);
-        // Map pool lives in the live status message; editing it is the host's feedback.
+        if (!lobbyService.addMap(chatId, civMap)) {
+            sendMessage(update, civMap + " is already in the map pool.");
+            return;
+        }
         refreshStatus(chatId);
     }
 
@@ -512,9 +514,11 @@ public class    AmbotorixService {
                     + " command.");
             return;
         }
-        lobbyService.addMap(lobbyChatId, civMap);
+        if (!lobbyService.addMap(lobbyChatId, civMap)) {
+            sendMessage(update, civMap + " is already in the map pool.");
+            return;
+        }
         refreshStatus(lobbyChatId);
-        // The button was tapped in a DM, so acknowledge there since the status edit is in the group.
         sendMessage(update, "✅ Added " + civMap + " to the map pool.");
     }
 

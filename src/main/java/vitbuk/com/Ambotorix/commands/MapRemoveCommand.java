@@ -23,7 +23,7 @@ public class MapRemoveCommand implements HostCommand, DynamicCommand {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        String[] parts = update.getMessage().getText().trim().split("\\s+", 2);
+        String[] parts = update.getMessage().getText().trim().split("[\\s_]+", 2);
         String mapName = parts[1].trim();
         Optional<CivMap> maybeMap = CivMap.fromDisplayNameIgnoreCase(mapName);
 
