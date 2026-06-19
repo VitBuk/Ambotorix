@@ -112,9 +112,9 @@ public class LobbyService {
         return lobby == null ? null : lobby.getMapPool();
     }
 
-    public void addMap(Long chatId, CivMap civMap) {
+    public boolean addMap(Long chatId, CivMap civMap) {
         Lobby lobby = lobbies.get(chatId);
-        if (lobby != null) lobby.addMap(civMap);
+        return lobby != null && lobby.addMap(civMap);
     }
 
     public boolean removeMap(Long chatId, CivMap civMap) {
