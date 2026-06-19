@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>vitbuk.com</groupId>
 	<artifactId>Ambotorix</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.2.0</version>
 	<name>Ambotorix</name>
 	<description>Telegram Bot for local Civilization 6 community</description>
 	<url/>
