@@ -125,7 +125,13 @@ public class    AmbotorixService {
                 }).toList();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<b>General:</b>\n");
+        sb.append("<b>Quick start:</b>\n")
+          .append(commandFactory.infoOf(LobbyCommand.class).name()).append(" – create lobby\n")
+          .append(commandFactory.infoOf(RegisterCommand.class).name()).append(" – register to the lobby\n")
+          .append(commandFactory.infoOf(BanButtonsCommand.class).name()).append(" – get buttons to DM, click one to ban a leader\n")
+          .append(commandFactory.infoOf(StartCommand.class).name()).append(" – start game (host only)\n");
+
+        sb.append("\n<b>General:</b>\n");
         general.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
 
         sb.append("\n<b>Host commands:</b>\n");
