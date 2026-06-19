@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardRow;
 import vitbuk.com.Ambotorix.commands.DescriptionCommand;
 import vitbuk.com.Ambotorix.commands.MapAddCommand;
+import vitbuk.com.Ambotorix.commands.MapRemoveCommand;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
@@ -68,6 +69,25 @@ public class MarkupService {
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(m.name())
                     .callbackData(mPrefix + " " + groupChatId + " " + m.toString())
+                    .build();
+            InlineKeyboardRow row = new InlineKeyboardRow();
+            row.add(btn);
+            rows.add(row);
+        }
+
+        return InlineKeyboardMarkup.builder()
+                .keyboard(rows)
+                .build();
+    }
+
+    public InlineKeyboardMarkup mapRemoveMarkup(List<CivMap> maps, Long groupChatId) {
+        String rPrefix = commandFactory.infoOf(MapRemoveCommand.class).prefix();
+
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+        for (CivMap m : maps) {
+            InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                    .text("❌ " + m.toString())
+                    .callbackData(rPrefix + " " + groupChatId + " " + m.toString())
                     .build();
             InlineKeyboardRow row = new InlineKeyboardRow();
             row.add(btn);

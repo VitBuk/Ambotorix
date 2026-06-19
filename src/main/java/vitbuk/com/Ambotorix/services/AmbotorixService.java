@@ -70,12 +70,12 @@ public class    AmbotorixService {
 
     //logic for command -> credits
     public void sendCredits(Update update) {
-        sendMessage(update, "Bot is created by @VitBuk\nhttps://github.com/VitBuk");
+        sendPrivateMessage(update, "Bot is created by @VitBuk\nhttps://github.com/VitBuk");
     }
 
     //logic for command -> discord
     public void sendDiscord(Update update) {
-        sendMessage(update, "Our discord server: \nJoin our Discord: https://discord.gg/2h425TExSt");
+        sendPrivateMessage(update, "Our discord server: \nJoin our Discord: https://discord.gg/2h425TExSt");
     }
     //logic for command -> /update
     public void sendUpdate(Update update) {
@@ -134,7 +134,7 @@ public class    AmbotorixService {
         sb.append("\n<b>Player commands:</b>\n");
         playerCmds.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
 
-        sendMessage(update, sb.toString());
+        sendPrivateMessage(update, sb.toString());
     }
 
     // logic for command -> /lobby
@@ -180,12 +180,12 @@ public class    AmbotorixService {
 
     //logic for command -> /mods
     public void sendMods(Update update) {
-        sendMessage(update, allLines(dataDir + "/mods"));
+        sendPrivateMessage(update, allLines(dataDir + "/mods"));
     }
 
     //logic for command -> /settings
     public void sendSettings(Update update) {
-        sendMessage(update, allLines(dataDir + "/settings"));
+        sendPrivateMessage(update, allLines(dataDir + "/settings"));
     }
 
     //logic for command -> /d_[shortName]
@@ -235,17 +235,18 @@ public class    AmbotorixService {
 
         String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
         String addPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
+        String removePrefix = commandFactory.infoOf(MapRemoveCommand.class).prefix();
 
         if (data != null && data.startsWith(dPrefix)) {
             String shortName = data.substring(dPrefix.length()+1); // +1 is space or _ before shortname
             sendDescription(update, shortName);
         }
 
-        if (data != null && data.startsWith(addPrefix)) {
+        if (data != null && data.startsWith(addPrefix + " ")) {
             String payload = data.substring(addPrefix.length() + 1);
             String[] parts = payload.split(" ", 2);
             if (parts.length < 2) {
-                sendMessage(update, "This button is outdated. Please use /maplist again.");
+                sendPrivateMessage(update, "This button is outdated. Please use /maplist again.");
                 return;
             }
             try {
@@ -253,7 +254,28 @@ public class    AmbotorixService {
                 String civMapName = parts[1];
                 sendMapAdd(update, CivMap.fromDisplayNameIgnoreCase(civMapName).get(), lobbyChatId);
             } catch (NumberFormatException e) {
-                sendMessage(update, "This button is outdated. Please use /maplist again.");
+                sendPrivateMessage(update, "This button is outdated. Please use /maplist again.");
+            }
+        }
+
+        if (data != null && data.startsWith(removePrefix + " ")) {
+            String payload = data.substring(removePrefix.length() + 1);
+            String[] parts = payload.split(" ", 2);
+            if (parts.length < 2) {
+                sendPrivateMessage(update, "This button is outdated. Please use /mappool again.");
+                return;
+            }
+            try {
+                Long lobbyChatId = Long.parseLong(parts[0]);
+                String civMapName = parts[1];
+                Optional<CivMap> map = CivMap.fromDisplayNameIgnoreCase(civMapName);
+                if (map.isEmpty()) {
+                    sendPrivateMessage(update, "Unknown map: " + civMapName);
+                    return;
+                }
+                sendMapRemove(update, map.get(), lobbyChatId);
+            } catch (NumberFormatException e) {
+                sendPrivateMessage(update, "This button is outdated. Please use /mappool again.");
             }
         }
 
@@ -429,39 +451,40 @@ public class    AmbotorixService {
                 nowInMunich.format(formatter)
         );
 
-        sendMessage(update, message);
+        sendPrivateMessage(update, message);
     }
 
     //logic for command -> /mappool
     public void sendMappool(Update update) {
         if (!hasLobby(update)) {
-            sendNoLobby(update);
+            sendPrivateMessage(update, "No active lobby. Use " + commandFactory.infoOf(LobbyCommand.class).name() + " to create one.");
             return;
         }
 
         Long chatId = extractChatIdLong(update);
-        List<CivMap> mapPool =  lobbyService.getMappool(chatId);
+        List<CivMap> mapPool = lobbyService.getMappool(chatId);
 
         if (mapPool == null) {
-            sendBugReport(update);
+            sendPrivateMessage(update, "Something went wrong. Please contact @VitBuk.");
             return;
         }
 
-        StringBuilder sb = new StringBuilder("Map pool: \n");
-        sb.append("<i>To remove map from map pool use ")
-                .append(commandFactory.infoOf(MapRemoveCommand.class).name())
-                .append(" command </i> \n");
-
-        for (CivMap cm : mapPool) {
-            sb.append(commandFactory.infoOf(MapRemoveCommand.class).prefix())
-                    .append("_")
-                    .append(cm.toString())
-                    .append(" → ")
-                    .append(cm.toString())
-                    .append("\n");
+        if (mapPool.isEmpty()) {
+            sendPrivateMessage(update, "Map pool is empty. Use " + commandFactory.infoOf(MapAddCommand.class).name() + " to add maps.");
+            return;
         }
 
-        sendMessage(update, sb.toString());
+        SendMessage message = SendMessage.builder()
+                .chatId(update.getMessage().getFrom().getId())
+                .text("Map pool — click to remove:")
+                .replyMarkup(markupService.mapRemoveMarkup(mapPool, chatId))
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send mappool message: {}", e.getMessage(), e);
+        }
     }
 
     //logic for the command -> maplist
@@ -492,7 +515,7 @@ public class    AmbotorixService {
     //logic for command -> /mapAdd [name]
     public void sendMapAdd(Update update, CivMap civMap) {
         if (civMap == null) {
-            sendMessage(update, "There is no such map. To get list of available maps use "
+            sendPrivateMessage(update, "There is no such map. To get list of available maps use "
                     + commandFactory.infoOf(MapAddCommand.class).name()
                     + " command.");
             return;
@@ -500,7 +523,7 @@ public class    AmbotorixService {
 
         Long chatId = extractChatIdLong(update);
         if (!lobbyService.addMap(chatId, civMap)) {
-            sendMessage(update, civMap + " is already in the map pool.");
+            sendPrivateMessage(update, civMap + " is already in the map pool.");
             return;
         }
         refreshStatus(chatId);
@@ -524,10 +547,9 @@ public class    AmbotorixService {
 
     //logic for command /mapRemove [name]
     public void sendMapRemove(Update update, CivMap civMap) {
-        String mappoolName = commandFactory.infoOf(MappoolCommand.class).name();
-
         if (civMap == null) {
-            sendMessage(update, "There is no such map.Check map pool by using " + mappoolName + " command.");
+            sendPrivateMessage(update, "There is no such map. Check map pool with "
+                    + commandFactory.infoOf(MappoolCommand.class).name() + ".");
             return;
         }
 
@@ -537,7 +559,18 @@ public class    AmbotorixService {
             return;
         }
 
-        sendMessage(update, "There is no such map in map pool. Check map pool by using " + mappoolName + " command");
+        sendPrivateMessage(update, civMap + " is not in the map pool. Check it with "
+                + commandFactory.infoOf(MappoolCommand.class).name() + ".");
+    }
+
+    // Called from DM callback — lobbyChatId is the group chat where the lobby lives
+    public void sendMapRemove(Update update, CivMap civMap, Long lobbyChatId) {
+        if (!lobbyService.removeMap(lobbyChatId, civMap)) {
+            sendPrivateMessage(update, civMap + " is not in the map pool.");
+            return;
+        }
+        refreshStatus(lobbyChatId);
+        sendPrivateMessage(update, "✅ Removed " + civMap + " from the map pool.");
     }
 
     public void sendTerminate(Update update) {
@@ -575,7 +608,7 @@ public class    AmbotorixService {
     }
 
     public void sendNoSuchMap(Update update) {
-        sendMessage(update, "No such map. Check " + commandFactory.infoOf(MaplistCommand.class).name()
+        sendPrivateMessage(update, "No such map. Check " + commandFactory.infoOf(MaplistCommand.class).name()
                 + " command for list of available maps");
     }
 
@@ -737,7 +770,7 @@ public class    AmbotorixService {
 
     public void sendSetBanSize(Update update, int n) {
         if (n < 0) {
-            sendMessage(update, "Ban size must be 0 or greater.");
+            sendPrivateMessage(update, "Ban size must be 0 or greater.");
             return;
         }
         Long chatId = extractChatIdLong(update);
@@ -749,7 +782,7 @@ public class    AmbotorixService {
 
     public void sendSetPickSize(Update update, int n) {
         if (n < 1) {
-            sendMessage(update, "Pick size must be at least 1.");
+            sendPrivateMessage(update, "Pick size must be at least 1.");
             return;
         }
         Long chatId = extractChatIdLong(update);
@@ -761,7 +794,7 @@ public class    AmbotorixService {
 
     public void sendSetDraft(Update update, String strategyName) {
         if (!draftStrategyFactory.getStrategyNames().contains(strategyName)) {
-            sendMessage(update, "Unknown strategy. Available: " + String.join(", ", draftStrategyFactory.getStrategyNames()));
+            sendPrivateMessage(update, "Unknown strategy. Available: " + String.join(", ", draftStrategyFactory.getStrategyNames()));
             return;
         }
         Long chatId = extractChatIdLong(update);
@@ -774,7 +807,7 @@ public class    AmbotorixService {
     public void sendAdminLobbies(Update update) {
         Map<Long, Lobby> all = lobbyService.getAllLobbies();
         if (all.isEmpty()) {
-            sendMessage(update, "No active lobbies.");
+            sendPrivateMessage(update, "No active lobbies.");
             return;
         }
         StringBuilder sb = new StringBuilder("Active lobbies:\n");
@@ -785,18 +818,18 @@ public class    AmbotorixService {
               .append(" | players: ").append(lobby.getPlayers().size())
               .append(" | age: ").append(ageMinutes).append("m\n");
         });
-        sendMessage(update, sb.toString());
+        sendPrivateMessage(update, sb.toString());
     }
 
     public void sendAdminTerminate(Update update, Long targetChatId) {
         if (!lobbyService.hasLobby(targetChatId)) {
-            sendMessage(update, "No lobby found for chatId: " + targetChatId);
+            sendPrivateMessage(update, "No lobby found for chatId: " + targetChatId);
             return;
         }
         Integer threadId = lobbyService.getLobby(targetChatId).getMessageThreadId();
         lobbyService.removeLobby(targetChatId);
         sendToChat(targetChatId, threadId, "Lobby terminated by bot admin.");
-        sendMessage(update, "Lobby in chat " + targetChatId + " terminated.");
+        sendPrivateMessage(update, "Lobby in chat " + targetChatId + " terminated.");
     }
 
     public void sendToChat(Long chatId, String text) {
