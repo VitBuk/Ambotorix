@@ -8,6 +8,13 @@ leader data up to date by scraping it on a schedule.
 
 This is a pet project.
 
+## Unreleased
+
+- **`/photochallenge`** — posts the community photo-challenge leaderboard to the group. The bot
+  reads the standings from the shared Google Sheet (the "Main" tab) and reprints them as a
+  monospace table (Player / Total / Leaders / City-States / Wonders). The sheet stays the source
+  of truth; the sheet CSV URL is configurable via `photochallenge.sheet.csv-url`.
+
 ## Ambotorix Beta 0.3
 
 What's new in this release:
