@@ -1,0 +1,32 @@
+--- SCENARIO: herson rejects a submission that includes a host-banned civ ---
+# The host removes Montezuma from the pool before the draft starts. When Bob ranks Montezuma anyway,
+# his whole submission is rejected with a clear comment so he can re-send without it.
+
+--- CHAT ---
+alice: /lobby herson
+bob: /register
+
+--- DM (alice) ---
+alice: /leaders
+ambotorix: <button "{leader}">
+--- DM (bob) ---
+bob: /leaders
+ambotorix: <button "{leader}">
+
+--- CHAT ---
+alice: /ban montezuma
+--- DM (alice) ---
+ambotorix: ✅ Banned*Montezuma*
+
+--- CHAT ---
+alice: /start
+ambotorix: @alice* @bob* <backlink>
+ambotorix:
+
+--- DM (alice) ---
+ambotorix: *Herson draft*                 # alice is prompted (does not submit here)
+
+--- DM (bob) ---
+ambotorix: *Herson draft*
+bob: 1. lincoln 2. montezuma 3. basil 4. theodora   # Montezuma is host-banned
+ambotorix: *banned by the host*

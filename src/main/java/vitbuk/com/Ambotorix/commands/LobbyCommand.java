@@ -10,8 +10,8 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 public class LobbyCommand implements GeneralCommand {
     private static final CommandInfo INFO = new CommandInfo(
             "/lobby",
-            "/lobby",
-            "Create game lobby");
+            "/lobby [draft]",
+            "Create game lobby (optionally pick a draft, e.g. /lobby herson)");
     @Override
     public CommandInfo getInfo() {
         return INFO;
@@ -19,6 +19,8 @@ public class LobbyCommand implements GeneralCommand {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        ambotorixService.sendLobby(update);
+        String[] parts = update.getMessage().getText().trim().split("\\s+", 2);
+        String draftName = parts.length > 1 ? parts[1].trim() : null;
+        ambotorixService.sendLobby(update, draftName);
     }
 }

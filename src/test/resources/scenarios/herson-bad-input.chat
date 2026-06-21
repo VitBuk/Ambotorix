@@ -1,0 +1,42 @@
+--- SCENARIO: herson handles malformed pick submissions and re-prompts clearly ---
+# A player can fat-finger their DM in several ways; each gets a specific, actionable reply and the
+# draft waits. Once a clean submission lands it is recorded, and any further chatter just gets a
+# "you already submitted" nudge. Bob opens a DM (so he is prompted) but never submits, so the draft
+# stays open — this isolates Alice's input-validation paths.
+
+--- CHAT ---
+alice: /lobby herson
+bob: /register
+
+--- DM (alice) ---
+alice: /leaders
+ambotorix: <button "{leader}">
+--- DM (bob) ---
+bob: /leaders
+ambotorix: <button "{leader}">
+
+--- CHAT ---
+alice: /start
+ambotorix: @alice* @bob* <backlink>
+ambotorix:
+
+--- DM (bob) ---
+ambotorix: *Herson draft*                 # bob is prompted but does not submit here
+
+--- DM (alice) ---
+ambotorix: *Herson draft*
+alice: hello there                          # random text, no ranked list
+ambotorix: *send exactly*4*ranked picks*
+alice: 1. lincoln 2. curtin 3. montezuma    # only three picks
+ambotorix: *send exactly*4*ranked picks*
+alice: 1. lincoln 2. curtin 3. qqqqqq 4. hammurabi   # one name matches nothing
+ambotorix: *pin down some picks*
+alice: 1. lincoln 2. lincoln 3. montezuma 4. hammurabi   # a duplicate civ
+ambotorix: *must be different leaders*
+alice: 1. lincoln 2. curtin 3. montezuma 4. hammurabi    # finally valid
+ambotorix: *Picks recorded*
+alice: thanks bot                           # already submitted -> gentle nudge
+ambotorix: *already submitted*
+
+--- CHAT ---
+ambotorix:                                  # group stream only ever held the start ping
