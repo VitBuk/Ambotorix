@@ -14,6 +14,8 @@ This is a pet project.
   reads the standings from the shared Google Sheet (the "Main" tab) and reprints them as a
   monospace table (Player / Total / Leaders / City-States / Wonders). The sheet stays the source
   of truth; the sheet CSV URL is configurable via `photochallenge.sheet.csv-url`.
+- **`/mods`** now shows each mod as a tappable Steam Workshop link (no version numbers, since
+  those drift over time).
 
 ## Ambotorix Beta 0.3
 
@@ -64,3 +66,17 @@ The bot is containerised. With Docker and a populated `.env` (bot token, usernam
 ```bash
 docker compose up --build -d
 ```
+
+### Updating data files (`mods`, `settings`, etc.) on an existing deployment
+
+`src/main/resources` is a named Docker volume that the entrypoint **only seeds on first run**
+(when `civ6_leaders.json` is absent). So a plain `git pull` + `docker compose up --build` does
+**not** refresh files like `mods` or `settings` that already exist in the volume — the old copies
+persist. To push an updated data file to a running deployment, copy it into the volume and restart:
+
+```bash
+docker compose cp src/main/resources/mods ambotorix:/app/src/main/resources/mods
+docker compose restart
+```
+
+(Recreating the volume also works but re-triggers the full leader scrape on next start.)
