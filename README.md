@@ -8,8 +8,21 @@ leader data up to date by scraping it on a schedule.
 
 This is a pet project.
 
-## Unreleased
+## Ambotorix Beta 0.4
 
+What's new in this release:
+
+- **Herson ranked secret draft** (new draft strategy, by Mihails). A ranked secret draft over
+  the full roster: players DM four ranked picks as free text (`1. X 2. Y 3. Z 4. W`); names are
+  fuzzy-matched and confirmed via buttons when auto-corrected. Once everyone submits, a pure
+  resolver collapses the lists into a unique assignment — a civ wanted by 2+ players is banned and
+  contestants fall through to their next pick; a clash surviving all four picks is broken by a coin
+  flip. Picks stay hidden until resolved, then the status reveals each player's civ plus a
+  contested-ban summary. Herson has no per-player ban phase (only the host may ban, freely, before
+  the draft closes).
+- **`/lobby <strategy>`** — `/lobby` now takes an optional draft-strategy name (e.g. `/lobby secret`)
+  so the host can pick the draft up front instead of a separate `/setDraft`; an unknown name falls
+  back to the default with a note.
 - **`/photochallenge`** — posts the community photo-challenge leaderboard to the group. The bot
   reads the standings from the shared Google Sheet (the "Main" tab) and reprints them as a
   monospace table (Player / Total / Leaders / City-States / Wonders). The sheet stays the source
