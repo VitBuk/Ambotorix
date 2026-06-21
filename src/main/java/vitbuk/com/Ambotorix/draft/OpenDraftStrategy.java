@@ -36,14 +36,16 @@ public class OpenDraftStrategy implements DraftStrategy {
         leaderService.setLeadersPool(lobby);
 
         // Public group post: one combined image — a row per player — instead of a post per player.
+        // It is the single draft-start ping: posted as a reply to the status message and captioned
+        // with @-mentions so every player is notified. The image itself shows each player's pool.
         PickImageGenerator.LeaderPickPhoto combined =
                 PickImageGenerator.createCombinedPickMessage(chatId, lobby.getPlayers());
         File combinedFile = combined.tempFile();
         try {
             combined.sendPhoto().setMessageThreadId(lobby.getMessageThreadId());
             combined.sendPhoto().setParseMode("HTML");
-            // Caption lists each player's pool so the image content is visible (and test-assertable).
-            combined.sendPhoto().setCaption(PickImageGenerator.rosterCaption(lobby.getPlayers()));
+            combined.sendPhoto().setReplyToMessageId(lobby.getStatusMessageId());
+            combined.sendPhoto().setCaption(service.mentionAll(lobby));
             telegramClient.execute(combined.sendPhoto());
         } catch (TelegramApiException e) {
             log.error("Failed to send combined pick image", e);
