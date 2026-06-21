@@ -1,0 +1,28 @@
+--- SCENARIO: smart ban — fuzzy/prefix resolves to one leader, shared names offer buttons ---
+# /ban takes loose input. A unique match is applied silently to the status message (with a DM
+# confirmation naming the leader, so the player can see how a partial/typo query was read); a
+# query that matches several leaders comes back as buttons in DM instead of guessing wrong.
+# Alice opens a private chat first so the bot can reach her there.
+
+--- CHAT ---
+alice: /lobby
+ambotorix: <status *Lobby by @alice*>
+alice: /setBanSize 2
+ambotorix: <status *Bans per player: 2*>
+
+--- DM (alice) ---
+alice: /leaders                  # opens a private chat → DM-reachable
+ambotorix: <button "{leader}">
+
+--- CHAT ---
+alice: /ban alex                 # prefix → unique → Macedon Alexander
+ambotorix: <status *Bans:*@alice*Alexander*>   # the ban shows up silently in the status message
+
+--- DM (alice) ---
+ambotorix: ✅ Banned *Alexander*  # DM confirms which leader the partial query resolved to
+
+--- CHAT ---
+alice: /ban roosevelt            # one token, two leaders → must disambiguate, not guess
+
+--- DM (alice) ---
+ambotorix: *pick one to ban* <button "*Roosevelt*" x2 distinct>

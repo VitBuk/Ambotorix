@@ -20,9 +20,11 @@ public class BanCommand implements PlayerCommand, DynamicCommand {
 
     @Override
     public void execute(Update update, AmbotorixService ambotorixService) {
-        String messageText = update.getMessage().getText().replace("_", "");
-        String shortName = messageText.substring(getInfo().prefix().length()).trim();
+        // Everything after "/ban" (or "/ban_") is a free-form query; the matcher handles formatting,
+        // typos and partial names, so we only strip the leading separator here.
+        String text = update.getMessage().getText().trim();
+        String query = text.substring(getInfo().prefix().length()).replaceFirst("^[\\s_]+", "").trim();
 
-        ambotorixService.sendBan(update, shortName);
+        ambotorixService.sendSmartBan(update, query);
     }
 }

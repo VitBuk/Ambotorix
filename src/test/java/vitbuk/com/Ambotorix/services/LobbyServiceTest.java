@@ -84,9 +84,9 @@ class LobbyServiceTest {
     void getExpiredLobbyChatIds_returnsChatsWhoseStartExceededTimeout() {
         service.createLobby(CHAT_A, new Player("host", 1L));
         Lobby lobby = service.getLobby(CHAT_A);
-        lobby.setDraftStartedAt(java.time.LocalDateTime.now().minusHours(5));
+        lobby.setDraftStartedAt(java.time.LocalDateTime.now().minusMinutes(45));
 
-        var expired = service.getExpiredLobbyChatIds(4);
+        var expired = service.getExpiredLobbyChatIds(30);
         assertTrue(expired.contains(CHAT_A));
     }
 }

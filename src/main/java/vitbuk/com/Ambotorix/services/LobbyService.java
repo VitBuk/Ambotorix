@@ -51,8 +51,8 @@ public class LobbyService {
         return Collections.unmodifiableMap(lobbies);
     }
 
-    public List<Long> getExpiredLobbyChatIds(int hoursAfterStart) {
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(hoursAfterStart);
+    public List<Long> getExpiredLobbyChatIds(int minutesAfterStart) {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(minutesAfterStart);
         return lobbies.entrySet().stream()
                 .filter(e -> {
                     LocalDateTime started = e.getValue().getDraftStartedAt();

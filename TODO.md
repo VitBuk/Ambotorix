@@ -17,9 +17,11 @@
       reveal milestone and the secret-draft DM-failure fallback notices.
 - [x] Auto-terminate lobbies 30 minutes after start (was 4 hours); config is now
       `lobby.auto-terminate.minutes`, cleanup check runs every 5 minutes.
+- [x] Smart bans: `/ban alex` → Alexander, `/ban teresa` → Theresa (typo-tolerant). Tiered
+      exact→prefix→fuzzy matching; shared names (Roosevelt, Eleanor, Qin) offer DM buttons
+      instead of guessing.
 
 ## Planned
 
 - [ ] `/photochallenge` command
 - [ ] Links to mods instead of plain text
-- [ ] Smart ban parsing, e.g. `/ban alex` → bans Alexander (Macedonia)
