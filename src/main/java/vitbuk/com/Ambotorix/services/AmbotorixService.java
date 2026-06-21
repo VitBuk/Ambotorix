@@ -24,6 +24,8 @@ import vitbuk.com.Ambotorix.commands.structure.HostCommand;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
 import vitbuk.com.Ambotorix.draft.DraftStrategy;
 import vitbuk.com.Ambotorix.draft.DraftStrategyFactory;
+import vitbuk.com.Ambotorix.matching.LeaderMatcher;
+import vitbuk.com.Ambotorix.matching.LeaderMatcher.MatchResult;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -52,13 +54,14 @@ public class    AmbotorixService {
     private final MarkupService markupService;
     private final DataUpdateService dataUpdateService;
     private final DraftStrategyFactory draftStrategyFactory;
+    private final LeaderMatcher leaderMatcher;
 
     @Value("${data.dir:src/main/resources}")
     private String dataDir;
 
     @Autowired
     public AmbotorixService(TelegramClient telegramClient, LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
-                            DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory) {
+                            DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory, LeaderMatcher leaderMatcher) {
         this.telegramClient = telegramClient;
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
@@ -66,6 +69,7 @@ public class    AmbotorixService {
         this.markupService = markupService;
         this.dataUpdateService = dataUpdateService;
         this.draftStrategyFactory = draftStrategyFactory;
+        this.leaderMatcher = leaderMatcher;
     }
 
     //logic for command -> credits
@@ -370,53 +374,75 @@ public class    AmbotorixService {
             sendPrivateMessage(update, "Unknown leader: " + shortName);
             return;
         }
-        if (lobbyService.isBanned(lobbyChatId, leader)) {
-            sendPrivateMessage(update, leader.getFullName() + " is already banned.");
-            return;
-        }
-        if (!lobbyService.hasAvailableBans(lobbyChatId, player) && !lobbyService.isHost(lobbyChatId, userName)) {
-            sendPrivateMessage(update, "You have no ban slots remaining.");
-            return;
-        }
-        player.getBans().add(leader);
-        refreshStatus(lobbyChatId);
-        sendPrivateMessage(update, "✅ Banned " + leader.getFullName() + ".");
+        applyBan(update, lobbyChatId, userName, player, leader);
     }
 
-    //logic for command -> /ban_[shortName]
-    public void sendBan(Update update, String shortName) {
+    //logic for command -> /ban [query] — smart, forgiving leader matching
+    public void sendSmartBan(Update update, String query) {
         Long chatId = extractChatIdLong(update);
         String userName = update.getMessage().getFrom().getUserName();
         Player player = lobbyService.findPlayerByName(chatId, userName);
 
-        // registration check
-        if (!lobbyService.isRegistered(chatId, userName)) {
-            sendMessage(update, "Player " + userName + " is not registered");
+        if (player == null || !lobbyService.isRegistered(chatId, userName)) {
+            sendPrivateMessage(update, "You are not registered in this lobby.");
+            return;
+        }
+        if (!lobbyService.hasAvailableBans(chatId, player) && !lobbyService.isHost(chatId, userName)) {
+            sendPrivateMessage(update, "You have no ban slots remaining.");
             return;
         }
 
-        // leader exists check
-        Leader leader = leaderService.getLeaderByShortName(shortName);
-        if (leader == null) {
-            sendMessage(update, "Unknown leader. User " + commandFactory.infoOf(LeadersCommand.class).name() + " to see available description comamnd");
-            return;
+        MatchResult result = leaderMatcher.match(query, leaderService.getLeaders());
+        switch (result) {
+            case MatchResult.Unique u -> applyBan(update, chatId, userName, player, u.leader());
+            case MatchResult.Ambiguous a -> sendBanChoices(update, chatId, a.leaders(), query);
+            case MatchResult.None n -> sendPrivateMessage(update, "No leader matches \"" + query.trim()
+                    + "\". Use " + commandFactory.infoOf(BanButtonsCommand.class).name() + " to pick from a list.");
         }
+    }
 
-        //already banned check
+    /** Shared ban tail: already-banned + slot checks, then add the ban, refresh status, confirm in DM. */
+    private void applyBan(Update update, Long chatId, String userName, Player player, Leader leader) {
         if (lobbyService.isBanned(chatId, leader)) {
-            sendMessage(update, leader.getFullName() + " is already banned");
+            sendPrivateMessage(update, leader.getFullName() + " is already banned.");
             return;
         }
-
-        //has bans slots check
-        if (!lobbyService.hasAvailableBans(chatId, player) && !isHost(update)) {
-            sendMessage(update, "Player " + player.getUserName() + " cant ban more leaders");
+        if (!lobbyService.hasAvailableBans(chatId, player) && !lobbyService.isHost(chatId, userName)) {
+            sendPrivateMessage(update, "You have no ban slots remaining.");
             return;
         }
-
         player.getBans().add(leader);
-        // Bans show up in the live status message instead of a per-ban announcement.
+        // Bans show up in the live status message instead of a per-ban announcement; the DM confirms
+        // which leader was banned (important when a fuzzy/prefix query was interpreted).
         refreshStatus(chatId);
+        sendPrivateMessage(update, "✅ Banned " + leader.getFullName() + ".");
+    }
+
+    /** Ambiguous query: offer a button per candidate in DM (group fallback if the user isn't DM-reachable). */
+    private void sendBanChoices(Update update, Long chatId, List<Leader> candidates, String query) {
+        InlineKeyboardMarkup markup = markupService.banButtonsMarkup(candidates, chatId);
+        String text = "Multiple leaders match \"" + query.trim() + "\" — pick one to ban:";
+        try {
+            telegramClient.execute(SendMessage.builder()
+                    .chatId(update.getMessage().getFrom().getId())
+                    .text(text)
+                    .replyMarkup(markup)
+                    .parseMode("HTML")
+                    .build());
+        } catch (TelegramApiException dmFailed) {
+            // Not DM-reachable — post the choices in the group so the user isn't stuck.
+            try {
+                telegramClient.execute(SendMessage.builder()
+                        .chatId(chatId)
+                        .messageThreadId(extractThreadId(update))
+                        .text(text)
+                        .replyMarkup(markup)
+                        .parseMode("HTML")
+                        .build());
+            } catch (TelegramApiException groupFailed) {
+                log.error("Failed to send ban choices: {}", groupFailed.getMessage(), groupFailed);
+            }
+        }
     }
 
     // logic for unknown command
