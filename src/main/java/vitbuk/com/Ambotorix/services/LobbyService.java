@@ -118,7 +118,7 @@ public class LobbyService {
         LocalDateTime bestStarted = null;
         for (Map.Entry<Long, Lobby> e : lobbies.entrySet()) {
             Lobby lobby = e.getValue();
-            if (!"herson".equals(lobby.getDraftStrategyName())) continue;
+            if (!lobby.isHersonDraft()) continue;
             if (!lobby.isDraftInProgress() || lobby.getHersonState() == null) continue;
             Player player = lobby.getPlayers().stream()
                     .filter(p -> (userName != null && userName.equalsIgnoreCase(p.getUserName()))

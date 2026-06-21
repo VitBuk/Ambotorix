@@ -371,7 +371,7 @@ public class    AmbotorixService {
      */
     private String hersonBanRejection(Long chatId, String userName) {
         Lobby lobby = lobbyService.getLobby(chatId);
-        if (lobby == null || !"herson".equals(lobby.getDraftStrategyName())) return null;
+        if (lobby == null || !lobby.isHersonDraft()) return null;
         if (!lobbyService.isHost(chatId, userName)) return "Only the host can ban civs in a Herson draft.";
         if (lobby.isDraftStarted() && !lobby.isDraftInProgress()) return "The draft is closed — bans can no longer be changed.";
         return null;
@@ -388,7 +388,7 @@ public class    AmbotorixService {
         if (hersonReject != null) { sendPrivateMessage(update, hersonReject); return; }
 
         // In Herson the host bans freely (no slots); elsewhere the per-player ban slots apply.
-        boolean herson = "herson".equals(lobbyService.getLobby(chatId).getDraftStrategyName());
+        boolean herson = lobbyService.getLobby(chatId).isHersonDraft();
         if (!herson && !lobbyService.hasAvailableBans(chatId, player)) {
             sendPrivateMessage(update, "You have no ban slots remaining.");
             return;
@@ -805,8 +805,13 @@ public class    AmbotorixService {
         Set<Leader> hostBans = new LinkedHashSet<>(lobby.getBannedLeaders());
         Set<Leader> working = new LinkedHashSet<>(hostBans);
         working.addAll(state.getBanned());
-        HersonResolver.Step step = HersonResolver.resolve(
-                state.getRankedPicks(), working, state.getAssigned());
+        // "herson-low" bans every civ two or more players ranked (any priority), so survivors are
+        // unique and there is never a clash to coin-flip; plain "herson" bans only same-step clashes
+        // and breaks last-resort ties with a coin flip.
+        boolean low = "herson-low".equals(lobby.getDraftStrategyName());
+        HersonResolver.Step step = low
+                ? HersonResolver.resolveLow(state.getRankedPicks(), working, state.getAssigned())
+                : HersonResolver.resolve(state.getRankedPicks(), working, state.getAssigned());
         working.removeAll(hostBans);
         state.getBanned().clear();
         state.getBanned().addAll(working);
@@ -815,6 +820,15 @@ public class    AmbotorixService {
             finalizeHerson(chatId, lobby, complete.assignments());
         } else if (step instanceof HersonResolver.CoinFlip coinFlip) {
             runHersonCoinFlip(chatId, lobby, coinFlip.civ(), coinFlip.contestants());
+        } else if (step instanceof HersonResolver.Unresolvable unresolvable) {
+            // herson-low only: a player's four picks were all banned. Too rare to auto-recover — stop
+            // the draft and tell the group so the host can /terminate and re-run.
+            lobby.setDraftInProgress(false);
+            refreshStatus(chatId);
+            String who = unresolvable.players().stream().map(n -> "@" + n).collect(Collectors.joining(", "));
+            postMilestone(chatId, "⚠️ Couldn't resolve the draft — " + who
+                    + " had all four picks banned by overlaps. The host can /terminate and re-run.");
+            log.warn("herson-low unresolvable in chat {}: stranded {}", chatId, unresolvable.players());
         }
     }
 
@@ -1171,7 +1185,7 @@ public class    AmbotorixService {
                 .collect(Collectors.joining(", "));
         String draftStatus = !lobby.isDraftStarted() ? "waiting"
                 : (lobby.isDraftInProgress() ? "drafting" : "done");
-        boolean herson = "herson".equals(lobby.getDraftStrategyName());
+        boolean herson = lobby.isHersonDraft();
 
         StringBuilder sb = new StringBuilder();
         sb.append("🎲 <b>Lobby by @").append(lobby.getHost().getUserName()).append("</b>\n")

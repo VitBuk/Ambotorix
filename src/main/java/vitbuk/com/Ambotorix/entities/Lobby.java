@@ -142,6 +142,10 @@ public class Lobby {
     public String getDraftStrategyName() { return draftStrategyName; }
     public void setDraftStrategyName(String name) { this.draftStrategyName = name; }
 
+    /** All ranked-secret "herson" variants share the same DM submission/resolution machinery. */
+    private static final Set<String> HERSON_STRATEGIES = Set.of("herson", "herson-low");
+    public boolean isHersonDraft() { return HERSON_STRATEGIES.contains(draftStrategyName); }
+
     public Map<String, Leader> getPendingPicks() { return pendingPicks; }
     public void addPendingPick(String userName, Leader leader) { pendingPicks.put(userName, leader); }
     public boolean hasPendingPick(String userName) { return pendingPicks.containsKey(userName); }

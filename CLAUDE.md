@@ -111,8 +111,16 @@ Strategy pattern. `DraftStrategy` implementations are `@Component`s collected by
   `HersonResolver`/`HersonPickParser` are pure and unit-tested. Inapplicable commands are rejected
   with a comment (e.g. `/pick` → "only in secret draft", a non-host `/ban` in Herson → "only the host
   can ban").
+- **`herson-low`** (`HersonLowDraftStrategy`) — same DM submission flow as `herson`, stricter
+  resolution: **any** civ ranked by 2+ players is banned outright, *regardless of priority*
+  (`HersonResolver.resolveLow`), then each player keeps their highest surviving pick. Because every
+  surviving civ is unique to one player there is never a clash — and so never a coin flip. The only
+  failure mode is a player whose four picks were all banned; that's reported as `Unresolvable` and the
+  draft stops with a message for the host to `/terminate` and re-run (rare enough not to auto-recover).
+  The shared machinery treats both variants as Herson via `Lobby.isHersonDraft()`;
+  `advanceHersonResolution` picks the resolver by strategy name.
 
-A lobby's strategy is set with `/setDraft [open|secret|herson]` (or up front via `/lobby [draft]`);
+A lobby's strategy is set with `/setDraft [open|secret|herson|herson-low]` (or up front via `/lobby [draft]`);
 `sendStart` looks it up by name.
 **To add a strategy:** implement `DraftStrategy` as a `@Component` with a unique `getName()`.
 
