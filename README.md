@@ -8,7 +8,7 @@ leader data up to date by scraping it on a schedule.
 
 This is a pet project.
 
-## Ambotorix Beta 0.3 (in progress)
+## Ambotorix Beta 0.3
 
 What's new in this release:
 
@@ -23,6 +23,10 @@ What's new in this release:
 - Kept the "🎉 All picks are in" reveal and the secret-draft DM-failure fallback notices.
 - **Lobbies auto-terminate 30 minutes after start** (was 4 hours). Config key is now
   `lobby.auto-terminate.minutes`; the cleanup check runs every 5 minutes.
+- **Smart bans.** `/ban` now accepts loose input: `/ban alex` bans Alexander, `/ban teresa`
+  bans Theresa despite the typo. Matching is tiered (exact → prefix → fuzzy), and when a query
+  matches several leaders (e.g. `roosevelt`, `eleanor`, `qin`) the bot replies with buttons to
+  pick the right one rather than guessing.
 
 ## Ambotorix Beta 0.2
 
