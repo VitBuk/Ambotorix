@@ -26,6 +26,7 @@ import vitbuk.com.Ambotorix.draft.DraftStrategy;
 import vitbuk.com.Ambotorix.draft.DraftStrategyFactory;
 import vitbuk.com.Ambotorix.matching.LeaderMatcher;
 import vitbuk.com.Ambotorix.matching.LeaderMatcher.MatchResult;
+import vitbuk.com.Ambotorix.photochallenge.PhotoChallengeService;
 import vitbuk.com.Ambotorix.entities.CivMap;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
@@ -55,13 +56,15 @@ public class    AmbotorixService {
     private final DataUpdateService dataUpdateService;
     private final DraftStrategyFactory draftStrategyFactory;
     private final LeaderMatcher leaderMatcher;
+    private final PhotoChallengeService photoChallengeService;
 
     @Value("${data.dir:src/main/resources}")
     private String dataDir;
 
     @Autowired
     public AmbotorixService(TelegramClient telegramClient, LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
-                            DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory, LeaderMatcher leaderMatcher) {
+                            DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory, LeaderMatcher leaderMatcher,
+                            PhotoChallengeService photoChallengeService) {
         this.telegramClient = telegramClient;
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
@@ -70,6 +73,7 @@ public class    AmbotorixService {
         this.dataUpdateService = dataUpdateService;
         this.draftStrategyFactory = draftStrategyFactory;
         this.leaderMatcher = leaderMatcher;
+        this.photoChallengeService = photoChallengeService;
     }
 
     //logic for command -> credits
@@ -80,6 +84,11 @@ public class    AmbotorixService {
     //logic for command -> discord
     public void sendDiscord(Update update) {
         sendPrivateMessage(update, "Our discord server: \nJoin our Discord: https://discord.gg/2h425TExSt");
+    }
+
+    //logic for command -> /photochallenge — posts the leaderboard to the group (a shared challenge)
+    public void sendPhotoChallenge(Update update) {
+        sendMessage(update, photoChallengeService.leaderboardMessage());
     }
     //logic for command -> /update
     public void sendUpdate(Update update) {

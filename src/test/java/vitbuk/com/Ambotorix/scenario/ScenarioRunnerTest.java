@@ -51,6 +51,18 @@ class ScenarioRunnerTest {
         TestTelegramClient testTelegramClient() {
             return new TestTelegramClient();
         }
+
+        // Canned photo-challenge sheet so /photochallenge scenarios run offline.
+        @Bean
+        @Primary
+        vitbuk.com.Ambotorix.photochallenge.SheetCsvFetcher testSheetCsvFetcher() {
+            return () -> """
+                    Player,Total,Leaders,City-States,Wonders
+                    Shu B,4,1,2,1
+                    Misha B,4,1,2,1
+                    Vitalik B,1,1,0,0
+                    """;
+        }
     }
 
     private static final Path SCENARIO_DIR = Path.of("src/test/resources/scenarios");

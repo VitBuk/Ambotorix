@@ -20,8 +20,12 @@
 - [x] Smart bans: `/ban alex` → Alexander, `/ban teresa` → Theresa (typo-tolerant). Tiered
       exact→prefix→fuzzy matching; shared names (Roosevelt, Eleanor, Qin) offer DM buttons
       instead of guessing.
+- [x] `/photochallenge` — reads the public Google Sheet (Main tab CSV) and posts the
+      leaderboard (Player/Total/Leaders/City-States/Wonders) as a monospace table to the group.
 
 ## Planned
 
-- [ ] `/photochallenge` command
 - [ ] Links to mods instead of plain text
+- [ ] Never offer a button for an already-banned leader — in any path. `/banButtons` already
+      filters them, but smart-ban disambiguation buttons do not; exclude banned leaders from the
+      candidate list there too.
