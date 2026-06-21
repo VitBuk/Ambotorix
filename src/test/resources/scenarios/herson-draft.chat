@@ -1,0 +1,42 @@
+--- SCENARIO: herson draft resolves ranked picks submitted over DM ---
+# Herson is a ranked secret draft. Each player DMs four ranked picks as free text (no /pick). With no
+# clashes the bot resolves immediately; picks stay hidden until then and are revealed in the status
+# message. The group stream only ever holds the three milestone replies (start / all-in / resolved).
+
+--- CHAT ---
+alice: /lobby herson
+bob: /register
+ambotorix: <status *Status: waiting*Draft: herson*Players (2):*>
+
+--- DM (alice) ---
+alice: /leaders                  # open a private chat so the bot can DM the pick prompt
+ambotorix: <button "{leader}">
+--- DM (bob) ---
+bob: /leaders
+ambotorix: <button "{leader}">
+
+--- CHAT ---
+alice: /start
+ambotorix: <status *Status: drafting*Submissions: 0/2 in*>
+ambotorix: @alice* @bob* <backlink>     # draft-start ping, replying to the status message
+ambotorix:                              # nothing else in the group yet
+
+--- DM (alice) ---
+ambotorix: *Herson draft*               # the pick prompt
+alice: 1. lincoln 2. curtin 3. montezuma 4. hammurabi
+ambotorix: *Picks recorded*
+
+--- CHAT ---
+ambotorix: <status *Submissions: 1/2 in*>
+ambotorix:                              # still just the start ping in the stream
+
+--- DM (bob) ---
+ambotorix: *Herson draft*
+bob: 1. pedro 2. basil 3. theodora 4. laurier
+ambotorix: *Picks recorded*
+
+--- CHAT ---
+ambotorix: 📥 All picks are in* <backlink>
+ambotorix: 🎉 Draft resolved!* <backlink>
+ambotorix: <status *Status: done*Picks:*@{player} → {leader}*@{player} → {leader}*>
+ambotorix:                              # group stream held exactly the three milestones

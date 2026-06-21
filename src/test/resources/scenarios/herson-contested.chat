@@ -1,0 +1,36 @@
+--- SCENARIO: herson reveals which contested civs were banned and who had ranked them ---
+# Alice and Bob both rank Lincoln first. Lincoln is contested, so the resolver bans it and both fall
+# through to their next pick. When the draft closes the status explains the resolution: the banned
+# civ plus which players had it and at what priority.
+
+--- CHAT ---
+alice: /lobby herson
+bob: /register
+
+--- DM (alice) ---
+alice: /leaders
+ambotorix: <button "{leader}">
+--- DM (bob) ---
+bob: /leaders
+ambotorix: <button "{leader}">
+
+--- CHAT ---
+alice: /start
+ambotorix: @alice* @bob* <backlink>
+ambotorix:
+
+--- DM (alice) ---
+ambotorix: *Herson draft*
+alice: 1. lincoln 2. curtin 3. montezuma 4. hammurabi
+ambotorix: *Picks recorded*
+
+--- DM (bob) ---
+ambotorix: *Herson draft*
+bob: 1. lincoln 2. pedro 3. basil 4. theodora
+ambotorix: *Picks recorded*
+
+--- CHAT ---
+ambotorix: 📥 All picks are in* <backlink>
+ambotorix: 🎉 Draft resolved!* <backlink>
+ambotorix: <status *Status: done*Contested (banned):*America Abraham Lincoln*@alice (#1)*@bob (#1)*>
+ambotorix:

@@ -29,6 +29,8 @@ public class Lobby {
     private Integer statusMessageId;
     // The randomised slot order fixed at draft start, so the status message renders it consistently.
     private List<Player> slotOrder;
+    // Herson-draft bookkeeping (ranked picks + resolution state); null until a Herson draft starts.
+    private HersonDraftState hersonState;
 
     public Lobby(Player host) {
         this.created = LocalDateTime.now();
@@ -160,6 +162,9 @@ public class Lobby {
 
     public List<Player> getSlotOrder() { return slotOrder; }
     public void setSlotOrder(List<Player> slotOrder) { this.slotOrder = slotOrder; }
+
+    public HersonDraftState getHersonState() { return hersonState; }
+    public void setHersonState(HersonDraftState hersonState) { this.hersonState = hersonState; }
 
     public void defaultSetup() {
         this.banSize = 1;

@@ -62,6 +62,20 @@ public class MarkupService {
         return InlineKeyboardMarkup.builder().keyboard(rows).build();
     }
 
+    /** Confirm / re-enter buttons for a Herson submission whose civ names were fuzzily auto-corrected. */
+    public InlineKeyboardMarkup hersonConfirmMarkup(Long groupChatId) {
+        InlineKeyboardRow row = new InlineKeyboardRow();
+        row.add(InlineKeyboardButton.builder()
+                .text("✅ Confirm")
+                .callbackData("/hconfirm " + groupChatId)
+                .build());
+        row.add(InlineKeyboardButton.builder()
+                .text("✏️ Re-enter")
+                .callbackData("/hredo " + groupChatId)
+                .build());
+        return InlineKeyboardMarkup.builder().keyboard(List.of(row)).build();
+    }
+
     public InlineKeyboardMarkup maplistMarkup(List<CivMap> maps, Long groupChatId) {
         String mPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
 
