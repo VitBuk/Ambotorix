@@ -22,10 +22,10 @@
       instead of guessing.
 - [x] `/photochallenge` — reads the public Google Sheet (Main tab CSV) and posts the
       leaderboard (Player/Total/Leaders/City-States/Wonders) as a monospace table to the group.
+- [x] `/mods` shows tappable Steam Workshop links instead of plain text (no version numbers).
 
 ## Planned
 
-- [ ] Links to mods instead of plain text
 - [ ] Never offer a button for an already-banned leader — in any path. `/banButtons` already
       filters them, but smart-ban disambiguation buttons do not; exclude banned leaders from the
       candidate list there too.
