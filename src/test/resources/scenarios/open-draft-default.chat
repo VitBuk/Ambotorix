@@ -1,7 +1,8 @@
 --- SCENARIO: open draft posts pools publicly; status holds the metadata ---
 # Players register from the group without opening a private chat, so the bot cannot DM them: each
 # pick pool is posted publicly as a generated image. Slot order and the chosen map live in the
-# status message; only the draft-start milestone pings the group (a reply that backlinks the status).
+# status message. The picks image IS the single draft-start ping: a reply that backlinks the
+# status message, captioned with @-mentions so every player is notified.
 
 --- CHAT ---
 alice: /lobby
@@ -10,11 +11,10 @@ carol: /register
 ambotorix: <status *Status: waiting*Players (3): alice, bob, carol*>
 
 alice: /start
-ambotorix: 🎮 Draft started by @alice* <backlink>
 ambotorix: <status *Status: drafting*Map: {map}*Slot order:*>
-# One combined image; its caption lists every player and their pool, so the contents are assertable
-ambotorix: <image *Pick pools*alice: *bob: *carol: *>
-ambotorix:                        # group stream fully accounted for (one milestone + one image)
+# One combined image: a reply to the status, captioned with the player @-mentions
+ambotorix: <image *@alice*@bob*@carol*> <backlink>
+ambotorix:                        # group stream fully accounted for (just the one image)
 
 # Players who never opened a private chat receive nothing in DM
 --- DM (alice) ---

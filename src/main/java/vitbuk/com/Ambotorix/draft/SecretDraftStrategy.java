@@ -53,6 +53,8 @@ public class SecretDraftStrategy implements DraftStrategy {
             }
         }
         // Pick pools went out as DMs; pick progress is tracked silently in the live status message.
+        // Single group ping: one reply to the status message tagging everyone to check their DMs.
+        service.postMilestone(chatId, service.mentionAll(lobby) + " — draft started, check your DMs to pick.");
     }
 
     @Override

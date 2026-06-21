@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Renders a player's leader pick pool as an image. One image can hold several players — one row each,
@@ -179,20 +178,6 @@ public class PickImageGenerator {
         int textWidth = metrics.stringWidth(text);
         int startX = x + (maxWidth - textWidth) / 2;
         g.drawString(text, startX, y);
-    }
-
-    /**
-     * Alt text describing the image's contents: each player and their pool's short names, e.g.
-     * {@code "Pick pools:\nalice: lincoln, gorgo, ...\nbob: ..."}. Used as the photo caption so the
-     * otherwise-opaque combined image is human-readable and assertable in tests.
-     */
-    public static String rosterCaption(List<Player> players) {
-        StringBuilder sb = new StringBuilder("Pick pools:");
-        for (Player p : players) {
-            String civs = p.getPicks().stream().map(Leader::getShortName).collect(Collectors.joining(", "));
-            sb.append("\n").append(p.getUserName()).append(": ").append(civs);
-        }
-        return sb.toString();
     }
 
     public record LeaderPickPhoto(SendPhoto sendPhoto, File tempFile) {}

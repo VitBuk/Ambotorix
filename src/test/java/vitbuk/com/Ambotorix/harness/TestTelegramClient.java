@@ -230,8 +230,8 @@ public class TestTelegramClient implements TelegramClient {
     public Message execute(SendPhoto sendPhoto) throws TelegramApiException {
         long chatId = Long.parseLong(sendPhoto.getChatId());
         int id = outboundSeq.getAndIncrement();
-        OutboundMessage msg = new OutboundMessage(Kind.PHOTO, chatId, sendPhoto.getMessageThreadId(), id, null,
-                sendPhoto.getCaption(), true, false, buttonsOf(sendPhoto.getReplyMarkup()));
+        OutboundMessage msg = new OutboundMessage(Kind.PHOTO, chatId, sendPhoto.getMessageThreadId(), id,
+                sendPhoto.getReplyToMessageId(), sendPhoto.getCaption(), true, false, buttonsOf(sendPhoto.getReplyMarkup()));
         recordStream(chatId, sendPhoto.getMessageThreadId(), msg);
         return stub(chatId, id);
     }

@@ -466,9 +466,10 @@ public class    AmbotorixService {
             // milestone with a single mention that backlinks (replies) to the status message.
             lobby.setSlotOrder(lobbyService.randomSlotOrder(chatId));
             lobby.setSelectedMap(lobbyService.randomMap(chatId));
+            // Slot order and map fold into the status message silently. The single group ping is
+            // owned by the strategy: open posts the picks image (a reply to status), secret posts
+            // a tag reply — both tag players, so there's no separate "draft started" line.
             refreshStatus(chatId);
-            postMilestone(chatId, "🎮 Draft started by @" + lobby.getHost().getUserName()
-                    + "! Slot order and map are up ☝️");
 
             DraftStrategy strategy = draftStrategyFactory.getStrategy(lobby.getDraftStrategyName());
             strategy.execute(lobby, chatId, this);
@@ -725,6 +726,15 @@ public class    AmbotorixService {
             return;
         }
         editStatusMessage(chatId, lobby.getStatusMessageId(), renderStatus(lobby));
+    }
+
+    /** A space-joined {@code @username} mention of every player with a username — used to ping the group on draft start. */
+    public String mentionAll(Lobby lobby) {
+        return lobby.getPlayers().stream()
+                .map(Player::getUserName)
+                .filter(name -> name != null && !name.isBlank())
+                .map(name -> "@" + name)
+                .collect(Collectors.joining(" "));
     }
 
     /** A milestone notification (e.g. draft started / all picks in) that replies to — backlinks — the status message. */
