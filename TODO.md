@@ -15,11 +15,11 @@
       started" milestone; open draft now pings once via the picks image (reply to status, @-mentions
       caption), secret draft pings once via a tag reply to status. Kept the "🎉 All picks are in"
       reveal milestone and the secret-draft DM-failure fallback notices.
+- [x] Auto-terminate lobbies 30 minutes after start (was 4 hours); config is now
+      `lobby.auto-terminate.minutes`, cleanup check runs every 5 minutes.
 
 ## Planned
 
 - [ ] `/photochallenge` command
 - [ ] Links to mods instead of plain text
 - [ ] Smart ban parsing, e.g. `/ban alex` → bans Alexander (Macedonia)
-- [ ] Change auto-terminate to 30 minutes after the lobby starts (currently 4 hours). Note the
-      config is `lobby.auto-terminate.hours` — switch it to minutes (or seconds) to express 30 min.

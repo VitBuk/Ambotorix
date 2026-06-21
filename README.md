@@ -8,6 +8,22 @@ leader data up to date by scraping it on a schedule.
 
 This is a pet project.
 
+## Ambotorix Beta 0.3 (in progress)
+
+What's new in this release:
+
+- **Less group-chat spam on draft start.** Removed the standalone "🎮 Draft started" message.
+  The draft now pings the group exactly once:
+  - **Open draft** posts the combined picks image as a reply to the status message, captioned
+    with `@`-mentions of every player (no more pool-listing text — the image shows the pools).
+  - **Secret draft** posts a single tag reply to the status message telling players to check
+    their DMs to pick.
+- Both pings reply to (backlink) the status message, so players can tap to jump to slot order
+  and picks.
+- Kept the "🎉 All picks are in" reveal and the secret-draft DM-failure fallback notices.
+- **Lobbies auto-terminate 30 minutes after start** (was 4 hours). Config key is now
+  `lobby.auto-terminate.minutes`; the cleanup check runs every 5 minutes.
+
 ## Ambotorix Beta 0.2
 
 What's new in this release:
