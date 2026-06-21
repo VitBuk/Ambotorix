@@ -149,6 +149,11 @@ public class    AmbotorixService {
 
     // logic for command -> /lobby
     public void sendLobby(Update update) {
+        sendLobby(update, null);
+    }
+
+    // logic for command -> /lobby [draftName]. The optional argument pre-selects the draft strategy.
+    public void sendLobby(Update update, String draftName) {
         Long chatId = extractChatIdLong(update);
         Integer threadId = extractThreadId(update);
         Player host = new Player(update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId());
@@ -159,6 +164,17 @@ public class    AmbotorixService {
             sendMessage(update, message); // "lobby already exists" — a real error, post it
             return;
         }
+
+        if (draftName != null && !draftName.isBlank()) {
+            String wanted = draftName.trim().toLowerCase();
+            if (draftStrategyFactory.getStrategyNames().contains(wanted)) {
+                lobbyService.getLobby(chatId).setDraftStrategyName(wanted);
+            } else {
+                sendToChat(chatId, threadId, "Unknown draft \"" + draftName.trim() + "\". Available: "
+                        + String.join(", ", draftStrategyFactory.getStrategyNames()) + ". Keeping default.");
+            }
+        }
+
         // Fresh lobby: instead of a throwaway "created" line, post the single live status message
         // that we keep edited for the rest of the session.
         postStatus(chatId);
