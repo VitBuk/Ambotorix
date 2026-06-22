@@ -23,9 +23,16 @@ class HersonResolverTest {
     private static final Leader C = civ("C");
     private static final Leader D = civ("D");
     private static final Leader E = civ("E");
+    private static final Leader F = civ("F");
+    private static final Leader G = civ("G");
+    private static final Leader H = civ("H");
 
     private HersonResolver.Step resolve(Map<String, List<Leader>> picks) {
         return HersonResolver.resolve(picks, new HashSet<>(), new LinkedHashMap<>());
+    }
+
+    private HersonResolver.Step resolveLow(Map<String, List<Leader>> picks, Set<Leader> banned) {
+        return HersonResolver.resolveLow(picks, banned, new LinkedHashMap<>());
     }
 
     @Test
@@ -114,5 +121,50 @@ class HersonResolverTest {
         assertEquals(C, complete.assignments().get("alice"));
         assertEquals(D, complete.assignments().get("carol"));
         assertTrue(banned.contains(B));
+    }
+
+    // ---- herson-low: ban every shared civ regardless of priority; no clashes, no coin flip ----
+
+    @Test
+    void low_bansCivsSharedAtAnyPriority() {
+        Map<String, List<Leader>> picks = new LinkedHashMap<>();
+        picks.put("alice", List.of(A, B, C, D)); // A is alice's #1
+        picks.put("bob", List.of(B, A, E, C));   // bob ranks A at #2, B at #1
+
+        Set<Leader> banned = new HashSet<>();
+        HersonResolver.Step step = resolveLow(picks, banned);
+
+        // A, B and C are each ranked by both (at differing priorities) -> all banned.
+        HersonResolver.Complete complete = assertInstanceOf(HersonResolver.Complete.class, step);
+        assertEquals(D, complete.assignments().get("alice")); // A,B,C banned -> D
+        assertEquals(E, complete.assignments().get("bob"));   // B,A,C banned -> E
+        assertTrue(banned.containsAll(List.of(A, B, C)));
+    }
+
+    @Test
+    void low_uniquePicks_keepTopChoice() {
+        Map<String, List<Leader>> picks = new LinkedHashMap<>();
+        picks.put("alice", List.of(A, B, C, D));
+        picks.put("bob", List.of(E, F, G, H));
+
+        HersonResolver.Step step = resolveLow(picks, new HashSet<>());
+
+        HersonResolver.Complete complete = assertInstanceOf(HersonResolver.Complete.class, step);
+        assertEquals(A, complete.assignments().get("alice"));
+        assertEquals(E, complete.assignments().get("bob"));
+    }
+
+    @Test
+    void low_everyPickShared_isUnresolvable() {
+        Map<String, List<Leader>> picks = new LinkedHashMap<>();
+        picks.put("alice", List.of(A, B, C, D));
+        picks.put("bob", List.of(A, B, C, D)); // identical -> all four banned, both stranded
+
+        Set<Leader> banned = new HashSet<>();
+        HersonResolver.Step step = resolveLow(picks, banned);
+
+        HersonResolver.Unresolvable unresolvable = assertInstanceOf(HersonResolver.Unresolvable.class, step);
+        assertTrue(unresolvable.players().containsAll(List.of("alice", "bob")));
+        assertTrue(banned.containsAll(List.of(A, B, C, D)));
     }
 }

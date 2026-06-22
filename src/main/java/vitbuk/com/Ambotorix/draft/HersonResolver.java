@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -13,29 +14,28 @@ import java.util.Set;
 /**
  * Pure resolution logic for the Herson draft — no Telegram, no Spring, so it is unit-testable.
  *
- * <p>Every player submits four ranked civilizations. A player's <em>current</em> civ is the highest
- * ranked one still available (not banned, not already taken by someone else). The algorithm advances
- * in steps:
+ * <p>Every player submits four ranked civilizations. Two resolution rules exist:
  *
- * <ol>
- *   <li>If no two players currently want the same civ, everyone is assigned their current civ —
- *       {@link Complete}.</li>
- *   <li>If a contested civ can be banned without leaving any contestant empty-handed, it is banned
- *       (the contestants fall through to their next pick) and the loop repeats.</li>
- *   <li>If the only remaining clashes are ones where banning would strand a contestant (i.e. it is
- *       their last available pick), the caller must break the tie with a coin flip —
- *       {@link CoinFlip}.</li>
- * </ol>
+ * <ul>
+ *   <li>{@link #resolve} ("herson") — a player's <em>current</em> civ is their highest available pick;
+ *       a civ wanted by 2+ players at the same step is banned and they fall through to their next pick,
+ *       and a clash that survives all four picks is broken by a {@link CoinFlip}.</li>
+ *   <li>{@link #resolveLow} ("herson-low") — <em>any</em> civ two or more players ranked is banned
+ *       outright, regardless of priority. Every surviving civ then belongs to exactly one player, so
+ *       there is never a clash (and never a coin flip). The only failure mode is a player whose four
+ *       picks were all banned; that is reported as {@link Unresolvable} for the caller to surface — it
+ *       is rare enough not to warrant automatic recovery.</li>
+ * </ul>
  *
- * <p>{@code banned} is mutated in place as safe bans are discovered, so a coin-flip suspension can be
- * resumed by simply calling {@link #resolve} again once the loser's re-pick has been recorded in
+ * <p>{@code banned} is mutated in place as bans are discovered. For {@code herson}, a coin-flip
+ * suspension is resumed by calling {@link #resolve} again once the loser's re-pick is recorded in
  * {@code assigned}.
  */
 public final class HersonResolver {
 
     private HersonResolver() {}
 
-    public sealed interface Step permits Complete, CoinFlip {}
+    public sealed interface Step permits Complete, CoinFlip, Unresolvable {}
 
     /** Resolution finished: every player mapped to their final, unique civ. */
     public record Complete(Map<String, Leader> assignments) implements Step {}
@@ -43,7 +43,12 @@ public final class HersonResolver {
     /** A clash survived all four picks: flip a coin among {@code contestants} for {@code civ}. */
     public record CoinFlip(Leader civ, List<String> contestants) implements Step {}
 
+    /** These players had all four picks banned and cannot be assigned a civ — the draft can't resolve. */
+    public record Unresolvable(List<String> players) implements Step {}
+
     /**
+     * Plain "herson" resolution.
+     *
      * @param rankedPicks username -> their four ranked picks (priority order)
      * @param banned      civs already removed from the pool; mutated as more are banned
      * @param assigned    username -> final civ for players already resolved (coin-flip winners /
@@ -100,6 +105,39 @@ public final class HersonResolver {
             Map.Entry<Leader, List<String>> terminal = clashes.get(0);
             return new CoinFlip(terminal.getKey(), List.copyOf(terminal.getValue()));
         }
+    }
+
+    /**
+     * "herson-low" resolution: ban every civ two or more players ranked (at any priority), then assign
+     * each player their highest surviving pick. Survivors are unique, so this never clashes. A player
+     * left with no surviving pick yields {@link Unresolvable}.
+     */
+    public static Step resolveLow(Map<String, List<Leader>> rankedPicks,
+                                  Set<Leader> banned,
+                                  Map<String, Leader> assigned) {
+        List<String> unassigned = rankedPicks.keySet().stream()
+                .filter(u -> !assigned.containsKey(u))
+                .sorted()
+                .toList();
+
+        // Ban every civ ranked by two or more players, regardless of the priority each gave it.
+        Map<Leader, Integer> holders = new LinkedHashMap<>();
+        for (String u : unassigned) {
+            for (Leader civ : new LinkedHashSet<>(rankedPicks.get(u))) {
+                holders.merge(civ, 1, Integer::sum);
+            }
+        }
+        holders.forEach((civ, count) -> { if (count >= 2) banned.add(civ); });
+
+        Map<String, Leader> result = new LinkedHashMap<>(assigned);
+        List<String> stranded = new ArrayList<>();
+        for (String u : unassigned) {
+            Leader civ = firstAvailable(rankedPicks.get(u), banned, result.values(), null);
+            if (civ != null) result.put(u, civ);
+            else stranded.add(u);
+        }
+
+        return stranded.isEmpty() ? new Complete(result) : new Unresolvable(stranded);
     }
 
     /** Banning {@code civ} is safe only if every contestant still has another available pick. */
