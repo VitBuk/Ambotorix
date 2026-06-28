@@ -1,0 +1,28 @@
+--- SCENARIO: in a herson draft only the host may ban, and host bans are honored ---
+# Herson has no per-player ban phase. A non-host /ban is rejected with a clear comment; the host may
+# remove civs from the pool at any time before the draft closes, and those show up in the status.
+
+--- CHAT ---
+alice: /lobby herson
+bob: /register
+
+--- DM (alice) ---
+alice: /leaders
+ambotorix: <button "{leader}">
+--- DM (bob) ---
+bob: /leaders
+ambotorix: <button "{leader}">
+
+--- CHAT ---
+bob: /ban montezuma                # non-host -> rejected (reply lands in bob's DM)
+--- DM (bob) ---
+ambotorix: Only the host can ban civs in a Herson draft.
+
+--- CHAT ---
+alice: /ban montezuma              # host -> banned
+--- DM (alice) ---
+ambotorix: ✅ Banned*Montezuma*
+
+--- CHAT ---
+ambotorix: <status *Draft: herson*Host bans:*Montezuma*>
+ambotorix:

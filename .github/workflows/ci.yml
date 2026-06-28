@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Cancel superseded runs for the same branch/PR.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # The draft flow composes PNGs via java.awt; a headless runner needs a font backend.
+      - name: Install fonts for AWT image generation
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends fontconfig libfreetype6 fonts-dejavu-core
+
+      - name: Run tests
+        run: ./mvnw -B --no-transfer-progress test

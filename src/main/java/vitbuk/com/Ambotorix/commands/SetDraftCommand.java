@@ -10,7 +10,7 @@ import vitbuk.com.Ambotorix.services.AmbotorixService;
 @Component
 public class SetDraftCommand implements HostCommand, DynamicCommand {
     private static final CommandInfo INFO = new CommandInfo(
-            "/setDraft", "/setDraft [open|secret]", "Set draft strategy for this lobby");
+            "/setDraft", "/setDraft [open|secret|herson|herson-low]", "Set draft strategy for this lobby");
 
     @Override public CommandInfo getInfo() { return INFO; }
 

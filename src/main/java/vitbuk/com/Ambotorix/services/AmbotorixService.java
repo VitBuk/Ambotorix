@@ -8,22 +8,30 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.message.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
+import vitbuk.com.Ambotorix.PickImageGenerator;
 import vitbuk.com.Ambotorix.commands.*;
 import vitbuk.com.Ambotorix.commands.structure.AdminCommand;
 import vitbuk.com.Ambotorix.commands.structure.Command;
 import vitbuk.com.Ambotorix.commands.structure.GeneralCommand;
 import vitbuk.com.Ambotorix.commands.structure.HostCommand;
 import vitbuk.com.Ambotorix.commands.structure.CommandFactory;
-import vitbuk.com.Ambotorix.config.BotConfig;
 import vitbuk.com.Ambotorix.draft.DraftStrategy;
 import vitbuk.com.Ambotorix.draft.DraftStrategyFactory;
+import vitbuk.com.Ambotorix.draft.HersonPickParser;
+import vitbuk.com.Ambotorix.draft.HersonResolver;
+import vitbuk.com.Ambotorix.matching.LeaderMatcher;
+import vitbuk.com.Ambotorix.matching.LeaderMatcher.MatchResult;
+import vitbuk.com.Ambotorix.photochallenge.PhotoChallengeService;
 import vitbuk.com.Ambotorix.entities.CivMap;
+import vitbuk.com.Ambotorix.entities.HersonDraftState;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
@@ -49,34 +57,42 @@ public class    AmbotorixService {
     private final LobbyService lobbyService;
     private final CommandFactory commandFactory;
     private final MarkupService markupService;
-    private final BotConfig botConfig;
     private final DataUpdateService dataUpdateService;
     private final DraftStrategyFactory draftStrategyFactory;
+    private final LeaderMatcher leaderMatcher;
+    private final PhotoChallengeService photoChallengeService;
 
     @Value("${data.dir:src/main/resources}")
     private String dataDir;
 
     @Autowired
     public AmbotorixService(TelegramClient telegramClient, LeaderService leaderService, LobbyService lobbyService, CommandFactory commandFactory, MarkupService markupService,
-                            BotConfig botConfig, DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory) {
+                            DataUpdateService dataUpdateService, DraftStrategyFactory draftStrategyFactory, LeaderMatcher leaderMatcher,
+                            PhotoChallengeService photoChallengeService) {
         this.telegramClient = telegramClient;
         this.leaderService = leaderService;
         this.lobbyService = lobbyService;
         this.commandFactory = commandFactory;
         this.markupService = markupService;
-        this.botConfig = botConfig;
         this.dataUpdateService = dataUpdateService;
         this.draftStrategyFactory = draftStrategyFactory;
+        this.leaderMatcher = leaderMatcher;
+        this.photoChallengeService = photoChallengeService;
     }
 
     //logic for command -> credits
     public void sendCredits(Update update) {
-        sendMessage(update, "Bot is created by @VitBuk\nhttps://github.com/VitBuk");
+        sendPrivateMessage(update, "Bot is created by @VitBuk\nhttps://github.com/VitBuk");
     }
 
     //logic for command -> discord
     public void sendDiscord(Update update) {
-        sendMessage(update, "Our discord server: \nJoin our Discord: https://discord.gg/2h425TExSt");
+        sendPrivateMessage(update, "Our discord server: \nJoin our Discord: https://discord.gg/2h425TExSt");
+    }
+
+    //logic for command -> /photochallenge — posts the leaderboard to the group (a shared challenge)
+    public void sendPhotoChallenge(Update update) {
+        sendMessage(update, photoChallengeService.leaderboardMessage());
     }
     //logic for command -> /update
     public void sendUpdate(Update update) {
@@ -126,7 +142,13 @@ public class    AmbotorixService {
                 }).toList();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<b>General:</b>\n");
+        sb.append("<b>Quick start:</b>\n")
+          .append(commandFactory.infoOf(LobbyCommand.class).name()).append(" – create lobby\n")
+          .append(commandFactory.infoOf(RegisterCommand.class).name()).append(" – register to the lobby\n")
+          .append(commandFactory.infoOf(BanButtonsCommand.class).name()).append(" – get buttons to DM, click one to ban a leader\n")
+          .append(commandFactory.infoOf(StartCommand.class).name()).append(" – start game (host only)\n");
+
+        sb.append("\n<b>General:</b>\n");
         general.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
 
         sb.append("\n<b>Host commands:</b>\n");
@@ -135,16 +157,40 @@ public class    AmbotorixService {
         sb.append("\n<b>Player commands:</b>\n");
         playerCmds.forEach(c -> sb.append(c.getInfo().name()).append(" – ").append(c.getInfo().description()).append('\n'));
 
-        sendMessage(update, sb.toString());
+        sendPrivateMessage(update, sb.toString());
     }
 
     // logic for command -> /lobby
     public void sendLobby(Update update) {
-        Long chatId = extractChatIdLong(update);
-        Player host = new Player(update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId());
-        String message = lobbyService.createLobby(chatId, host);
+        sendLobby(update, null);
+    }
 
-        sendMessage(update, message);
+    // logic for command -> /lobby [draftName]. The optional argument pre-selects the draft strategy.
+    public void sendLobby(Update update, String draftName) {
+        Long chatId = extractChatIdLong(update);
+        Integer threadId = extractThreadId(update);
+        Player host = new Player(update.getMessage().getFrom().getUserName(), update.getMessage().getFrom().getId());
+
+        boolean existed = lobbyService.hasLobby(chatId);
+        String message = lobbyService.createLobby(chatId, threadId, host);
+        if (existed) {
+            sendMessage(update, message); // "lobby already exists" — a real error, post it
+            return;
+        }
+
+        if (draftName != null && !draftName.isBlank()) {
+            String wanted = draftName.trim().toLowerCase();
+            if (draftStrategyFactory.getStrategyNames().contains(wanted)) {
+                lobbyService.getLobby(chatId).setDraftStrategyName(wanted);
+            } else {
+                sendToChat(chatId, threadId, "Unknown draft \"" + draftName.trim() + "\". Available: "
+                        + String.join(", ", draftStrategyFactory.getStrategyNames()) + ". Keeping default.");
+            }
+        }
+
+        // Fresh lobby: instead of a throwaway "created" line, post the single live status message
+        // that we keep edited for the rest of the session.
+        postStatus(chatId);
     }
 
     // logic for command -> /leaders
@@ -173,12 +219,12 @@ public class    AmbotorixService {
 
     //logic for command -> /mods
     public void sendMods(Update update) {
-        sendMessage(update, allLines(dataDir + "/mods"));
+        sendPrivateMessage(update, allLines(dataDir + "/mods"));
     }
 
     //logic for command -> /settings
     public void sendSettings(Update update) {
-        sendMessage(update, allLines(dataDir + "/settings"));
+        sendPrivateMessage(update, allLines(dataDir + "/settings"));
     }
 
     //logic for command -> /d_[shortName]
@@ -228,17 +274,19 @@ public class    AmbotorixService {
 
         String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
         String addPrefix = commandFactory.infoOf(MapAddCommand.class).prefix();
+        String removePrefix = commandFactory.infoOf(MapRemoveCommand.class).prefix();
+        String banPrefix = commandFactory.infoOf(BanCommand.class).prefix();
 
         if (data != null && data.startsWith(dPrefix)) {
             String shortName = data.substring(dPrefix.length()+1); // +1 is space or _ before shortname
             sendDescription(update, shortName);
         }
 
-        if (data != null && data.startsWith(addPrefix)) {
+        if (data != null && data.startsWith(addPrefix + " ")) {
             String payload = data.substring(addPrefix.length() + 1);
             String[] parts = payload.split(" ", 2);
             if (parts.length < 2) {
-                sendMessage(update, "This button is outdated. Please use /maplist again.");
+                sendPrivateMessage(update, "This button is outdated. Please use /maplist again.");
                 return;
             }
             try {
@@ -246,7 +294,41 @@ public class    AmbotorixService {
                 String civMapName = parts[1];
                 sendMapAdd(update, CivMap.fromDisplayNameIgnoreCase(civMapName).get(), lobbyChatId);
             } catch (NumberFormatException e) {
-                sendMessage(update, "This button is outdated. Please use /maplist again.");
+                sendPrivateMessage(update, "This button is outdated. Please use /maplist again.");
+            }
+        }
+
+        if (data != null && data.startsWith(removePrefix + " ")) {
+            String payload = data.substring(removePrefix.length() + 1);
+            String[] parts = payload.split(" ", 2);
+            if (parts.length < 2) {
+                sendPrivateMessage(update, "This button is outdated. Please use /mappool again.");
+                return;
+            }
+            try {
+                Long lobbyChatId = Long.parseLong(parts[0]);
+                String civMapName = parts[1];
+                Optional<CivMap> map = CivMap.fromDisplayNameIgnoreCase(civMapName);
+                if (map.isEmpty()) {
+                    sendPrivateMessage(update, "Unknown map: " + civMapName);
+                    return;
+                }
+                sendMapRemove(update, map.get(), lobbyChatId);
+            } catch (NumberFormatException e) {
+                sendPrivateMessage(update, "This button is outdated. Please use /mappool again.");
+            }
+        }
+
+        if (data != null && data.startsWith(banPrefix + " ")) {
+            String payload = data.substring(banPrefix.length() + 1);
+            String[] parts = payload.split(" ", 2);
+            if (parts.length == 2) {
+                try {
+                    Long lobbyChatId = Long.parseLong(parts[0]);
+                    sendBanFromCallback(update, lobbyChatId, parts[1]);
+                } catch (NumberFormatException e) {
+                    sendPrivateMessage(update, "This button is outdated. Please use /banButtons again.");
+                }
             }
         }
 
@@ -258,47 +340,170 @@ public class    AmbotorixService {
             String shortName = parts[1];
             sendPick(update, lobbyChatId, shortName);
         }
+
+        // Herson submission confirm / re-enter taps — payload is just the group chat id.
+        if (data != null && (data.startsWith("/hconfirm ") || data.startsWith("/hredo "))) {
+            boolean confirm = data.startsWith("/hconfirm ");
+            String payload = data.substring(data.indexOf(' ') + 1).trim();
+            try {
+                hersonConfirmCallback(update, Long.parseLong(payload), confirm);
+            } catch (NumberFormatException e) {
+                sendPrivateMessage(update, "This button is outdated.");
+            }
+        }
     }
 
-    //logic for command -> /ban_[shortName]
-    public void sendBan(Update update, String shortName) {
+    //logic for command -> /clearBans
+    public void sendClearBans(Update update) {
+        Long chatId = extractChatIdLong(update);
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) { sendNoLobby(update); return; }
+        if (lobby.isDraftInProgress()) {
+            sendPrivateMessage(update, "Cannot clear bans while draft is in progress.");
+            return;
+        }
+        lobbyService.clearAllBans(chatId);
+        refreshStatus(chatId);
+    }
+
+    /**
+     * Herson has no per-player ban phase — only the host may ban, and only before the draft closes.
+     * Returns a rejection message to show the caller, or null if allowed (or this isn't a Herson lobby).
+     */
+    private String hersonBanRejection(Long chatId, String userName) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null || !lobby.isHersonDraft()) return null;
+        if (!lobbyService.isHost(chatId, userName)) return "Only the host can ban civs in a Herson draft.";
+        if (lobby.isDraftStarted() && !lobby.isDraftInProgress()) return "The draft is closed — bans can no longer be changed.";
+        return null;
+    }
+
+    //logic for command -> /banButtons
+    public void sendBanButtons(Update update) {
         Long chatId = extractChatIdLong(update);
         String userName = update.getMessage().getFrom().getUserName();
         Player player = lobbyService.findPlayerByName(chatId, userName);
 
-        // registration check
-        if (!lobbyService.isRegistered(chatId, userName)) {
-            sendMessage(update, "Player " + userName + " is not registered");
+        if (player == null) { sendPrivateMessage(update, "You are not registered in this lobby."); return; }
+        String hersonReject = hersonBanRejection(chatId, userName);
+        if (hersonReject != null) { sendPrivateMessage(update, hersonReject); return; }
+
+        // In Herson the host bans freely (no slots); elsewhere the per-player ban slots apply.
+        boolean herson = lobbyService.getLobby(chatId).isHersonDraft();
+        if (!herson && !lobbyService.hasAvailableBans(chatId, player)) {
+            sendPrivateMessage(update, "You have no ban slots remaining.");
             return;
         }
 
-        // leader exists check
+        List<Leader> available = leaderService.getLeaders().stream()
+                .filter(l -> !lobbyService.isBanned(chatId, l))
+                .toList();
+
+        if (available.isEmpty()) {
+            sendPrivateMessage(update, "All leaders have already been banned.");
+            return;
+        }
+
+        SendMessage message = SendMessage.builder()
+                .chatId(update.getMessage().getFrom().getId())
+                .text("Choose a leader to ban:")
+                .replyMarkup(markupService.banButtonsMarkup(available, chatId))
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send ban buttons: {}", e.getMessage(), e);
+        }
+    }
+
+    // Called from DM callback — lobbyChatId is the group chat where the lobby lives
+    public void sendBanFromCallback(Update update, Long lobbyChatId, String shortName) {
+        String userName = update.getCallbackQuery().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(lobbyChatId, userName);
+
+        if (!lobbyService.isRegistered(lobbyChatId, userName)) {
+            sendPrivateMessage(update, "You are not registered in this lobby.");
+            return;
+        }
+        String hersonReject = hersonBanRejection(lobbyChatId, userName);
+        if (hersonReject != null) { sendPrivateMessage(update, hersonReject); return; }
         Leader leader = leaderService.getLeaderByShortName(shortName);
         if (leader == null) {
-            sendMessage(update, "Unknown leader. User " + commandFactory.infoOf(LeadersCommand.class).name() + " to see available description comamnd");
+            sendPrivateMessage(update, "Unknown leader: " + shortName);
+            return;
+        }
+        applyBan(update, lobbyChatId, userName, player, leader);
+    }
+
+    //logic for command -> /ban [query] — smart, forgiving leader matching
+    public void sendSmartBan(Update update, String query) {
+        Long chatId = extractChatIdLong(update);
+        String userName = update.getMessage().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(chatId, userName);
+
+        if (player == null || !lobbyService.isRegistered(chatId, userName)) {
+            sendPrivateMessage(update, "You are not registered in this lobby.");
+            return;
+        }
+        String hersonReject = hersonBanRejection(chatId, userName);
+        if (hersonReject != null) { sendPrivateMessage(update, hersonReject); return; }
+        if (!lobbyService.hasAvailableBans(chatId, player) && !lobbyService.isHost(chatId, userName)) {
+            sendPrivateMessage(update, "You have no ban slots remaining.");
             return;
         }
 
-        //already banned check
+        MatchResult result = leaderMatcher.match(query, leaderService.getLeaders());
+        switch (result) {
+            case MatchResult.Unique u -> applyBan(update, chatId, userName, player, u.leader());
+            case MatchResult.Ambiguous a -> sendBanChoices(update, chatId, a.leaders(), query);
+            case MatchResult.None n -> sendPrivateMessage(update, "No leader matches \"" + query.trim()
+                    + "\". Use " + commandFactory.infoOf(BanButtonsCommand.class).name() + " to pick from a list.");
+        }
+    }
+
+    /** Shared ban tail: already-banned + slot checks, then add the ban, refresh status, confirm in DM. */
+    private void applyBan(Update update, Long chatId, String userName, Player player, Leader leader) {
         if (lobbyService.isBanned(chatId, leader)) {
-            sendMessage(update, leader.getFullName() + " is already banned");
+            sendPrivateMessage(update, leader.getFullName() + " is already banned.");
             return;
         }
-
-        //has bans slots check
-        if (!lobbyService.hasAvailableBans(chatId, player) && !isHost(update)) {
-            sendMessage(update, "Player " + player.getUserName() + " cant ban more leaders");
+        if (!lobbyService.hasAvailableBans(chatId, player) && !lobbyService.isHost(chatId, userName)) {
+            sendPrivateMessage(update, "You have no ban slots remaining.");
             return;
         }
-
         player.getBans().add(leader);
-        sendMessage(update, leader.getFullName() + " successfully banned by " + player.getUserName() + " .");
+        // Bans show up in the live status message instead of a per-ban announcement; the DM confirms
+        // which leader was banned (important when a fuzzy/prefix query was interpreted).
+        refreshStatus(chatId);
+        sendPrivateMessage(update, "✅ Banned " + leader.getFullName() + ".");
+    }
 
-        StringBuilder sb = new StringBuilder("Bans: \n");
-        for (Leader l: lobbyService.bannedLeaders(chatId)) {
-            sb.append(l.getFullName()).append(", ");
+    /** Ambiguous query: offer a button per candidate in DM (group fallback if the user isn't DM-reachable). */
+    private void sendBanChoices(Update update, Long chatId, List<Leader> candidates, String query) {
+        InlineKeyboardMarkup markup = markupService.banButtonsMarkup(candidates, chatId);
+        String text = "Multiple leaders match \"" + query.trim() + "\" — pick one to ban:";
+        try {
+            telegramClient.execute(SendMessage.builder()
+                    .chatId(update.getMessage().getFrom().getId())
+                    .text(text)
+                    .replyMarkup(markup)
+                    .parseMode("HTML")
+                    .build());
+        } catch (TelegramApiException dmFailed) {
+            // Not DM-reachable — post the choices in the group so the user isn't stuck.
+            try {
+                telegramClient.execute(SendMessage.builder()
+                        .chatId(chatId)
+                        .messageThreadId(extractThreadId(update))
+                        .text(text)
+                        .replyMarkup(markup)
+                        .parseMode("HTML")
+                        .build());
+            } catch (TelegramApiException groupFailed) {
+                log.error("Failed to send ban choices: {}", groupFailed.getMessage(), groupFailed);
+            }
         }
-        sendMessage(update, sb.toString());
     }
 
     // logic for unknown command
@@ -315,25 +520,20 @@ public class    AmbotorixService {
 
         Long chatId = extractChatIdLong(update);
         Long userId = update.getMessage().getFrom().getId();
-        String result = lobbyService.registerPlayer(chatId, update.getMessage().getFrom().getUserName(), userId);
+        lobbyService.registerPlayer(chatId, update.getMessage().getFrom().getUserName(), userId);
 
-        if (canDm(userId)) {
-            sendMessage(update, result);
-            sendToChat(userId, "You're registered for the lobby! Your leader picks will be sent here when the draft starts.");
-        } else {
-            sendMessage(update, result + "\n\n⚠️ To receive your picks in DM, please start a private chat with @" + botConfig.getUsername().replaceFirst("^@", "") + " first.");
-        }
-    }
+        // Registration is reflected silently in the live status message — no per-join group line.
+        refreshStatus(chatId);
 
-    private boolean canDm(Long userId) {
+        // Best-effort DM confirmation. If it fails the player simply isn't DM-reachable yet; that's
+        // handled when the draft starts (open posts pools publicly, secret notes it in the group).
         try {
             telegramClient.execute(SendMessage.builder()
                     .chatId(userId)
-                    .text("✅ DM confirmed — you'll receive your leader picks here when a draft starts.")
+                    .text("You're registered for the lobby! Your leader picks will arrive here when the draft starts.")
                     .build());
-            return true;
-        } catch (TelegramApiException e) {
-            return false;
+        } catch (TelegramApiException ignored) {
+            // not reachable — no action needed now
         }
     }
 
@@ -349,8 +549,15 @@ public class    AmbotorixService {
         lobby.setDraftInProgress(true);
         lobby.setDraftStartedAt(LocalDateTime.now());
         try {
-            sendSlotOrder(update);
-            sendRandomMap(update);
+            // Fix the random slot order and map, fold them into the status message, and announce the
+            // milestone with a single mention that backlinks (replies) to the status message.
+            lobby.setSlotOrder(lobbyService.randomSlotOrder(chatId));
+            lobby.setSelectedMap(lobbyService.randomMap(chatId));
+            // Slot order and map fold into the status message silently. The single group ping is
+            // owned by the strategy: open posts the picks image (a reply to status), secret posts
+            // a tag reply — both tag players, so there's no separate "draft started" line.
+            refreshStatus(chatId);
+
             DraftStrategy strategy = draftStrategyFactory.getStrategy(lobby.getDraftStrategyName());
             strategy.execute(lobby, chatId, this);
         } catch (Exception e) {
@@ -400,12 +607,331 @@ public class    AmbotorixService {
         }
         lobby.addPendingPick(userName, leader);
         sendToChat(userChatId, "You picked <b>" + leader.getFullName() + "</b>!");
-        sendToChat(lobbyChatId, pickStatusMessage(lobby, userName));
 
         if (lobby.allPicksIn(lobby.getPlayers().size())) {
+            // Reveal: mark the draft done first so the status renders the final picks, then let the
+            // strategy edit the status and post the all-picks-in milestone.
+            lobby.setDraftInProgress(false);
             draftStrategyFactory.getStrategy(lobby.getDraftStrategyName())
                     .onAllPicksIn(lobby, lobbyChatId, this);
+        } else {
+            // Pick progress (k/N) is shown in the live status message, silently — no per-pick line.
+            refreshStatus(lobbyChatId);
+        }
+    }
+
+    // ---- Herson draft (ranked secret draft, submitted/resolved over DM) ----
+
+    /** Draft kickoff: create the per-lobby state and DM every player asking for their four ranked picks. */
+    public void sendHersonStart(Lobby lobby, Long chatId) {
+        HersonDraftState state = new HersonDraftState();
+        state.init(lobby.getPlayers());
+        lobby.setHersonState(state);
+
+        for (Player player : lobby.getPlayers()) {
+            if (player.getUserId() == null) {
+                sendToChat(chatId, lobby.getMessageThreadId(),
+                        "@" + player.getUserName() + " — couldn't DM you. Message the bot directly first, then send your 4 ranked picks there.");
+                continue;
+            }
+            boolean delivered = sendDm(player.getUserId(), hersonPrompt(), null);
+            if (!delivered) {
+                sendToChat(chatId, lobby.getMessageThreadId(),
+                        "@" + player.getUserName() + " — couldn't DM you. Message the bot directly first, then send your 4 ranked picks there.");
+            }
+        }
+        postMilestone(chatId, mentionAll(lobby)
+                + " — Herson draft started. Check your DMs and send your 4 ranked picks.");
+    }
+
+    private String hersonPrompt() {
+        return "🗳️ <b>Herson draft</b> — send your <b>4 ranked picks</b> in one message, most-wanted first, like:\n"
+                + "<code>1. Gandhi 2. Lincoln 3. Saladin 4. Trajan</code>\n\n"
+                + "Names are matched loosely; I'll ask you to confirm if I had to guess. "
+                + "Use /leaders if you need the roster.";
+    }
+
+    /** Entry point for any free-text DM (no leading slash) — routed here by the dispatcher. */
+    public void handleDirectMessage(Update update) {
+        String userName = update.getMessage().getFrom().getUserName();
+        Long userId = update.getMessage().getFrom().getId();
+        Long chatId = lobbyService.findHersonChatIdForUser(userName, userId);
+        if (chatId == null) return; // not a participant in any live draft — stay quiet
+
+        Lobby lobby = lobbyService.getLobby(chatId);
+        Player player = lobbyService.findPlayerByName(chatId, userName);
+        if (lobby == null || player == null || lobby.getHersonState() == null) return;
+        String key = player.getUserName();
+        HersonDraftState state = lobby.getHersonState();
+        String text = update.getMessage().getText().trim();
+
+        switch (state.getStage(key)) {
+            case AWAITING_REPICK -> handleHersonRepick(chatId, lobby, player, text);
+            case AWAITING_PICKS, AWAITING_CONFIRM -> submitHersonPicks(chatId, lobby, player, text);
+            case SUBMITTED -> sendDm(userId, "You've already submitted. Sit tight — waiting on the rest.", null);
+            case null -> { /* not a participant in this draft */ }
+        }
+    }
+
+    private void submitHersonPicks(Long chatId, Lobby lobby, Player player, String text) {
+        Long userId = player.getUserId();
+        List<String> raw = HersonPickParser.parse(text);
+        if (raw.size() != 4) {
+            sendDm(userId, "Please send exactly <b>4</b> ranked picks in one message, e.g.\n"
+                    + "<code>1. Gandhi 2. Lincoln 3. Saladin 4. Trajan</code>", null);
+            return;
+        }
+
+        List<Leader> resolved = new ArrayList<>();
+        List<String> problems = new ArrayList<>();
+        boolean allExact = true;
+        for (int i = 0; i < 4; i++) {
+            String token = raw.get(i);
+            switch (leaderMatcher.match(token, leaderService.getLeaders())) {
+                case MatchResult.Unique u -> {
+                    resolved.add(u.leader());
+                    if (!isExactLeaderMatch(token, u.leader())) allExact = false;
+                }
+                case MatchResult.Ambiguous a -> {
+                    resolved.add(null);
+                    problems.add((i + 1) + ". \"" + token + "\" → " + a.leaders().stream()
+                            .map(Leader::getFullName).limit(4).collect(Collectors.joining(" / ")));
+                }
+                case MatchResult.None n -> {
+                    resolved.add(null);
+                    problems.add((i + 1) + ". \"" + token + "\" → no match");
+                }
+            }
+        }
+
+        if (!problems.isEmpty()) {
+            sendDm(userId, "I couldn't pin down some picks — please re-send all 4:\n" + String.join("\n", problems), null);
+            return;
+        }
+        if (new HashSet<>(resolved).size() < 4) {
+            sendDm(userId, "Your 4 picks must be different leaders. Please re-send all 4.", null);
+            return;
+        }
+        List<Leader> hostBanned = resolved.stream().filter(lobby.getBannedLeaders()::contains).toList();
+        if (!hostBanned.isEmpty()) {
+            sendDm(userId, "These civs were banned by the host: " + hostBanned.stream()
+                    .map(Leader::getFullName).collect(Collectors.joining(", "))
+                    + ". Please re-send 4 picks without them.", null);
+            return;
+        }
+
+        if (allExact) {
+            commitHersonSubmission(chatId, lobby, player, resolved);
+        } else {
+            lobby.getHersonState().setPendingConfirm(player.getUserName(), resolved);
+            lobby.getHersonState().setStage(player.getUserName(), HersonDraftState.Stage.AWAITING_CONFIRM);
+            sendDm(userId, "I read your picks as:\n" + numberedPicks(resolved)
+                    + "\n\nPress <b>Confirm</b> if that is what you intended — otherwise just send a new list of 4 picks.",
+                    markupService.hersonConfirmMarkup(chatId));
+        }
+    }
+
+    private void hersonConfirmCallback(Update update, Long chatId, boolean confirm) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null || lobby.getHersonState() == null) { sendPrivateMessage(update, "That draft is no longer active."); return; }
+        String userName = update.getCallbackQuery().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(chatId, userName);
+        if (player == null) { sendPrivateMessage(update, "You are not in this draft."); return; }
+        HersonDraftState state = lobby.getHersonState();
+        String key = player.getUserName();
+
+        if (!confirm) {
+            state.clearPendingConfirm(key);
+            state.setStage(key, HersonDraftState.Stage.AWAITING_PICKS);
+            sendDm(player.getUserId(), "Okay — send your 4 ranked picks again.", null);
+            return;
+        }
+        List<Leader> pending = state.getPendingConfirm(key);
+        if (pending == null) { sendDm(player.getUserId(), "Nothing to confirm — send your 4 ranked picks.", null); return; }
+        commitHersonSubmission(chatId, lobby, player, pending);
+    }
+
+    private void commitHersonSubmission(Long chatId, Lobby lobby, Player player, List<Leader> picks) {
+        HersonDraftState state = lobby.getHersonState();
+        String key = player.getUserName();
+        state.getRankedPicks().put(key, new ArrayList<>(picks));
+        state.clearPendingConfirm(key);
+        state.setStage(key, HersonDraftState.Stage.SUBMITTED);
+        sendDm(player.getUserId(), "✅ Picks recorded:\n" + numberedPicks(picks)
+                + "\n\nHidden until the draft resolves.", null);
+        refreshStatus(chatId);
+
+        if (state.allRankedSubmitted(lobby.getPlayers().size())) {
+            postMilestone(chatId, "📥 All picks are in — resolving the draft…");
+            advanceHersonResolution(chatId);
+        }
+    }
+
+    private void handleHersonRepick(Long chatId, Lobby lobby, Player player, String text) {
+        HersonDraftState state = lobby.getHersonState();
+        switch (leaderMatcher.match(text, leaderService.getLeaders())) {
+            case MatchResult.Unique u -> {
+                if (state.getAssigned().containsValue(u.leader())) {
+                    sendDm(player.getUserId(), u.leader().getFullName() + " is already taken — pick another civ.", null);
+                    return;
+                }
+                if (lobby.getBannedLeaders().contains(u.leader())) {
+                    sendDm(player.getUserId(), u.leader().getFullName() + " is banned by the host — pick another civ.", null);
+                    return;
+                }
+                state.getAssigned().put(player.getUserName(), u.leader());
+                state.setStage(player.getUserName(), HersonDraftState.Stage.SUBMITTED);
+                sendDm(player.getUserId(), "✅ You re-picked <b>" + u.leader().getFullName() + "</b>.", null);
+                refreshStatus(chatId);
+                if (!state.anyAwaitingRepick()) advanceHersonResolution(chatId);
+            }
+            case MatchResult.Ambiguous a -> sendDm(player.getUserId(),
+                    "Several leaders match — be more specific: " + a.leaders().stream()
+                            .map(Leader::getFullName).limit(5).collect(Collectors.joining(" / ")), null);
+            case MatchResult.None n -> sendDm(player.getUserId(),
+                    "No leader matches \"" + text + "\". Reply with one civ name from the remaining pool.", null);
+        }
+    }
+
+    /** Run the resolver as far as it can; either finish the draft or pause for coin-flip re-picks. */
+    public void advanceHersonResolution(Long chatId) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null || lobby.getHersonState() == null) return;
+        HersonDraftState state = lobby.getHersonState();
+        if (state.anyAwaitingInput()) return; // someone still owes picks or a re-pick
+
+        // The pool excludes both the host's manual bans and the civs the resolver bans as contested.
+        // We feed both into the resolver but keep only the contested ones in state (host bans live on
+        // the host Player), so the closing summary can attribute each correctly.
+        Set<Leader> hostBans = new LinkedHashSet<>(lobby.getBannedLeaders());
+        Set<Leader> working = new LinkedHashSet<>(hostBans);
+        working.addAll(state.getBanned());
+        // "herson-low" bans every civ two or more players ranked (any priority), so survivors are
+        // unique and there is never a clash to coin-flip; plain "herson" bans only same-step clashes
+        // and breaks last-resort ties with a coin flip.
+        boolean low = "herson-low".equals(lobby.getDraftStrategyName());
+        HersonResolver.Step step = low
+                ? HersonResolver.resolveLow(state.getRankedPicks(), working, state.getAssigned())
+                : HersonResolver.resolve(state.getRankedPicks(), working, state.getAssigned());
+        working.removeAll(hostBans);
+        state.getBanned().clear();
+        state.getBanned().addAll(working);
+
+        if (step instanceof HersonResolver.Complete complete) {
+            finalizeHerson(chatId, lobby, complete.assignments());
+        } else if (step instanceof HersonResolver.CoinFlip coinFlip) {
+            runHersonCoinFlip(chatId, lobby, coinFlip.civ(), coinFlip.contestants());
+        } else if (step instanceof HersonResolver.Unresolvable unresolvable) {
+            // herson-low only: a player's four picks were all banned. Too rare to auto-recover — stop
+            // the draft and tell the group so the host can /terminate and re-run.
             lobby.setDraftInProgress(false);
+            refreshStatus(chatId);
+            String who = unresolvable.players().stream().map(n -> "@" + n).collect(Collectors.joining(", "));
+            postMilestone(chatId, "⚠️ Couldn't resolve the draft — " + who
+                    + " had all four picks banned by overlaps. The host can /terminate and re-run.");
+            log.warn("herson-low unresolvable in chat {}: stranded {}", chatId, unresolvable.players());
+        }
+    }
+
+    private void runHersonCoinFlip(Long chatId, Lobby lobby, Leader civ, List<String> contestants) {
+        HersonDraftState state = lobby.getHersonState();
+        List<String> order = new ArrayList<>(contestants);
+        Collections.shuffle(order);
+        String winner = order.get(0);
+
+        state.getAssigned().put(winner, civ);
+        state.setStage(winner, HersonDraftState.Stage.SUBMITTED);
+        Player winnerPlayer = lobby.getPlayerByName(winner);
+        if (winnerPlayer != null) {
+            sendDm(winnerPlayer.getUserId(), "🪙 Coin flip — you kept <b>" + civ.getFullName() + "</b>.", null);
+        }
+        for (int i = 1; i < order.size(); i++) {
+            String loser = order.get(i);
+            state.setStage(loser, HersonDraftState.Stage.AWAITING_REPICK);
+            Player loserPlayer = lobby.getPlayerByName(loser);
+            if (loserPlayer != null) {
+                sendDm(loserPlayer.getUserId(), "🪙 Coin flip — <b>" + civ.getFullName()
+                        + "</b> went to someone else. Reply with <b>one</b> civ name to pick again from the remaining pool.", null);
+            }
+        }
+        refreshStatus(chatId); // suspended until the re-pick(s) arrive
+    }
+
+    private void finalizeHerson(Long chatId, Lobby lobby, Map<String, Leader> assignments) {
+        lobby.setDraftInProgress(false);
+        // The status closes out (done + contested-ban summary) without listing picks — the reveal is a
+        // portrait image instead, one row per player with just their assigned leader.
+        refreshStatus(chatId);
+        postHersonReveal(chatId, lobby, assignments);
+    }
+
+    /** Reveal the resolved draft as a combined portrait image — a row per player with their one civ. */
+    private void postHersonReveal(Long chatId, Lobby lobby, Map<String, Leader> assignments) {
+        List<Player> order = (lobby.getSlotOrder() != null && !lobby.getSlotOrder().isEmpty())
+                ? lobby.getSlotOrder() : lobby.getPlayers();
+        List<Player> rows = new ArrayList<>();
+        for (Player p : order) {
+            Leader civ = assignments.get(p.getUserName());
+            if (civ == null) continue;
+            Player row = new Player(p.getUserName(), p.getUserId());
+            row.setPicks(List.of(civ));
+            rows.add(row);
+        }
+        try {
+            PickImageGenerator.LeaderPickPhoto reveal = PickImageGenerator.createCombinedPickMessage(chatId, rows);
+            File file = reveal.tempFile();
+            try {
+                reveal.sendPhoto().setMessageThreadId(lobby.getMessageThreadId());
+                reveal.sendPhoto().setParseMode("HTML");
+                reveal.sendPhoto().setReplyToMessageId(lobby.getStatusMessageId());
+                reveal.sendPhoto().setCaption("🎉 Draft resolved! " + mentionAll(lobby));
+                telegramClient.execute(reveal.sendPhoto());
+            } finally {
+                file.delete();
+            }
+        } catch (Exception e) {
+            log.error("Failed to post Herson reveal image for chat {}", chatId, e);
+            // Fall back to a text reveal so players still see the result.
+            postMilestone(chatId, "🎉 Draft resolved!\n" + assignments.entrySet().stream()
+                    .map(en -> "@" + en.getKey() + " → " + en.getValue().getFullName())
+                    .collect(Collectors.joining("\n")));
+        }
+    }
+
+    private String numberedPicks(List<Leader> picks) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < picks.size(); i++) {
+            sb.append(i + 1).append(". ").append(picks.get(i).getFullName());
+            if (i < picks.size() - 1) sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    /** True when the typed token is the leader's exact shortname or full name (so no confirm is needed). */
+    private boolean isExactLeaderMatch(String token, Leader leader) {
+        String t = normalizeLoose(token);
+        return t.equals(normalizeLoose(leader.getShortName())) || t.equals(normalizeLoose(leader.getFullName()));
+    }
+
+    private String normalizeLoose(String s) {
+        if (s == null) return "";
+        return s.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", " ").trim().replaceAll("\\s+", " ");
+    }
+
+    /** DM a user (optionally with inline buttons); returns false if Telegram rejected it (not reachable). */
+    private boolean sendDm(Long userId, String text, InlineKeyboardMarkup markup) {
+        if (userId == null) return false;
+        SendMessage.SendMessageBuilder<?, ?> builder = SendMessage.builder()
+                .chatId(userId)
+                .text(text)
+                .parseMode("HTML");
+        if (markup != null) builder.replyMarkup(markup);
+        try {
+            telegramClient.execute(builder.build());
+            return true;
+        } catch (TelegramApiException e) {
+            log.warn("Failed to DM user {}: {}", userId, e.getMessage());
+            return false;
         }
     }
 
@@ -446,69 +972,40 @@ public class    AmbotorixService {
                 nowInMunich.format(formatter)
         );
 
-        sendMessage(update, message);
+        sendPrivateMessage(update, message);
     }
 
     //logic for command -> /mappool
     public void sendMappool(Update update) {
         if (!hasLobby(update)) {
-            sendNoLobby(update);
+            sendPrivateMessage(update, "No active lobby. Use " + commandFactory.infoOf(LobbyCommand.class).name() + " to create one.");
             return;
         }
 
         Long chatId = extractChatIdLong(update);
-        List<CivMap> mapPool =  lobbyService.getMappool(chatId);
+        List<CivMap> mapPool = lobbyService.getMappool(chatId);
 
         if (mapPool == null) {
-            sendBugReport(update);
+            sendPrivateMessage(update, "Something went wrong. Please contact @VitBuk.");
             return;
         }
 
-        StringBuilder sb = new StringBuilder("Map pool: \n");
-        sb.append("<i>To remove map from map pool use ")
-                .append(commandFactory.infoOf(MapRemoveCommand.class).name())
-                .append(" command </i> \n");
-
-        for (CivMap cm : mapPool) {
-            sb.append(commandFactory.infoOf(MapRemoveCommand.class).prefix())
-                    .append("_")
-                    .append(cm.toString())
-                    .append(" → ")
-                    .append(cm.toString())
-                    .append("\n");
-        }
-
-        sendMessage(update, sb.toString());
-    }
-
-    // Looks up the lobby by lobbyChatId but responds to the update's chat (e.g. a DM callback)
-    public void sendMappool(Update update, Long lobbyChatId) {
-        if (!lobbyService.hasLobby(lobbyChatId)) {
-            sendNoLobby(update);
+        if (mapPool.isEmpty()) {
+            sendPrivateMessage(update, "Map pool is empty. Use " + commandFactory.infoOf(MapAddCommand.class).name() + " to add maps.");
             return;
         }
 
-        List<CivMap> mapPool = lobbyService.getMappool(lobbyChatId);
-        if (mapPool == null) {
-            sendBugReport(update);
-            return;
+        SendMessage message = SendMessage.builder()
+                .chatId(update.getMessage().getFrom().getId())
+                .text("Map pool — click to remove:")
+                .replyMarkup(markupService.mapRemoveMarkup(mapPool, chatId))
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send mappool message: {}", e.getMessage(), e);
         }
-
-        StringBuilder sb = new StringBuilder("Map pool: \n");
-        sb.append("<i>To remove map from map pool use ")
-                .append(commandFactory.infoOf(MapRemoveCommand.class).name())
-                .append(" command </i> \n");
-
-        for (CivMap cm : mapPool) {
-            sb.append(commandFactory.infoOf(MapRemoveCommand.class).prefix())
-                    .append("_")
-                    .append(cm.toString())
-                    .append(" → ")
-                    .append(cm.toString())
-                    .append("\n");
-        }
-
-        sendMessage(update, sb.toString());
     }
 
     //logic for the command -> maplist
@@ -539,15 +1036,18 @@ public class    AmbotorixService {
     //logic for command -> /mapAdd [name]
     public void sendMapAdd(Update update, CivMap civMap) {
         if (civMap == null) {
-            sendMessage(update, "There is no such map. To get list of available maps use "
+            sendPrivateMessage(update, "There is no such map. To get list of available maps use "
                     + commandFactory.infoOf(MapAddCommand.class).name()
                     + " command.");
             return;
         }
 
         Long chatId = extractChatIdLong(update);
-        lobbyService.addMap(chatId, civMap);
-        sendMappool(update);
+        if (!lobbyService.addMap(chatId, civMap)) {
+            sendPrivateMessage(update, civMap + " is already in the map pool.");
+            return;
+        }
+        refreshStatus(chatId);
     }
 
     // Called from DM callback — lobbyChatId is the group chat where the lobby lives
@@ -558,26 +1058,40 @@ public class    AmbotorixService {
                     + " command.");
             return;
         }
-        lobbyService.addMap(lobbyChatId, civMap);
-        sendMappool(update, lobbyChatId);
+        if (!lobbyService.addMap(lobbyChatId, civMap)) {
+            sendMessage(update, civMap + " is already in the map pool.");
+            return;
+        }
+        refreshStatus(lobbyChatId);
+        sendMessage(update, "✅ Added " + civMap + " to the map pool.");
     }
 
     //logic for command /mapRemove [name]
     public void sendMapRemove(Update update, CivMap civMap) {
-        String mappoolName = commandFactory.infoOf(MappoolCommand.class).name();
-
         if (civMap == null) {
-            sendMessage(update, "There is no such map.Check map pool by using " + mappoolName + " command.");
+            sendPrivateMessage(update, "There is no such map. Check map pool with "
+                    + commandFactory.infoOf(MappoolCommand.class).name() + ".");
             return;
         }
 
         Long chatId = extractChatIdLong(update);
         if (lobbyService.removeMap(chatId, civMap)) {
-            sendMappool(update);
+            refreshStatus(chatId);
             return;
         }
 
-        sendMessage(update, "There is no such map in map pool. Check map pool by using " + mappoolName + " command");
+        sendPrivateMessage(update, civMap + " is not in the map pool. Check it with "
+                + commandFactory.infoOf(MappoolCommand.class).name() + ".");
+    }
+
+    // Called from DM callback — lobbyChatId is the group chat where the lobby lives
+    public void sendMapRemove(Update update, CivMap civMap, Long lobbyChatId) {
+        if (!lobbyService.removeMap(lobbyChatId, civMap)) {
+            sendPrivateMessage(update, civMap + " is not in the map pool.");
+            return;
+        }
+        refreshStatus(lobbyChatId);
+        sendPrivateMessage(update, "✅ Removed " + civMap + " from the map pool.");
     }
 
     public void sendTerminate(Update update) {
@@ -615,44 +1129,97 @@ public class    AmbotorixService {
     }
 
     public void sendNoSuchMap(Update update) {
-        sendMessage(update, "No such map. Check " + commandFactory.infoOf(MaplistCommand.class).name()
+        sendPrivateMessage(update, "No such map. Check " + commandFactory.infoOf(MaplistCommand.class).name()
                 + " command for list of available maps");
     }
 
-    private void sendSlotOrder(Update update) {
-        Long chatId = extractChatIdLong(update);
-        List<Player> shuffledPlayers = lobbyService.randomSlotOrder(chatId);
-        if (shuffledPlayers == null || shuffledPlayers.isEmpty()) {
-            sendMessage(update, "0 players registered");
-            return;
-        }
+    // ---- Single live status message: created once, then edited; milestones get a backlinking reply ----
 
-        StringBuilder sb = new StringBuilder("Slot order: \n");
-        for (int i = 0; i < shuffledPlayers.size(); i++) {
-            sb.append(i + 1)
-                    .append(". ")
-                    .append(shuffledPlayers.get(i).getUserName())
-                    .append("\n");
-        }
-
-        sendMessage(update, sb.toString());
-    }
-
-    private void sendRandomMap(Update update) {
-        Long chatId = extractChatIdLong(update);
-        CivMap randomMap = lobbyService.randomMap(chatId);
-        if (randomMap == null) {
-            sendMessage(update, "There is no maps in the map pool");
-            return;
-        }
-
+    /** Post the lobby's status message for the first time and remember its id for future edits. */
+    public void postStatus(Long chatId) {
         Lobby lobby = lobbyService.getLobby(chatId);
-        if (lobby != null) {
-            lobby.setSelectedMap(randomMap);
-        }
-        sendMessage(update, "Map: " + randomMap.toString());
+        if (lobby == null) return;
+        Integer id = sendStatusMessage(chatId, lobby.getMessageThreadId(), renderStatus(lobby));
+        lobby.setStatusMessageId(id);
     }
 
+    /** Re-render the status into the existing live message (editing it in place), or post it if absent. */
+    public void refreshStatus(Long chatId) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby == null) return;
+        if (lobby.getStatusMessageId() == null) {
+            postStatus(chatId);
+            return;
+        }
+        editStatusMessage(chatId, lobby.getStatusMessageId(), renderStatus(lobby));
+    }
+
+    /** A space-joined {@code @username} mention of every player with a username — used to ping the group on draft start. */
+    public String mentionAll(Lobby lobby) {
+        return lobby.getPlayers().stream()
+                .map(Player::getUserName)
+                .filter(name -> name != null && !name.isBlank())
+                .map(name -> "@" + name)
+                .collect(Collectors.joining(" "));
+    }
+
+    /** A milestone notification (e.g. draft started / all picks in) that replies to — backlinks — the status message. */
+    public void postMilestone(Long chatId, String text) {
+        Lobby lobby = lobbyService.getLobby(chatId);
+        Integer threadId = lobby == null ? null : lobby.getMessageThreadId();
+        Integer replyTo = lobby == null ? null : lobby.getStatusMessageId();
+        sendReply(chatId, threadId, replyTo, text);
+    }
+
+    // The status message is posted silently (no ping) — it is ambient state; the milestone replies do the pinging.
+    private Integer sendStatusMessage(Long chatId, Integer threadId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .messageThreadId(threadId)
+                .text(text)
+                .parseMode("HTML")
+                .disableNotification(true)
+                .build();
+        try {
+            Message sent = telegramClient.execute(message);
+            return sent == null ? null : sent.getMessageId();
+        } catch (TelegramApiException e) {
+            log.error("Failed to post status message to chat {}: {}", chatId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    private void editStatusMessage(Long chatId, Integer messageId, String text) {
+        EditMessageText edit = EditMessageText.builder()
+                .chatId(chatId.toString())
+                .messageId(messageId)
+                .text(text)
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(edit);
+        } catch (TelegramApiException e) {
+            log.error("Failed to edit status message {} in chat {}: {}", messageId, chatId, e.getMessage(), e);
+        }
+    }
+
+    private void sendReply(Long chatId, Integer threadId, Integer replyToMessageId, String text) {
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .messageThreadId(threadId)
+                .replyToMessageId(replyToMessageId)
+                .text(text)
+                .parseMode("HTML")
+                .build();
+        try {
+            telegramClient.execute(message);
+        } catch (TelegramApiException e) {
+            log.error("Failed to send reply to chat {}: {}", chatId, e.getMessage(), e);
+        }
+    }
+
+    // logic for command -> /lobbyInfo. The live status message already carries everything, so this
+    // just drops an anchor (a reply that backlinks to it) so players can jump to it.
     public void sendLobbyInfo(Update update) {
         Long chatId = extractChatIdLong(update);
         if (!lobbyService.hasLobby(chatId)) {
@@ -660,24 +1227,46 @@ public class    AmbotorixService {
             return;
         }
         Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby.getStatusMessageId() == null) {
+            // No status message yet (shouldn't normally happen) — post a fresh one.
+            postStatus(chatId);
+            return;
+        }
+        sendReply(chatId, lobby.getMessageThreadId(), lobby.getStatusMessageId(), "📌 Lobby status ☝️");
+    }
 
+    /** Builds the full lobby status text — all metadata plus draft progress — kept in one edited message. */
+    public String renderStatus(Lobby lobby) {
         String playerList = lobby.getPlayers().stream()
                 .map(Player::getUserName)
                 .collect(Collectors.joining(", "));
-        String mapList = lobby.getMapPool().isEmpty() ? "none"
-                : lobby.getMapPool().stream().map(CivMap::toString).collect(Collectors.joining(", "));
-        String draftStatus = lobby.isDraftInProgress() ? "in progress" : "waiting";
+        String draftStatus = !lobby.isDraftStarted() ? "waiting"
+                : (lobby.isDraftInProgress() ? "drafting" : "done");
+        boolean herson = lobby.isHersonDraft();
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<b>Lobby by @").append(lobby.getHost().getUserName()).append("</b>")
-                .append(" | Draft: ").append(lobby.getDraftStrategyName())
-                .append(" | Status: ").append(draftStatus).append("\n")
-                .append("Players (").append(lobby.getPlayers().size()).append("): ").append(playerList).append("\n")
-                .append("Pick size: ").append(lobby.getPickSize())
-                .append(" | Bans per player: ").append(lobby.getBanSize()).append("\n")
-                .append("Map pool: ").append(mapList);
+        sb.append("🎲 <b>Lobby by @").append(lobby.getHost().getUserName()).append("</b>\n")
+                .append("Status: ").append(draftStatus);
 
-        if (lobby.getBanSize() > 0) {
+        // Every tunable parameter, kept current as the host defines it. Herson resolves its own bans
+        // and submits a fixed 4 ranked picks, so the manual ban/pick-size knobs don't apply to it.
+        sb.append("\n\n<b>Settings:</b>")
+                .append("\nDraft: ").append(lobby.getDraftStrategyName());
+        if (!herson) {
+            sb.append("\nPick size: ").append(lobby.getPickSize())
+                    .append("\nBans per player: ").append(lobby.getBanSize());
+        }
+        if (!lobby.isDraftStarted()) {
+            String mapList = lobby.getMapPool().isEmpty() ? "none"
+                    : lobby.getMapPool().stream().map(CivMap::toString).collect(Collectors.joining(", "));
+            sb.append("\nMap pool: ").append(mapList);
+        } else {
+            sb.append("\nMap: ").append(lobby.getSelectedMap() == null ? "—" : lobby.getSelectedMap().toString());
+        }
+
+        sb.append("\n\n<b>Players (").append(lobby.getPlayers().size()).append("):</b> ").append(playerList);
+
+        if (!herson && lobby.getBanSize() > 0) {
             sb.append("\n\n<b>Bans:</b>");
             for (Player player : lobby.getPlayers()) {
                 sb.append("\n@").append(player.getUserName()).append(": ");
@@ -685,55 +1274,107 @@ public class    AmbotorixService {
                     sb.append("—");
                 } else {
                     sb.append(player.getBans().stream()
-                            .map(vitbuk.com.Ambotorix.entities.Leader::getFullName)
+                            .map(Leader::getFullName)
                             .collect(Collectors.joining(", ")));
                 }
             }
         }
 
-        sendMessage(update, sb.toString());
+        // Herson has no per-player ban phase, but the host can remove civs from the pool at any time
+        // before the draft closes — surface those so players know what's off the table.
+        if (herson && !lobby.getBannedLeaders().isEmpty()) {
+            sb.append("\n\n<b>Host bans:</b> ").append(lobby.getBannedLeaders().stream()
+                    .map(Leader::getFullName)
+                    .collect(Collectors.joining(", ")));
+        }
+
+        if (lobby.isDraftStarted() && lobby.getSlotOrder() != null && !lobby.getSlotOrder().isEmpty()) {
+            sb.append("\n\n<b>Slot order:</b>");
+            List<Player> order = lobby.getSlotOrder();
+            for (int i = 0; i < order.size(); i++) {
+                sb.append("\n").append(i + 1).append(". ").append(order.get(i).getUserName());
+            }
+        }
+
+        // Hidden-draft pick progress / reveal.
+        if ("secret".equals(lobby.getDraftStrategyName()) && lobby.isDraftInProgress()) {
+            sb.append("\n\n<b>Picks:</b> ").append(lobby.getPendingPicks().size())
+                    .append("/").append(lobby.getPlayers().size()).append(" in");
+        } else if (herson && lobby.isDraftInProgress()) {
+            int submitted = lobby.getHersonState() == null ? 0 : lobby.getHersonState().getRankedPicks().size();
+            sb.append("\n\n<b>Submissions:</b> ").append(submitted)
+                    .append("/").append(lobby.getPlayers().size()).append(" in");
+            if (lobby.getHersonState() != null && lobby.getHersonState().anyAwaitingRepick()) {
+                sb.append("\nResolving — awaiting a coin-flip re-pick…");
+            }
+        } else if (!herson && !lobby.getPendingPicks().isEmpty()) {
+            // Herson reveals picks as a portrait image, not in the status.
+            sb.append("\n\n<b>Picks:</b>");
+            for (Map.Entry<String, Leader> e : lobby.getPendingPicks().entrySet()) {
+                sb.append("\n@").append(e.getKey()).append(" → ").append(e.getValue().getFullName());
+            }
+        }
+
+        // Once a Herson draft has closed, explain the resolution: which civs were contested (banned)
+        // and which players had ranked them (and at what priority), so the outcome is transparent.
+        if (herson && lobby.isDraftStarted() && !lobby.isDraftInProgress()
+                && lobby.getHersonState() != null && !lobby.getHersonState().getBanned().isEmpty()) {
+            HersonDraftState state = lobby.getHersonState();
+            sb.append("\n\n<b>Contested (banned):</b>");
+            for (Leader civ : state.getBanned()) {
+                List<String> who = new ArrayList<>();
+                for (Map.Entry<String, List<Leader>> e : state.getRankedPicks().entrySet()) {
+                    int idx = e.getValue().indexOf(civ);
+                    if (idx >= 0) who.add("@" + e.getKey() + " (#" + (idx + 1) + ")");
+                }
+                sb.append("\n").append(civ.getFullName());
+                if (!who.isEmpty()) sb.append(" — ").append(String.join(", ", who));
+            }
+        }
+
+        return sb.toString();
     }
 
     public void sendSetBanSize(Update update, int n) {
         if (n < 0) {
-            sendMessage(update, "Ban size must be 0 or greater.");
+            sendPrivateMessage(update, "Ban size must be 0 or greater.");
             return;
         }
         Long chatId = extractChatIdLong(update);
         Lobby lobby = lobbyService.getLobby(chatId);
         if (lobby == null) { sendNoLobby(update); return; }
         lobby.setBanSize(n);
-        sendMessage(update, "Ban size set to " + n + ".");
+        refreshStatus(chatId);
     }
 
     public void sendSetPickSize(Update update, int n) {
         if (n < 1) {
-            sendMessage(update, "Pick size must be at least 1.");
+            sendPrivateMessage(update, "Pick size must be at least 1.");
             return;
         }
         Long chatId = extractChatIdLong(update);
         Lobby lobby = lobbyService.getLobby(chatId);
         if (lobby == null) { sendNoLobby(update); return; }
         lobby.setPickSize(n);
-        sendMessage(update, "Pick size set to " + n + ".");
+        refreshStatus(chatId);
     }
 
     public void sendSetDraft(Update update, String strategyName) {
         if (!draftStrategyFactory.getStrategyNames().contains(strategyName)) {
-            sendMessage(update, "Unknown strategy. Available: " + String.join(", ", draftStrategyFactory.getStrategyNames()));
+            sendPrivateMessage(update, "Unknown strategy. Available: " + String.join(", ", draftStrategyFactory.getStrategyNames()));
             return;
         }
         Long chatId = extractChatIdLong(update);
         Lobby lobby = lobbyService.getLobby(chatId);
         if (lobby == null) { sendNoLobby(update); return; }
         lobby.setDraftStrategyName(strategyName);
-        sendMessage(update, "Draft strategy set to: " + strategyName + ".");
+        refreshStatus(chatId);
     }
 
     public void sendAdminLobbies(Update update) {
         Map<Long, Lobby> all = lobbyService.getAllLobbies();
         if (all.isEmpty()) {
-            sendMessage(update, "No active lobbies.");
+            sendPrivateMessage(update, "No active lobbies.");
             return;
         }
         StringBuilder sb = new StringBuilder("Active lobbies:\n");
@@ -744,22 +1385,30 @@ public class    AmbotorixService {
               .append(" | players: ").append(lobby.getPlayers().size())
               .append(" | age: ").append(ageMinutes).append("m\n");
         });
-        sendMessage(update, sb.toString());
+        sendPrivateMessage(update, sb.toString());
     }
 
     public void sendAdminTerminate(Update update, Long targetChatId) {
         if (!lobbyService.hasLobby(targetChatId)) {
-            sendMessage(update, "No lobby found for chatId: " + targetChatId);
+            sendPrivateMessage(update, "No lobby found for chatId: " + targetChatId);
             return;
         }
+        Integer threadId = lobbyService.getLobby(targetChatId).getMessageThreadId();
         lobbyService.removeLobby(targetChatId);
-        sendToChat(targetChatId, "Lobby terminated by bot admin.");
-        sendMessage(update, "Lobby in chat " + targetChatId + " terminated.");
+        sendToChat(targetChatId, threadId, "Lobby terminated by bot admin.");
+        sendPrivateMessage(update, "Lobby in chat " + targetChatId + " terminated.");
     }
 
     public void sendToChat(Long chatId, String text) {
+        sendToChat(chatId, null, text);
+    }
+
+    // Same as sendToChat but pins the message to a Telegram forum topic (message_thread_id);
+    // pass null for the General topic / direct messages, which have no topics.
+    public void sendToChat(Long chatId, Integer threadId, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
+                .messageThreadId(threadId)
                 .text(text)
                 .parseMode("HTML")
                 .build();
@@ -773,6 +1422,7 @@ public class    AmbotorixService {
     public void sendMessage(Update update, String text) {
         SendMessage message = SendMessage.builder()
                 .chatId(extractChatId(update))
+                .messageThreadId(extractThreadId(update))
                 .text(text)
                 .parseMode("HTML")
                 .build();
@@ -838,6 +1488,16 @@ public class    AmbotorixService {
             return update.getCallbackQuery().getMessage().getChatId();
         }
         return update.getMessage().getChatId();
+    }
+
+    // The Telegram forum topic an update originated in, so replies land in the same topic instead of
+    // defaulting to General. null when there is no topic (General topic, DMs, non-forum groups) or
+    // when a callback's originating message is no longer accessible.
+    public Integer extractThreadId(Update update) {
+        if (update.hasCallbackQuery()) {
+            return update.getCallbackQuery().getMessage() instanceof Message m ? m.getMessageThreadId() : null;
+        }
+        return update.getMessage() == null ? null : update.getMessage().getMessageThreadId();
     }
 
     private List<String> readLines (String filePath) {

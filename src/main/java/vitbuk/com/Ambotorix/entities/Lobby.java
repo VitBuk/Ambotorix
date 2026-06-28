@@ -23,6 +23,14 @@ public class Lobby {
     private Map<String, Leader> pendingPicks = new LinkedHashMap<>();
     private boolean draftInProgress = false;
     private LocalDateTime draftStartedAt;
+    // Telegram forum topic (message_thread_id) the lobby lives in; null = General topic / non-forum group.
+    private Integer messageThreadId;
+    // The single live status message the bot keeps edited with all lobby metadata; null until posted.
+    private Integer statusMessageId;
+    // The randomised slot order fixed at draft start, so the status message renders it consistently.
+    private List<Player> slotOrder;
+    // Herson-draft bookkeeping (ranked picks + resolution state); null until a Herson draft starts.
+    private HersonDraftState hersonState;
 
     public Lobby(Player host) {
         this.created = LocalDateTime.now();
@@ -113,8 +121,14 @@ public class Lobby {
         return getBannedLeaders().contains(leader);
     }
 
-    public void addMap(CivMap civMap) {
+    public boolean addMap(CivMap civMap) {
+        if (mapPool.contains(civMap)) return false;
         mapPool.add(civMap);
+        return true;
+    }
+
+    public void clearAllBans() {
+        players.forEach(p -> p.getBans().clear());
     }
 
     public boolean removeMap (CivMap civMap) {
@@ -128,6 +142,10 @@ public class Lobby {
     public String getDraftStrategyName() { return draftStrategyName; }
     public void setDraftStrategyName(String name) { this.draftStrategyName = name; }
 
+    /** All ranked-secret "herson" variants share the same DM submission/resolution machinery. */
+    private static final Set<String> HERSON_STRATEGIES = Set.of("herson", "herson-low");
+    public boolean isHersonDraft() { return HERSON_STRATEGIES.contains(draftStrategyName); }
+
     public Map<String, Leader> getPendingPicks() { return pendingPicks; }
     public void addPendingPick(String userName, Leader leader) { pendingPicks.put(userName, leader); }
     public boolean hasPendingPick(String userName) { return pendingPicks.containsKey(userName); }
@@ -139,6 +157,18 @@ public class Lobby {
     public LocalDateTime getDraftStartedAt() { return draftStartedAt; }
     public void setDraftStartedAt(LocalDateTime draftStartedAt) { this.draftStartedAt = draftStartedAt; }
     public boolean isDraftStarted() { return draftStartedAt != null; }
+
+    public Integer getMessageThreadId() { return messageThreadId; }
+    public void setMessageThreadId(Integer messageThreadId) { this.messageThreadId = messageThreadId; }
+
+    public Integer getStatusMessageId() { return statusMessageId; }
+    public void setStatusMessageId(Integer statusMessageId) { this.statusMessageId = statusMessageId; }
+
+    public List<Player> getSlotOrder() { return slotOrder; }
+    public void setSlotOrder(List<Player> slotOrder) { this.slotOrder = slotOrder; }
+
+    public HersonDraftState getHersonState() { return hersonState; }
+    public void setHersonState(HersonDraftState hersonState) { this.hersonState = hersonState; }
 
     public void defaultSetup() {
         this.banSize = 1;

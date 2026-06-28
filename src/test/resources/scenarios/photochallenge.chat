@@ -1,0 +1,8 @@
+--- SCENARIO: /photochallenge posts the leaderboard to the group ---
+# The bot reads the (stubbed, in tests) photo-challenge sheet and reprints the standings as a
+# monospace table in the group chat. No lobby needed — it's a general info command.
+
+--- CHAT ---
+alice: /photochallenge
+ambotorix: *Photo Challenge*Shu B*Misha B*Vitalik B*
+ambotorix:                       # exactly one group message — the leaderboard

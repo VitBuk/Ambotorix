@@ -18,22 +18,23 @@ public class LobbyCleanupScheduler {
     private final LobbyService lobbyService;
     private final AmbotorixService ambotorixService;
 
-    @Value("${lobby.auto-terminate.hours:4}")
-    private int autoTerminateHours;
+    @Value("${lobby.auto-terminate.minutes:30}")
+    private int autoTerminateMinutes;
 
     public LobbyCleanupScheduler(LobbyService lobbyService, AmbotorixService ambotorixService) {
         this.lobbyService = lobbyService;
         this.ambotorixService = ambotorixService;
     }
 
-    @Scheduled(fixedRate = 900_000) // every 15 minutes
+    @Scheduled(fixedRate = 300_000) // every 5 minutes
     public void terminateExpiredLobbies() {
-        List<Long> expired = lobbyService.getExpiredLobbyChatIds(autoTerminateHours);
+        List<Long> expired = lobbyService.getExpiredLobbyChatIds(autoTerminateMinutes);
         for (Long chatId : expired) {
-            log.info("Auto-terminating lobby in chat {} ({}h after /start)", chatId, autoTerminateHours);
+            log.info("Auto-terminating lobby in chat {} ({}m after /start)", chatId, autoTerminateMinutes);
+            Integer threadId = lobbyService.getLobby(chatId).getMessageThreadId();
             lobbyService.removeLobby(chatId);
-            ambotorixService.sendToChat(chatId,
-                "Lobby automatically terminated after " + autoTerminateHours + " hours.");
+            ambotorixService.sendToChat(chatId, threadId,
+                "Lobby automatically terminated after " + autoTerminateMinutes + " minutes.");
         }
     }
 }

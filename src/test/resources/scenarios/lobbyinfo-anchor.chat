@@ -1,0 +1,16 @@
+--- SCENARIO: /lobbyInfo drops an anchor that backlinks to the live status message ---
+# The status message already carries everything, so /lobbyInfo no longer re-prints lobby state — it
+# posts a short anchor that replies to (backlinks) the status message so players can jump to it. With
+# no lobby it just says so.
+
+--- CHAT ---
+alice: /lobbyInfo
+ambotorix: No active lobby*       # nothing to anchor to yet
+
+alice: /lobby
+bob: /register
+ambotorix: <status *Players (2): alice, bob*>
+
+bob: /lobbyInfo
+ambotorix: 📌 Lobby status* <backlink>
+ambotorix:                        # only the "no lobby" reply and the anchor were ever posted

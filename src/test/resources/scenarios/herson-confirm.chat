@@ -1,0 +1,40 @@
+--- SCENARIO: herson asks to confirm a fuzzy guess; a player may re-submit instead of confirming ---
+# When fuzzy matching had to guess a name the bot echoes the interpreted list with Confirm / Re-enter
+# buttons and clear instructions. Alice confirms the guess as-is. Bob's guess isn't what he meant, so
+# instead of tapping Confirm he just sends a fresh corrected list, which replaces the pending one.
+
+--- CHAT ---
+alice: /lobby herson
+bob: /register
+
+--- DM (alice) ---
+alice: /leaders
+ambotorix: <button "{leader}">
+--- DM (bob) ---
+bob: /leaders
+ambotorix: <button "{leader}">
+
+--- CHAT ---
+alice: /start
+ambotorix: @alice* @bob* <backlink>
+ambotorix:
+
+--- DM (alice) ---
+ambotorix: *Herson draft*
+alice: 1. lincol 2. curtin 3. montezuma 4. hammurabi          # "lincol" -> guessed Lincoln
+ambotorix: *I read your picks as*Press*Confirm*otherwise*4 picks* <button "*">
+alice: <press_button "*Confirm*">
+ambotorix: *Picks recorded*
+
+--- DM (bob) ---
+ambotorix: *Herson draft*
+bob: 1. pedr 2. basil 3. theodora 4. laurier                  # "pedr" -> guessed Pedro
+ambotorix: *I read your picks as*Press*Confirm*otherwise*4 picks* <button "*">
+bob: 1. pedro 2. basil 3. theodora 4. laurier                 # re-submits instead of confirming
+ambotorix: *Picks recorded*
+
+--- CHAT ---
+ambotorix: 📥 All picks are in* <backlink>
+ambotorix: <image *resolved*> <backlink>
+ambotorix: <status *Status: done*Draft: herson*>
+ambotorix:

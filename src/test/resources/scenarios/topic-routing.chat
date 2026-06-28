@@ -1,0 +1,19 @@
+--- SCENARIO: commands answer in their own topic; the lobby status lives in its topic ---
+# A Telegram forum group is one chat split into several topics (sub-channels) that share a chat id
+# but differ by message_thread_id. Replies must land in the topic a command arrived in, and the
+# lobby's single status message must stay in the topic it was created in — never leaking into
+# General or another topic. Here several conversations run in parallel.
+
+--- TOPIC (drafting) ---
+alice: /lobby
+ambotorix: <status *Lobby by @alice*>        # status message created in the drafting topic
+
+--- TOPIC (drafting) ---
+bob: /register
+ambotorix: <status *Players (2): alice, bob*>   # silently edited in place, still in this topic
+
+# Each topic saw only its own replies; the status never left the drafting topic.
+--- TOPIC (drafting) ---
+ambotorix:                                    # drafting topic stream is empty — edits are silent
+--- CHAT ---
+ambotorix:

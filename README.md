@@ -1,12 +1,95 @@
-Telegram Bot for local Civilization6 community.
-This is my pet-project.
+# Ambotorix
 
-1. RemoveMap bug
-2. Add refresh Bans by host command
-3. Add /photochallenge command
-4. Which commands better to accept in DM only (host tuning game settings?)
-5. Can we clear messages?
-6. One picture for all picks?
-7. /help command result in DM
-8. links to mods instead of text
-9. smart ban parses e.g. /ban alex -> will result in banning Alexander (Macedonia)
+Telegram bot for a local Civilization VI community. It runs leader-draft lobbies in a
+group chat: players join a lobby, ban leaders, and the bot hands out pick pools (publicly
+for open drafts, or privately via DM for secret drafts), then reveals the results. It also
+serves reference info — leaders, maps, recommended mods and settings — and keeps the BBG
+leader data up to date by scraping it on a schedule.
+
+This is a pet project.
+
+## Ambotorix Beta 0.4
+
+What's new in this release:
+
+- **Herson ranked secret draft** (new draft strategy, by Mihails). A ranked secret draft over
+  the full roster: players DM four ranked picks as free text (`1. X 2. Y 3. Z 4. W`); names are
+  fuzzy-matched and confirmed via buttons when auto-corrected. Once everyone submits, a pure
+  resolver collapses the lists into a unique assignment — a civ wanted by 2+ players is banned and
+  contestants fall through to their next pick; a clash surviving all four picks is broken by a coin
+  flip. Picks stay hidden until resolved, then the status reveals each player's civ plus a
+  contested-ban summary. Herson has no per-player ban phase (only the host may ban, freely, before
+  the draft closes).
+- **`/lobby <strategy>`** — `/lobby` now takes an optional draft-strategy name (e.g. `/lobby secret`)
+  so the host can pick the draft up front instead of a separate `/setDraft`; an unknown name falls
+  back to the default with a note.
+- **`/photochallenge`** — posts the community photo-challenge leaderboard to the group. The bot
+  reads the standings from the shared Google Sheet (the "Main" tab) and reprints them as a
+  monospace table (Player / Total / Leaders / City-States / Wonders). The sheet stays the source
+  of truth; the sheet CSV URL is configurable via `photochallenge.sheet.csv-url`.
+- **`/mods`** now shows each mod as a tappable Steam Workshop link (no version numbers, since
+  those drift over time).
+
+## Ambotorix Beta 0.3
+
+What's new in this release:
+
+- **Less group-chat spam on draft start.** Removed the standalone "🎮 Draft started" message.
+  The draft now pings the group exactly once:
+  - **Open draft** posts the combined picks image as a reply to the status message, captioned
+    with `@`-mentions of every player (no more pool-listing text — the image shows the pools).
+  - **Secret draft** posts a single tag reply to the status message telling players to check
+    their DMs to pick.
+- Both pings reply to (backlink) the status message, so players can tap to jump to slot order
+  and picks.
+- Kept the "🎉 All picks are in" reveal and the secret-draft DM-failure fallback notices.
+- **Lobbies auto-terminate 30 minutes after start** (was 4 hours). Config key is now
+  `lobby.auto-terminate.minutes`; the cleanup check runs every 5 minutes.
+- **Smart bans.** `/ban` now accepts loose input: `/ban alex` bans Alexander, `/ban teresa`
+  bans Theresa despite the typo. Matching is tiered (exact → prefix → fuzzy), and when a query
+  matches several leaders (e.g. `roosevelt`, `eleanor`, `qin`) the bot replies with buttons to
+  pick the right one rather than guessing.
+
+## Ambotorix Beta 0.2
+
+What's new in this release:
+
+- **Single live status message.** The lobby keeps one message (settings, players, bans,
+  slot order, picks) that is edited in place as things change, instead of posting a new line
+  for every join, ban, config tweak and pick. Only milestones ("draft started", "all picks
+  in") ping the group.
+- **One combined pick-pools image** for open drafts — a row per player — instead of one post
+  per player.
+- **Quieter group chat.** Info and host-tuning commands (`/help`, `/leaders`, `/maplist`,
+  `/mappool`, `/mods`, `/settings`, map/config commands, etc.) now reply in DM instead of
+  spamming the group.
+- **`/clearBans`** (host) — clears all bans so players can redo them.
+- **`/banButtons`** — every registered player gets DM buttons for each not-yet-banned leader;
+  tapping one bans that leader and updates the group status message.
+- **`/mappool` remove buttons** — tap to remove a map from the pool, sent to DM.
+- **Quick start** section at the top of `/help`.
+- **Bug fix:** `/mapRemove_<Map>` now works, and maps can no longer be added twice.
+
+See [TODO.md](TODO.md) for what's planned next.
+
+## Running it
+
+The bot is containerised. With Docker and a populated `.env` (bot token, username, admin id):
+
+```bash
+docker compose up --build -d
+```
+
+### Updating data files (`mods`, `settings`, etc.) on an existing deployment
+
+`src/main/resources` is a named Docker volume that the entrypoint **only seeds on first run**
+(when `civ6_leaders.json` is absent). So a plain `git pull` + `docker compose up --build` does
+**not** refresh files like `mods` or `settings` that already exist in the volume — the old copies
+persist. To push an updated data file to a running deployment, copy it into the volume and restart:
+
+```bash
+docker compose cp src/main/resources/mods ambotorix:/app/src/main/resources/mods
+docker compose restart
+```
+
+(Recreating the volume also works but re-triggers the full leader scrape on next start.)

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import vitbuk.com.Ambotorix.entities.CivMap;
+import vitbuk.com.Ambotorix.entities.HersonDraftState;
 import vitbuk.com.Ambotorix.entities.Leader;
 import vitbuk.com.Ambotorix.entities.Lobby;
 import vitbuk.com.Ambotorix.entities.Player;
@@ -20,7 +21,14 @@ public class LobbyService {
     private final Map<Long, Lobby> lobbies = new ConcurrentHashMap<>();
 
     public String createLobby(Long chatId, Player host) {
-        Lobby existing = lobbies.putIfAbsent(chatId, new Lobby(host));
+        return createLobby(chatId, null, host);
+    }
+
+    /** Creates a lobby anchored to a Telegram forum topic ({@code threadId}; null = General topic). */
+    public String createLobby(Long chatId, Integer threadId, Player host) {
+        Lobby lobby = new Lobby(host);
+        lobby.setMessageThreadId(threadId);
+        Lobby existing = lobbies.putIfAbsent(chatId, lobby);
         if (existing != null) {
             return "Lobby already exists. " + existing.getHost().getUserName()
                     + " can terminate it using /terminate";
@@ -44,8 +52,8 @@ public class LobbyService {
         return Collections.unmodifiableMap(lobbies);
     }
 
-    public List<Long> getExpiredLobbyChatIds(int hoursAfterStart) {
-        LocalDateTime cutoff = LocalDateTime.now().minusHours(hoursAfterStart);
+    public List<Long> getExpiredLobbyChatIds(int minutesAfterStart) {
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(minutesAfterStart);
         return lobbies.entrySet().stream()
                 .filter(e -> {
                     LocalDateTime started = e.getValue().getDraftStartedAt();
@@ -100,14 +108,47 @@ public class LobbyService {
                 .findFirst().orElse(null);
     }
 
+    /**
+     * The group chat id of the in-progress Herson draft this user is a participant in (so their DM can
+     * be routed — including a "you've already submitted" nudge once they have), or null. If somehow
+     * several qualify, the most recently started wins.
+     */
+    public Long findHersonChatIdForUser(String userName, Long userId) {
+        Long best = null;
+        LocalDateTime bestStarted = null;
+        for (Map.Entry<Long, Lobby> e : lobbies.entrySet()) {
+            Lobby lobby = e.getValue();
+            if (!lobby.isHersonDraft()) continue;
+            if (!lobby.isDraftInProgress() || lobby.getHersonState() == null) continue;
+            Player player = lobby.getPlayers().stream()
+                    .filter(p -> (userName != null && userName.equalsIgnoreCase(p.getUserName()))
+                            || (userId != null && userId.equals(p.getUserId())))
+                    .findFirst().orElse(null);
+            if (player == null) continue;
+            // Stage is null only for someone who joined after the prompts went out — nothing to route.
+            if (lobby.getHersonState().getStage(player.getUserName()) == null) continue;
+            LocalDateTime started = lobby.getDraftStartedAt();
+            if (best == null || (started != null && (bestStarted == null || started.isAfter(bestStarted)))) {
+                best = e.getKey();
+                bestStarted = started;
+            }
+        }
+        return best;
+    }
+
     public List<CivMap> getMappool(Long chatId) {
         Lobby lobby = lobbies.get(chatId);
         return lobby == null ? null : lobby.getMapPool();
     }
 
-    public void addMap(Long chatId, CivMap civMap) {
+    public boolean addMap(Long chatId, CivMap civMap) {
         Lobby lobby = lobbies.get(chatId);
-        if (lobby != null) lobby.addMap(civMap);
+        return lobby != null && lobby.addMap(civMap);
+    }
+
+    public void clearAllBans(Long chatId) {
+        Lobby lobby = lobbies.get(chatId);
+        if (lobby != null) lobby.clearAllBans();
     }
 
     public boolean removeMap(Long chatId, CivMap civMap) {

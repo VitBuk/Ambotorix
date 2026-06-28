@@ -52,7 +52,15 @@ public class Ambotorix implements SpringLongPollingBot, LongPollingSingleThreadU
         Message message = update.getMessage();
         String messageText = message.getText();
 
-        if (messageText == null || !messageText.startsWith("/")) return;
+        if (messageText == null) return;
+        if (!messageText.startsWith("/")) {
+            // Free text in a private chat is a draft submission (e.g. Herson ranked picks). Group
+            // chatter without a slash is ignored, as before.
+            if (message.getChat() != null && message.getChat().isUserChat()) {
+                ambotorixService.handleDirectMessage(update);
+            }
+            return;
+        }
         String username = botConfig.getUsername().replaceFirst("^@", "");
         String cleaned = messageText.replaceAll("(?i)@" + Pattern.quote(username), "");
         message.setText(cleaned);
