@@ -30,7 +30,10 @@ class LeaderMatcherTest {
             leader("China Qin (Unifier)", "qin_unifier"),
             leader("China Qin (Mandate of Heaven)", "qin_mandate_of_heaven"),
             leader("Gran Colombia Simón Bolívar", "bolivar"),
-            leader("Vietnam Bà Triệu", "triu")
+            leader("Vietnam Bà Triệu", "triu"),
+            // "Nzinga" is the shortName of one leader but also a name-word of the other.
+            leader("Kongo Mvemba a Nzinga", "nzinga"),
+            leader("Kongo Nzinga Mbande", "mbande")
     );
 
     private MatchResult match(String q) {
@@ -94,6 +97,15 @@ class LeaderMatcherTest {
     void garbageOrTooShortIsNone() {
         assertInstanceOf(MatchResult.None.class, match("a"));
         assertInstanceOf(MatchResult.None.class, match("zzzzzz"));
+    }
+
+    @Test
+    void exactShortNameBeatsNameWordCollision() {
+        // "nzinga" is the exact shortName of Mvemba a Nzinga, but the word "Nzinga" also appears
+        // in Nzinga Mbande's full name. An exact shortName match is unambiguous and must win
+        // outright — the bot should ban it directly, never ask the user to disambiguate.
+        assertUnique("nzinga", "Kongo Mvemba a Nzinga");
+        assertUnique("mbande", "Kongo Nzinga Mbande");
     }
 
     @Test
