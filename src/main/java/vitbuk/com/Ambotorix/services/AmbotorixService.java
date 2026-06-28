@@ -197,7 +197,7 @@ public class    AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        InlineKeyboardMarkup markup = markupService.leadersMarkup(leaders);
+        InlineKeyboardMarkup markup = markupService.leadersGridMarkup(leaders);
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
         sb.append("<i>To get description use /d_[shortName] \n")
@@ -933,6 +933,30 @@ public class    AmbotorixService {
             log.warn("Failed to DM user {}: {}", userId, e.getMessage());
             return false;
         }
+    }
+
+    // Builds a draft pick status message listing who has submitted and who is still pending.
+    private String pickStatusMessage(Lobby lobby, String justPicked) {
+        List<String> submitted = lobby.getPlayers().stream()
+                .map(Player::getUserName)
+                .filter(lobby::hasPendingPick)
+                .toList();
+        List<String> waiting = lobby.getPlayers().stream()
+                .map(Player::getUserName)
+                .filter(name -> !lobby.hasPendingPick(name))
+                .toList();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("@").append(justPicked).append(" has made their pick. (")
+                .append(submitted.size()).append("/").append(lobby.getPlayers().size()).append(")\n\n");
+        sb.append("✅ Submitted: ")
+                .append(submitted.isEmpty() ? "—"
+                        : submitted.stream().map(n -> "@" + n).collect(Collectors.joining(", ")))
+                .append("\n");
+        sb.append("⏳ Waiting on: ")
+                .append(waiting.isEmpty() ? "—"
+                        : waiting.stream().map(n -> "@" + n).collect(Collectors.joining(", ")));
+        return sb.toString();
     }
 
     //logic for command -> /time

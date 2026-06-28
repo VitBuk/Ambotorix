@@ -32,6 +32,9 @@ public class SecretDraftStrategy implements DraftStrategy {
     @Override
     public void execute(Lobby lobby, Long chatId, AmbotorixService service) {
         leaderService.setLeadersPool(lobby);
+        String mapLine = lobby.getSelectedMap() != null
+                ? "🗺 Map: " + lobby.getSelectedMap() + "\n\n"
+                : "";
         for (Player player : lobby.getPlayers()) {
             Long userId = player.getUserId();
             if (userId == null) {
@@ -41,7 +44,7 @@ public class SecretDraftStrategy implements DraftStrategy {
             }
             PickImageGenerator.LeaderPickPhoto result = PickImageGenerator.createLeaderPickMessage(userId, player);
             result.sendPhoto().setReplyMarkup(markupService.pickMarkup(player.getPicks(), chatId));
-            result.sendPhoto().setCaption("Your leaders — tap to pick one:");
+            result.sendPhoto().setCaption(mapLine + "Your leaders — tap to pick one:");
             try {
                 telegramClient.execute(result.sendPhoto());
             } catch (TelegramApiException e) {
