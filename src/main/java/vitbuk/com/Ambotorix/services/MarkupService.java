@@ -27,10 +27,15 @@ public class MarkupService {
         this.commandFactory = commandFactory;
     }
 
+    // Number of leader buttons per row in the grid layout. Buttons use the compact
+    // display name (getDisplayName), so 3 columns fit without heavy wrapping.
+    private static final int LEADERS_GRID_COLUMNS = 3;
+
+    // One leader per row, labelled with the full name. Used where vertical space is
+    // not a concern (e.g. the per-player draft DM).
     public InlineKeyboardMarkup leadersMarkup(List<Leader> leaders) {
         String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
         List<InlineKeyboardRow> rows = new ArrayList<>();
-
         for (Leader l : leaders) {
             InlineKeyboardButton btn = InlineKeyboardButton.builder()
                     .text(l.getFullName())
@@ -38,6 +43,34 @@ public class MarkupService {
                     .build();
             InlineKeyboardRow row = new InlineKeyboardRow();
             row.add(btn);
+            rows.add(row);
+        }
+        return InlineKeyboardMarkup.builder().keyboard(rows).build();
+    }
+
+    public InlineKeyboardMarkup leadersGridMarkup(List<Leader> leaders) {
+        return leadersGridMarkup(leaders, LEADERS_GRID_COLUMNS);
+    }
+
+    // Compact grid using the short display name, packed into the given number of columns.
+    public InlineKeyboardMarkup leadersGridMarkup(List<Leader> leaders, int columns) {
+        String dPrefix = commandFactory.infoOf(DescriptionCommand.class).prefix();
+        int cols = Math.max(1, columns);
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+
+        InlineKeyboardRow row = new InlineKeyboardRow();
+        for (Leader l : leaders) {
+            InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                    .text(l.getDisplayName())
+                    .callbackData(dPrefix + " " + l.getShortName())
+                    .build();
+            row.add(btn);
+            if (row.size() == cols) {
+                rows.add(row);
+                row = new InlineKeyboardRow();
+            }
+        }
+        if (!row.isEmpty()) {
             rows.add(row);
         }
 

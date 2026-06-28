@@ -36,6 +36,9 @@ public class OpenDraftStrategy implements DraftStrategy {
     @Override
     public void execute(Lobby lobby, Long chatId, AmbotorixService service) {
         leaderService.setLeadersPool(lobby);
+        String mapLine = lobby.getSelectedMap() != null
+                ? "🗺 Map: " + lobby.getSelectedMap() + "\n\n"
+                : "";
         for (Player player : lobby.getPlayers()) {
             PickImageGenerator.LeaderPickPhoto result = PickImageGenerator.createLeaderPickMessage(chatId, player);
             File tempFile = result.tempFile();
@@ -52,7 +55,7 @@ public class OpenDraftStrategy implements DraftStrategy {
             // DM: same image with description buttons — non-fatal if it fails
             if (player.getUserId() != null) {
                 try {
-                    sendDmWithButtons(player, tempFile);
+                    sendDmWithButtons(player, tempFile, mapLine);
                 } catch (TelegramApiException e) {
                     log.warn("Could not send DM to player {} (userId={}): {}", player.getUserName(), player.getUserId(), e.getMessage());
                 }
@@ -63,12 +66,12 @@ public class OpenDraftStrategy implements DraftStrategy {
         }
     }
 
-    private void sendDmWithButtons(Player player, File imageFile) throws TelegramApiException {
+    private void sendDmWithButtons(Player player, File imageFile, String mapLine) throws TelegramApiException {
         SendPhoto dm = SendPhoto.builder()
                 .chatId(player.getUserId())
                 .photo(new InputFile(imageFile))
                 .parseMode("HTML")
-                .caption("Your leaders - tap to check descriptions:")
+                .caption(mapLine + "Your leaders - tap to check descriptions:")
                 .replyMarkup(markupService.leadersMarkup(player.getPicks()))
                 .build();
         telegramClient.execute(dm);

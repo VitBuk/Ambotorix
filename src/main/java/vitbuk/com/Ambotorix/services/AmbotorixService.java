@@ -151,7 +151,7 @@ public class    AmbotorixService {
     public void sendLeaders(Update update) {
         List<Leader> leaders = leaderService.getLeaders();
 
-        InlineKeyboardMarkup markup = markupService.leadersMarkup(leaders);
+        InlineKeyboardMarkup markup = markupService.leadersGridMarkup(leaders);
 
         StringBuilder sb = new StringBuilder("Leaders: \n");
         sb.append("<i>To get description use /d_[shortName] \n")
@@ -400,14 +400,37 @@ public class    AmbotorixService {
         }
         lobby.addPendingPick(userName, leader);
         sendToChat(userChatId, "You picked <b>" + leader.getFullName() + "</b>!");
-        sendToChat(lobbyChatId, "@" + userName + " has made their pick. ("
-                + lobby.getPendingPicks().size() + "/" + lobby.getPlayers().size() + ")");
+        sendToChat(lobbyChatId, pickStatusMessage(lobby, userName));
 
         if (lobby.allPicksIn(lobby.getPlayers().size())) {
             draftStrategyFactory.getStrategy(lobby.getDraftStrategyName())
                     .onAllPicksIn(lobby, lobbyChatId, this);
             lobby.setDraftInProgress(false);
         }
+    }
+
+    // Builds a draft pick status message listing who has submitted and who is still pending.
+    private String pickStatusMessage(Lobby lobby, String justPicked) {
+        List<String> submitted = lobby.getPlayers().stream()
+                .map(Player::getUserName)
+                .filter(lobby::hasPendingPick)
+                .toList();
+        List<String> waiting = lobby.getPlayers().stream()
+                .map(Player::getUserName)
+                .filter(name -> !lobby.hasPendingPick(name))
+                .toList();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("@").append(justPicked).append(" has made their pick. (")
+                .append(submitted.size()).append("/").append(lobby.getPlayers().size()).append(")\n\n");
+        sb.append("✅ Submitted: ")
+                .append(submitted.isEmpty() ? "—"
+                        : submitted.stream().map(n -> "@" + n).collect(Collectors.joining(", ")))
+                .append("\n");
+        sb.append("⏳ Waiting on: ")
+                .append(waiting.isEmpty() ? "—"
+                        : waiting.stream().map(n -> "@" + n).collect(Collectors.joining(", ")));
+        return sb.toString();
     }
 
     //logic for command -> /time
@@ -623,6 +646,10 @@ public class    AmbotorixService {
             return;
         }
 
+        Lobby lobby = lobbyService.getLobby(chatId);
+        if (lobby != null) {
+            lobby.setSelectedMap(randomMap);
+        }
         sendMessage(update, "Map: " + randomMap.toString());
     }
 
