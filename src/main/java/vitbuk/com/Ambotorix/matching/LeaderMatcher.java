@@ -14,10 +14,11 @@ import java.util.Set;
  * Resolves a loose, human-typed ban query (e.g. {@code "alex"}, {@code "teresa"},
  * {@code "roosevelt"}) to a leader, without ever silently banning the wrong one.
  *
- * <p>Matching is tiered — exact → prefix → fuzzy — and the first tier that matches any leader
- * wins, so an exact match always beats a fuzzy one. Within the winning tier, a single distinct
- * leader yields {@link MatchResult.Unique}; several yield {@link MatchResult.Ambiguous} (the
- * caller shows buttons). Nothing matched yields {@link MatchResult.None}.
+ * <p>Matching is tiered — exact shortName → exact name-word → prefix → fuzzy — and the first tier
+ * that matches any leader wins, so an exact shortName always beats a name-word collision, prefix or
+ * fuzzy match. Within the winning tier, a single distinct leader yields {@link MatchResult.Unique};
+ * several yield {@link MatchResult.Ambiguous} (the caller shows buttons). Nothing matched yields
+ * {@link MatchResult.None}.
  */
 @Component
 public class LeaderMatcher {
@@ -36,13 +37,22 @@ public class LeaderMatcher {
         String q = normalize(rawQuery);
         if (q.length() < 2) return new MatchResult.None();
 
-        // Tier 1 — exact: query equals a token or the whole normalized shortName.
+        // Tier 1 — exact shortName: a perfect shortName match is unambiguous and always wins, even
+        // when that word also appears in another leader's name (e.g. "nzinga" is the shortName of
+        // Mvemba a Nzinga but also a name-word of Nzinga Mbande). Never ask the user to disambiguate
+        // a query that exactly equals a shortName.
+        List<Leader> shortNameExact = leaders.stream()
+                .filter(l -> shortNameNorm(l).equals(q))
+                .toList();
+        if (!shortNameExact.isEmpty()) return resolve(shortNameExact);
+
+        // Tier 2 — exact name-word: query equals a full-name token (or a shortName part).
         List<Leader> exact = leaders.stream()
-                .filter(l -> tokens(l).contains(q) || shortNameNorm(l).equals(q))
+                .filter(l -> tokens(l).contains(q))
                 .toList();
         if (!exact.isEmpty()) return resolve(exact);
 
-        // Tier 2 — prefix: a token starts with the query (≥3 chars); multi-word queries also
+        // Tier 3 — prefix: a token starts with the query (≥3 chars); multi-word queries also
         // match as a substring of the joined full name (handles "bull moose").
         if (q.length() >= 3) {
             boolean multiWord = q.contains(" ");
@@ -53,7 +63,7 @@ public class LeaderMatcher {
             if (!prefix.isEmpty()) return resolve(prefix);
         }
 
-        // Tier 3 — fuzzy: a token is within a length-scaled edit distance of the query (≥4 chars).
+        // Tier 4 — fuzzy: a token is within a length-scaled edit distance of the query (≥4 chars).
         if (q.length() >= 4) {
             List<Leader> fuzzy = leaders.stream()
                     .filter(l -> tokens(l).stream().anyMatch(t -> withinTypoThreshold(q, t)))

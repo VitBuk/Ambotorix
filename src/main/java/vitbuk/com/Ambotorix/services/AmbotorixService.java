@@ -219,12 +219,12 @@ public class    AmbotorixService {
 
     //logic for command -> /mods
     public void sendMods(Update update) {
-        sendPrivateMessage(update, allLines(dataDir + "/mods"));
+        sendMessage(update, allLines(dataDir + "/mods"));
     }
 
     //logic for command -> /settings
     public void sendSettings(Update update) {
-        sendPrivateMessage(update, allLines(dataDir + "/settings"));
+        sendMessage(update, allLines(dataDir + "/settings"));
     }
 
     //logic for command -> /d_[shortName]

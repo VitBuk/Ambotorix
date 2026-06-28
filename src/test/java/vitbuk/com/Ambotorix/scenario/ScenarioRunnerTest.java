@@ -226,8 +226,14 @@ class ScenarioRunnerTest {
                 + " to press");
     }
 
+    // The {leader} placeholder must match both how leaders appear in message text (full name, e.g.
+    // "America Abraham Lincoln") and on buttons (compact display name, e.g. "Lincoln",
+    // "Kublai (China)"). Since matching is whole-string, the alternation needs both spellings.
     private List<String> leaderNames() {
-        return leaderService.getLeaders().stream().map(Leader::getFullName).toList();
+        return leaderService.getLeaders().stream()
+                .flatMap(l -> Stream.of(l.getFullName(), l.getDisplayName()))
+                .distinct()
+                .toList();
     }
 
     private static Channel channel(Scenario.Step step) {

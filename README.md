@@ -8,6 +8,38 @@ leader data up to date by scraping it on a schedule.
 
 This is a pet project.
 
+## Ambotorix Beta 0.5
+
+What's new in this release:
+
+- **Herson results revealed as a portrait image** (by Mihails). Instead of listing the resolved
+  picks as text, the draft now posts a combined portrait image — one row per player with their
+  assigned leader — mirroring the open/secret draft reveals. The status message closes out with just
+  the contested-ban summary; it falls back to a text reveal if image generation fails.
+- **`herson-low` draft variant** (by Mihails) — selectable via `/lobby herson-low` or
+  `/setDraft herson-low`. A stricter Herson: it bans **any** civ that two or more players ranked,
+  regardless of priority, so every surviving civ belongs to exactly one player — no clashes and no
+  coin flips, each player simply keeps their highest surviving pick. The only failure mode is a
+  player whose four picks were all banned; the draft then stops with a message for the host to
+  `/terminate` and re-run.
+- **Draft DMs now show the selected map.** The map rolled for the lobby is persisted and displayed
+  in the open- and secret-draft DMs, so players see what they're drafting for.
+- **Clearer pick status.** During secret/Herson drafts the status message now lists who has already
+  submitted and who is still being waited on, instead of just a count.
+- **`/leaders` compact grid.** The leader list is rendered as a 3-column grid using short display
+  names (e.g. `Lincoln`, `Kublai (China)`), so it scans far more easily.
+- **`/mods` and `/settings` now post in the group chat** instead of DM, so everyone sees the agreed
+  mod list and settings at once.
+- **Refreshed `/mods` list** to match the current multiplayer setup, each as a tappable Steam
+  Workshop link: Better Balanced Game 7.5 Beta, BBG Expanded 2.0, Multiplayer Helper, and Better
+  Balanced Maps.
+- **Smarter `/ban` matching.** An exact short-name now always wins, even when that word also appears
+  in another leader's name — e.g. `/ban nzinga` bans Mvemba a Nzinga directly instead of asking you
+  to disambiguate it against Nzinga Mbande. Matching priority is now: exact short name → exact
+  name-word → prefix → fuzzy.
+- **Short-name fixes:** `khan_china` → `kublai_china`, and the Eleanor of Aquitaine variants
+  `aquitaine_*` → `eleanor_*`.
+
 ## Ambotorix Beta 0.4
 
 What's new in this release:
