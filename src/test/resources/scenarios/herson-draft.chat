@@ -23,6 +23,7 @@ ambotorix:                              # nothing else in the group yet
 
 --- DM (alice) ---
 ambotorix: *Herson draft*               # the pick prompt
+ambotorix: *Tap leaders* <button "*">  # interactive grid
 alice: 1. lincoln 2. curtin 3. montezuma 4. hammurabi
 ambotorix: *Picks recorded*
 
@@ -32,6 +33,7 @@ ambotorix:                              # still just the start ping in the strea
 
 --- DM (bob) ---
 ambotorix: *Herson draft*
+ambotorix: *Tap leaders* <button "*">
 bob: 1. pedro 2. basil 3. theodora 4. laurier
 ambotorix: *Picks recorded*
 

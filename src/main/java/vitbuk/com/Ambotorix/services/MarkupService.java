@@ -95,6 +95,35 @@ public class MarkupService {
         return InlineKeyboardMarkup.builder().keyboard(rows).build();
     }
 
+    // Priority-ranking grid for interactive Herson picks. Already-ranked leaders show their rank number.
+    // SUBMIT and RESET action buttons appear below the leader grid.
+    public InlineKeyboardMarkup hersonPickMarkup(List<Leader> leaders, List<String> priorityPicks, Long groupChatId) {
+        int cols = LEADERS_GRID_COLUMNS;
+        List<InlineKeyboardRow> rows = new ArrayList<>();
+        InlineKeyboardRow row = new InlineKeyboardRow();
+        for (Leader l : leaders) {
+            int rank = priorityPicks.indexOf(l.getShortName());
+            String label = rank >= 0 ? l.getDisplayName() + " (" + (rank + 1) + ")" : l.getDisplayName();
+            InlineKeyboardButton btn = InlineKeyboardButton.builder()
+                    .text(label)
+                    .callbackData("/hpick " + groupChatId + " " + l.getShortName())
+                    .build();
+            row.add(btn);
+            if (row.size() == cols) {
+                rows.add(row);
+                row = new InlineKeyboardRow();
+            }
+        }
+        if (!row.isEmpty()) {
+            rows.add(row);
+        }
+        InlineKeyboardRow actionRow = new InlineKeyboardRow();
+        actionRow.add(InlineKeyboardButton.builder().text("✅ SUBMIT").callbackData("/hsubmit " + groupChatId).build());
+        actionRow.add(InlineKeyboardButton.builder().text("🔄 RESET").callbackData("/hreset " + groupChatId).build());
+        rows.add(actionRow);
+        return InlineKeyboardMarkup.builder().keyboard(rows).build();
+    }
+
     /** Confirm / re-enter buttons for a Herson submission whose civ names were fuzzily auto-corrected. */
     public InlineKeyboardMarkup hersonConfirmMarkup(Long groupChatId) {
         InlineKeyboardRow row = new InlineKeyboardRow();

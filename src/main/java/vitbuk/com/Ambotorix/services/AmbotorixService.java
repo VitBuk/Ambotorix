@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
@@ -351,6 +352,36 @@ public class    AmbotorixService {
                 sendPrivateMessage(update, "This button is outdated.");
             }
         }
+
+        // Herson interactive grid — toggle a leader's priority rank.
+        if (data != null && data.startsWith("/hpick ")) {
+            String[] parts = data.substring("/hpick ".length()).split(" ", 2);
+            if (parts.length == 2) {
+                try {
+                    handleHersonGridPick(update, Long.parseLong(parts[0]), parts[1]);
+                } catch (NumberFormatException e) {
+                    sendPrivateMessage(update, "This button is outdated.");
+                }
+            }
+        }
+
+        // Herson interactive grid — submit the current priority ranking.
+        if (data != null && data.startsWith("/hsubmit ")) {
+            try {
+                handleHersonGridSubmit(update, Long.parseLong(data.substring("/hsubmit ".length()).trim()));
+            } catch (NumberFormatException e) {
+                sendPrivateMessage(update, "This button is outdated.");
+            }
+        }
+
+        // Herson interactive grid — clear the current priority ranking.
+        if (data != null && data.startsWith("/hreset ")) {
+            try {
+                handleHersonGridReset(update, Long.parseLong(data.substring("/hreset ".length()).trim()));
+            } catch (NumberFormatException e) {
+                sendPrivateMessage(update, "This button is outdated.");
+            }
+        }
     }
 
     //logic for command -> /clearBans
@@ -628,6 +659,9 @@ public class    AmbotorixService {
         state.init(lobby.getPlayers());
         lobby.setHersonState(state);
 
+        List<Leader> available = leaderService.getLeaders().stream()
+                .filter(l -> !lobby.getBannedLeaders().contains(l))
+                .toList();
         for (Player player : lobby.getPlayers()) {
             if (player.getUserId() == null) {
                 sendToChat(chatId, lobby.getMessageThreadId(),
@@ -638,7 +672,12 @@ public class    AmbotorixService {
             if (!delivered) {
                 sendToChat(chatId, lobby.getMessageThreadId(),
                         "@" + player.getUserName() + " — couldn't DM you. Message the bot directly first, then send your 4 ranked picks there.");
+                continue;
             }
+            Long msgId = sendDmWithId(player.getUserId(),
+                    "🗳 Tap leaders to rank your top 4 picks, then hit SUBMIT:",
+                    markupService.hersonPickMarkup(available, player.getPriorityPicks(), chatId));
+            player.setDmPickMessageId(msgId);
         }
         postMilestone(chatId, mentionAll(lobby)
                 + " — Herson draft started. Check your DMs and send your 4 ranked picks.");
@@ -751,6 +790,110 @@ public class    AmbotorixService {
         commitHersonSubmission(chatId, lobby, player, pending);
     }
 
+    // ---- Herson interactive grid callbacks ----
+
+    private void handleHersonGridPick(Update update, Long lobbyChatId, String shortName) {
+        Lobby lobby = lobbyService.getLobby(lobbyChatId);
+        if (lobby == null || lobby.getHersonState() == null) return;
+        String userName = update.getCallbackQuery().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(lobbyChatId, userName);
+        if (player == null) return;
+        if (lobby.getHersonState().getStage(userName) == HersonDraftState.Stage.SUBMITTED) return;
+        List<String> priority = player.getPriorityPicks();
+        if (priority.contains(shortName)) {
+            priority.remove(shortName);
+        } else {
+            priority.add(shortName);
+        }
+        editHersonGrid(player, lobby, lobbyChatId);
+    }
+
+    private void handleHersonGridSubmit(Update update, Long lobbyChatId) {
+        Lobby lobby = lobbyService.getLobby(lobbyChatId);
+        if (lobby == null || lobby.getHersonState() == null) { sendPrivateMessage(update, "No active draft."); return; }
+        String userName = update.getCallbackQuery().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(lobbyChatId, userName);
+        if (player == null) { sendPrivateMessage(update, "You are not in this draft."); return; }
+        if (lobby.getHersonState().getStage(userName) == HersonDraftState.Stage.SUBMITTED) {
+            sendDm(player.getUserId(), "You've already submitted. Sit tight — waiting on the rest.", null);
+            return;
+        }
+        List<String> priority = player.getPriorityPicks();
+        if (priority.size() != 4) {
+            sendDm(player.getUserId(), "Please rank exactly 4 leaders before submitting (you have " + priority.size() + " selected).", null);
+            return;
+        }
+        List<Leader> resolved = priority.stream().map(sn -> leaderService.getLeaderByShortName(sn)).toList();
+        if (resolved.stream().anyMatch(Objects::isNull)) {
+            sendDm(player.getUserId(), "Something went wrong with your selection. Try resetting and picking again.", null);
+            return;
+        }
+        List<Leader> hostBanned = resolved.stream().filter(lobby.getBannedLeaders()::contains).toList();
+        if (!hostBanned.isEmpty()) {
+            sendDm(player.getUserId(), "These civs are banned: " + hostBanned.stream()
+                    .map(Leader::getFullName).collect(Collectors.joining(", ")) + ". Reset and re-pick.", null);
+            return;
+        }
+        commitHersonSubmission(lobbyChatId, lobby, player, resolved);
+    }
+
+    private void handleHersonGridReset(Update update, Long lobbyChatId) {
+        Lobby lobby = lobbyService.getLobby(lobbyChatId);
+        if (lobby == null || lobby.getHersonState() == null) return;
+        String userName = update.getCallbackQuery().getFrom().getUserName();
+        Player player = lobbyService.findPlayerByName(lobbyChatId, userName);
+        if (player == null) return;
+        if (lobby.getHersonState().getStage(userName) == HersonDraftState.Stage.SUBMITTED) return;
+        player.getPriorityPicks().clear();
+        editHersonGrid(player, lobby, lobbyChatId);
+    }
+
+    private void editHersonGrid(Player player, Lobby lobby, Long groupChatId) {
+        if (player.getDmPickMessageId() == null || player.getUserId() == null) return;
+        List<Leader> available = leaderService.getLeaders().stream()
+                .filter(l -> !lobby.getBannedLeaders().contains(l))
+                .toList();
+        InlineKeyboardMarkup markup = markupService.hersonPickMarkup(available, player.getPriorityPicks(), groupChatId);
+        try {
+            telegramClient.execute(EditMessageReplyMarkup.builder()
+                    .chatId(player.getUserId())
+                    .messageId(player.getDmPickMessageId().intValue())
+                    .replyMarkup(markup)
+                    .build());
+        } catch (TelegramApiException e) {
+            log.warn("Failed to edit herson pick grid for {}: {}", player.getUserName(), e.getMessage());
+        }
+    }
+
+    private void lockHersonGrid(Player player) {
+        if (player.getDmPickMessageId() == null || player.getUserId() == null) return;
+        try {
+            telegramClient.execute(EditMessageReplyMarkup.builder()
+                    .chatId(player.getUserId())
+                    .messageId(player.getDmPickMessageId().intValue())
+                    .replyMarkup(InlineKeyboardMarkup.builder().keyboard(List.of()).build())
+                    .build());
+        } catch (TelegramApiException e) {
+            log.warn("Failed to lock herson pick grid for {}: {}", player.getUserName(), e.getMessage());
+        }
+    }
+
+    private Long sendDmWithId(Long userId, String text, InlineKeyboardMarkup markup) {
+        if (userId == null) return null;
+        SendMessage.SendMessageBuilder<?, ?> builder = SendMessage.builder()
+                .chatId(userId)
+                .text(text)
+                .parseMode("HTML");
+        if (markup != null) builder.replyMarkup(markup);
+        try {
+            Message sent = telegramClient.execute(builder.build());
+            return sent == null ? null : sent.getMessageId().longValue();
+        } catch (TelegramApiException e) {
+            log.warn("Failed to DM user {}: {}", userId, e.getMessage());
+            return null;
+        }
+    }
+
     private void commitHersonSubmission(Long chatId, Lobby lobby, Player player, List<Leader> picks) {
         HersonDraftState state = lobby.getHersonState();
         String key = player.getUserName();
@@ -759,6 +902,7 @@ public class    AmbotorixService {
         state.setStage(key, HersonDraftState.Stage.SUBMITTED);
         sendDm(player.getUserId(), "✅ Picks recorded:\n" + numberedPicks(picks)
                 + "\n\nHidden until the draft resolves.", null);
+        lockHersonGrid(player);
         refreshStatus(chatId);
 
         if (state.allRankedSubmitted(lobby.getPlayers().size())) {
