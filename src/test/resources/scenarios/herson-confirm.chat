@@ -21,6 +21,7 @@ ambotorix:
 
 --- DM (alice) ---
 ambotorix: *Herson draft*
+ambotorix: *Tap leaders* <button "*">
 alice: 1. lincol 2. curtin 3. montezuma 4. hammurabi          # "lincol" -> guessed Lincoln
 ambotorix: *I read your picks as*Press*Confirm*otherwise*4 picks* <button "*">
 alice: <press_button "*Confirm*">
@@ -28,6 +29,7 @@ ambotorix: *Picks recorded*
 
 --- DM (bob) ---
 ambotorix: *Herson draft*
+ambotorix: *Tap leaders* <button "*">
 bob: 1. pedr 2. basil 3. theodora 4. laurier                  # "pedr" -> guessed Pedro
 ambotorix: *I read your picks as*Press*Confirm*otherwise*4 picks* <button "*">
 bob: 1. pedro 2. basil 3. theodora 4. laurier                 # re-submits instead of confirming

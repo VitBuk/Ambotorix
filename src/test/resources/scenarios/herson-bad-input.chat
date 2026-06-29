@@ -22,9 +22,11 @@ ambotorix:
 
 --- DM (bob) ---
 ambotorix: *Herson draft*                 # bob is prompted but does not submit here
+ambotorix: *Tap leaders* <button "*">
 
 --- DM (alice) ---
 ambotorix: *Herson draft*
+ambotorix: *Tap leaders* <button "*">
 alice: hello there                          # random text, no ranked list
 ambotorix: *send exactly*4*ranked picks*
 alice: 1. lincoln 2. curtin 3. montezuma    # only three picks

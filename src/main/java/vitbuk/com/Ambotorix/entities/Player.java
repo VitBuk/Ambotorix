@@ -9,6 +9,8 @@ public class Player {
     private Long userId;
     private List<Leader> picks;
     private List<Leader> bans;
+    private List<String> priorityPicks = new ArrayList<>();
+    private Long dmPickMessageId;
 
     public Player(String userName, Long userId) {
         this.userName = userName;
@@ -24,6 +26,11 @@ public class Player {
     public List<Leader> getBans() { return bans; }
     public void setBans(List<Leader> bans) { this.bans = bans; }
     public void ban(Leader leader) { bans.add(leader); }
+
+    public List<String> getPriorityPicks() { return priorityPicks; }
+    public void setPriorityPicks(List<String> priorityPicks) { this.priorityPicks = priorityPicks; }
+    public Long getDmPickMessageId() { return dmPickMessageId; }
+    public void setDmPickMessageId(Long dmPickMessageId) { this.dmPickMessageId = dmPickMessageId; }
 
     @Override
     public boolean equals(Object o) {
